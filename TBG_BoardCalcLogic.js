@@ -208,8 +208,8 @@ var cutMethodId = {
     1156: 'fabCut'  //Fab to Cut
 }
 var deviceSetupMap = {
-    6 : 623,  //Standard HS100 Board Device Setup
-    7 : 585,  //Standard Inca Q40 Board Device Setup
+    6 : 585,  //Standard HS100 Board Device Setup
+    7 : 623,  //Standard Inca Q40 Board Device Setup
     15 : 1263  //Standard Inca X2 Board Device Setup
 }
 

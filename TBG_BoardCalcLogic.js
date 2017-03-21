@@ -207,6 +207,14 @@ var cutMethodId = {
     1084: 'guillotineCut' , //Guillotine Cut
     1156: 'fabCut'  //Fab to Cut
 }
+<<<<<<< HEAD
+=======
+var deviceSetupMap = {
+    6 : 585,  //Standard HS100 Board Device Setup
+    7 : 623,  //Standard Inca Q40 Board Device Setup
+    15 : 1263  //Standard Inca X2 Board Device Setup
+}
+>>>>>>> feature/sf-add-device-setup-script
 
 var cutMethod;
 
@@ -413,6 +421,21 @@ var boardCalcLogic = {
                         }
                     }
                     removeOperationItemsWithString(156,'Cut');
+                }
+                /********* Assign Device setup */
+                var deviceSetupOp = fields.operation96;
+                if (deviceSetupOp) {
+                    if (configureglobals.cquote) {
+                        var deviceTypeId = configureglobals.cquote.pjQuote.device.type.id
+                        var deviceSetupOpItemId = deviceSetupMap[deviceTypeId] ? deviceSetupMap[deviceTypeId] : null;
+                        if (deviceSetupOpItemId) {
+                            if (cu.getValue(deviceSetupOp) != deviceSetupOpItemId) {
+                                cu.changeField(deviceSetupOp, deviceSetupOpItemId, true);
+                            }
+                        } else {
+                            console.log('device type ID ' + deviceTypeId + ' does not exists in operation');
+                        }
+                    }
                 }
                 /********* Disallow Edge Banding for incorrect sizes */
                 var edgeBanding = fields.operation119;

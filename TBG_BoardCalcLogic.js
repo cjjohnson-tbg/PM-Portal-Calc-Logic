@@ -422,8 +422,8 @@ var boardCalcLogic = {
                 /********* Assign Device setup */
                 var deviceSetupOp = fields.operation96;
                 if (deviceSetupOp) {
-                    if (configureglobals.cdevicemgr.chosenElements[0]) {
-                        var deviceTypeId = configureglobals.cdevicemgr.chosenElements[0].type.id;
+                    if (configureglobals.cquote) {
+                        var deviceTypeId = configureglobals.cquote.pjQuote.device.type.id
                         var deviceSetupOpItemId = deviceSetupMap[deviceTypeId] ? deviceSetupMap[deviceTypeId] : null;
                         if (deviceSetupOpItemId) {
                             if (cu.getValue(deviceSetupOp) != deviceSetupOpItemId) {

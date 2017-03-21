@@ -208,8 +208,8 @@ var cutMethodId = {
     1156: 'fabCut'  //Fab to Cut
 }
 var deviceSetupMap = {
-    6 : 623,  //Standard Inca Q40 Board Device Setup
-    7 : 585,  //Standard HS100 Board Device Setup
+    6 : 623,  //Standard HS100 Board Device Setup
+    7 : 585,  //Standard Inca Q40 Board Device Setup
     15 : 1263  //Standard Inca X2 Board Device Setup
 }
 
@@ -422,11 +422,16 @@ var boardCalcLogic = {
                 /********* Assign Device setup */
                 var deviceSetupOp = fields.operation96;
                 if (deviceSetupOp) {
-                    var deviceTypeId = configureglobals.cdevicemgr.chosenElements[0].type.id;
-                    var deviceSetupOpItemId = deviceSetupMap[deviceTypeId];
-                    if (cu.getValue(deviceSetupOp) != deviceSetupOpItemId) {
-                        cu.changeField(deviceSetupOp, deviceSetupOpItemId, true);
-                        return
+                    if (configureglobals.cdevicemgr.chosenElements[0]) {
+                        var deviceTypeId = configureglobals.cdevicemgr.chosenElements[0].type.id;
+                        var deviceSetupOpItemId = deviceSetupMap[deviceTypeId] ? deviceSetupMap[deviceTypeId] : null;
+                        if (deviceSetupOpItemId) {
+                            if (cu.getValue(deviceSetupOp) != deviceSetupOpItemId) {
+                                cu.changeField(deviceSetupOp, deviceSetupOpItemId, true);
+                            }
+                        } else {
+                            console.log('device type ID ' + deviceTypeId + ' does not exists in operation');
+                        }
                     }
                 }
                 /********* Disallow Edge Banding for incorrect sizes */

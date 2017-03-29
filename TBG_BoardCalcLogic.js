@@ -369,8 +369,7 @@ var boardCalcLogic = {
                 //zund Cutting
                 if (cutMethod == 'zund') {
                     var zundMaterialId = cu.getPressSheetId();
-                    var zundFactorType = 'sfPressSheets';
-                    var speedFactor = zundFactors[zundFactorType][zundMaterialId] ? zundFactors[zundFactorType][zundMaterialId] : 1;
+                    var speedFactor = zundFactors.sfPressSheets[zundMaterialId] ? zundFactors.sfPressSheets[zundMaterialId] : 1;
                     var zundLoadingFactor = zundLoadingSelections[speedFactor];
                     var zundUnloadingFactor = zundUnloadingSelections[speedFactor];
                     var zundCuttingFactor = zundCuttingSelections[speedFactor];

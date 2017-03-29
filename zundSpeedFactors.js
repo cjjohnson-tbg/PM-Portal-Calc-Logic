@@ -1,14 +1,6 @@
 /******* Small Format Press Sheet ID's */
 var zundFactors = {
   'sfPressSheets' : {
-		513  : 1,    //SUB-CARD-WTD-12PT-C1S-50X100
-		514  : 1,    //SUB-CARD-WTD-12PT-C1S-60X120
-		515  : 1,    //SUB-CARD-WTD-12PT-50X100
-		516  : 1,    //SUB-CARD-WHT-12PT-C2S-60X120
-		517  : 1,    //SUB-CARD-WTD-24PT-C1S-50X100
-		518  : 1,    //SUB-CARD-WTD-24PT-C1S-60X120
-		519  : 1,    //SUB-CARD-WTD-24PT-50X100
-		520  : 1,    //SUB-CARD-WHT-24PT-C2S-60X120
 		521  : 3,    //SUB-CARD-WTD-48PT-50X100
 		522  : 3,    //SUB-FOAM-WHT-0.1875-48X96
 		523  : 3,    //SUB-FOAM-WHT-0.1875-60X120
@@ -93,14 +85,10 @@ var zundFactors = {
 		580  : 6,    //SUB-ACRD-CLR-0.118-48X96
 		581  : 6,    //SUB-ACRD-CLR-0.220-48X96
 		599  : 6,	 //SUB-MAGLAM-WHT-015-40X119
-		600	 : 1,    //SUB-MAGLAM-WHT-020-40X119
-		601	 : 1,    //SUB-MAGLAM-WHT-030-40X119
 		612  : 2,	 //SUB-CORO-WHT-04MIL-50X100
 		613  : 2,	 //SUB-CORO-WHT-04MIL-60X120
-		713  : 1,    //SUB-RIGID-VYL-WHT-GLOSS/GLOSS-10MIL-25X52
 		614  : 6,	 //SUB-DBND-WHT-DURBND-03MIL-48X96
 		615  : 6,	 //SUB-DBND-WHT-DURBND-03MIL-60X120
-		616  : 1,    //SUB-CATBIO-SCCLG-STC-08MIL-54X124
 		623  : 2,	 //#200-63"X124"-CORRUGATED-B FLUTE-BLEACH 2 SIDES
 		624  : 2,	 //#200-61"X120"-CORRUGATED-E FLUTE-WHITE/WHITE
 		625	 : 2,	//SUB-CFLT-CORR-KRFT-ECT44-63X
@@ -256,8 +244,6 @@ var zundFactors = {
 		9 : 4,    //Gator 1" White
 		34 : 3,    //Gator 3/16" Black
 		11 : 3,    //Gator 3/16" White
-		45 : 1,    //Magnet .020
-		40 : 1,    //Magnet .030
 		60 : 5,    //MDF 1/2"
 		70 : 5,    //MDF 1/4"
 		18 : 5,    //MDO Outdoor 1/2"
@@ -268,7 +254,6 @@ var zundFactors = {
 		26 : 5,    //Plexiglass - Milk 1/8"
 		106 : 4,   //Optix DA Clear .118
 		105 : 4,   //Optix DA Clear .118
-		64 : 1,    //Poly5 Magnetic Receptor - 9mil Satin
 		4 : 2,    //Styrene 020
 		47 : 2,    //Styrene 020 Black
 		5 : 2,    //Styrene 030

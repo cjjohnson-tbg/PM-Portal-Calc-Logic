@@ -212,13 +212,15 @@ var rollCalcLogic = {
             }
             //Zund Cut
             if (cutMethod == 'zund') {
+                var lfSubstrateZundFactor = zundFactors.lfSubstrates[substrateId] ? zundFactors.lfSubstrates[substrateId] : 1;
                 if (cu.hasValue(fields.mountSubstrate)) {
-                    zundFactor = !lfMountZundFactors[mountId] ? 1 : lfMountZundFactors[mountId];
+                    lfMountZundFactor = zundFactors.lfMounts[mountId] ? zundFactors.lfMounts[mountId] : 1;
                 } else {
-                    zundFactor = !lfSubstrateZundFactors[substrateId] ? 1 : lfSubstrateZundFactors[substrateId];
+                    lfMountZundFactor = 0;
                 }
+                zundFactor = Math.max(lfMountZundFactor, lfSubstrateZundFactor);
                 //Align Zund Loading Speed Factor
-                    if (zundLoading) {
+                if (zundLoading) {
                     var zundLoadingItem = !zundOpItemMapLoading[zundFactor] ? 202 : zundOpItemMapLoading[zundFactor];
                 	if (cu.getValue(zundLoading) != zundLoadingItem) {
                 		cu.changeField(zundLoading, zundLoadingItem, true);

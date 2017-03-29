@@ -74,7 +74,7 @@ var bucketCalcLogic = {
 
             if (cutMethod == 'zund') {
                 
-                var zundFactor = !lfSubstrateZundFactors[substrateId] ? 1 : lfSubstrateZundFactors[substrateId];
+                var zundFactor = zundFactors.lfSubstrates[substrateId] ? zundFactors.lfSubstrates[substrateId] : 1;
                 var zundLoading = fields.operation53;
                 var zundCutting = fields.operation55;
                 var zundUnloading = fields.operation56;

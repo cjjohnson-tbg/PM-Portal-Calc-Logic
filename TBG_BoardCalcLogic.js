@@ -207,11 +207,6 @@ var cutMethodId = {
     1084: 'guillotineCut' , //Guillotine Cut
     1156: 'fabCut'  //Fab to Cut
 }
-var deviceSetupMap = {
-    6 : 623,  //Standard Inca Q40 Board Device Setup
-    7 : 585,  //Standard HS100 Board Device Setup
-    15 : 1263  //Standard Inca X2 Board Device Setup
-}
 
 var cutMethod;
 
@@ -373,8 +368,8 @@ var boardCalcLogic = {
                 var fabCutOp = fields.operation174;
                 //zund Cutting
                 if (cutMethod == 'zund') {
-                    var pressSheetId = cu.getPressSheetId();
-                    var speedFactor = sfPressSheetZundFactors[pressSheetId] ? sfPressSheetZundFactors[pressSheetId] : 1;
+                    var zundMaterialId = cu.getPressSheetId();
+                    var speedFactor = zundFactors.sfPressSheets[zundMaterialId] ? zundFactors.sfPressSheets[zundMaterialId] : 1;
                     var zundLoadingFactor = zundLoadingSelections[speedFactor];
                     var zundUnloadingFactor = zundUnloadingSelections[speedFactor];
                     var zundCuttingFactor = zundCuttingSelections[speedFactor];
@@ -418,16 +413,6 @@ var boardCalcLogic = {
                         }
                     }
                     removeOperationItemsWithString(156,'Cut');
-                }
-                /********* Assign Device setup */
-                var deviceSetupOp = fields.operation96;
-                if (deviceSetupOp) {
-                    var deviceTypeId = configureglobals.cdevicemgr.chosenElements[0].type.id;
-                    var deviceSetupOpItemId = deviceSetupMap[deviceTypeId];
-                    if (cu.getValue(deviceSetupOp) != deviceSetupOpItemId) {
-                        cu.changeField(deviceSetupOp, deviceSetupOpItemId, true);
-                        return
-                    }
                 }
                 /********* Disallow Edge Banding for incorrect sizes */
                 var edgeBanding = fields.operation119;

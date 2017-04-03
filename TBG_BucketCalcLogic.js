@@ -36,9 +36,17 @@ var bucketCalcLogic = {
 
         // apply datepicker to meta fields with Pace in label
         $('#additionalProductFields .additionalInformation div label:contains("Date")').parent().addClass('date');
+        $('#additionalProductFields .additionalInformation div label:contains("Shipping Due Date")').parent().addClass('ship-date');
+        $('.ship-date').removeClass('date');
         var dateInput = $('.date input');
         dateInput.datepicker({
             showAnim: "fold"
+        });
+        var shipDateInput = $('.ship-date input');
+        shipDateInput.datepicker({
+            showAnim: "fold",
+            beforeShowDay: $.datepicker.noWeekends,  // disable weekends
+            minDate: isNowBeforeCSTCutoffTime(13,15) ? 1 : 2 // if before 1:15, 1, if after 1:15 then 2
         });
         //Add ID for due date on SF field
         $('#additionalProductFields .additionalInformation div label:contains("Due Date")').parent().attr('id','dueDate');
@@ -79,14 +87,14 @@ var bucketCalcLogic = {
                 var zundCutting = fields.operation55;
                 var zundUnloading = fields.operation56;
                 //Align Zund Loading Speed Factor
-                    if (zundLoading) {
+                if (zundLoading) {
                     var zundLoadingItem = !zundOpItemMapLoading[zundFactor] ? 202 : zundOpItemMapLoading[zundFactor];
                 	if (cu.getValue(zundLoading) != zundLoadingItem) {
                 		cu.changeField(zundLoading, zundLoadingItem, true);
                 	}
                 }
                 //Align Zund Cutting Speed Factor
-                    if (zundCutting) {
+                if (zundCutting) {
                     var zundCuttingItem = !zundOpItemMapCutting[zundFactor] ? 195 : zundOpItemMapCutting[zundFactor];
                     if (cu.getValue(zundCutting) != zundCuttingItem) {
                 		cu.changeField(zundCutting, zundCuttingItem, true);
@@ -140,6 +148,22 @@ function addClassToOperation(opList, className) {
     for (var i = 0; i < opList.length; i++) {
         $('#operation' + opList[i]).addClass(className);
     }
+}
+function isNowBeforeCSTCutoffTime(hour24, minutes) {
+  var localOffsetMs = new Date().getTimezoneOffset()*60*-1000;
+  var localVsServerOffsetMs = localOffsetMs - SERVER_TZ_OFFSET_MS;
+  var localTime = new Date();
+  var localCutoffTime = (new Date(localTime.getFullYear(), localTime.getMonth(), localTime.getDate(), hour24, minutes, 0, 0));
+  var localCutoffTime = new Date(localCutoffTime.getTime() + localVsServerOffsetMs);
+  var returnVal = localTime.getTime() < localCutoffTime.getTime();
+  // console.log('server offset ms ', SERVER_TZ_OFFSET_MS);
+  // console.log('local  offset ms ', localOffsetMs);
+  // console.log('local vs server  ', SERVER_TZ_OFFSET_MS - localOffsetMs);
+  // console.log('server vs local  ', localOffsetMs - SERVER_TZ_OFFSET_MS);
+  // console.log('local time       ', localTime);
+  // console.log('local cutoff time', localCutoffTime);
+  // console.log('you have time before the cutoff?',returnVal);
+  return returnVal;
 }
 configureEvents.registerOnCalcLoadedListener(bucketCalcLogic);
 configureEvents.registerOnCalcChangedListener(bucketCalcLogic);

@@ -1,10 +1,14 @@
 var operationsWithBuyout = [
     '129',  //Pre-Printing Front Laminate
-    '144'   //Pre-Printing Back Laminate
+    '144',   //Pre-Printing Back Laminate
+    '131',   //Front Laminating
+    '130',   //Back Laminating
 ]
 var buyoutOperationItems = [
     '845',
-    '846'
+    '846',
+    '864',
+    '865'
 ]
 
 var metaMessage = '';

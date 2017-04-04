@@ -1,4 +1,3 @@
-
 var side1InkMap = {
     56  : 587,    //Vutek HS100 - CMYK - 1000 DPI_HS
     57  : 612,    //Vutek HS 1000 CMYK + W
@@ -261,6 +260,8 @@ var boardCalcLogic = {
 
                 //Change Labels for Paper Type, Weight, Color
                 cu.setLabel(fields.paperType,'Substrate');
+                cu.setLabel(fields.pages,'Pieces per Set');
+                //CHange label of pages for Setrs
                 cu.setLabel(fields.paperWeight,'Thickness');
 
                 //STOP IF QALCULATOR NOT RETURNING QUOTE

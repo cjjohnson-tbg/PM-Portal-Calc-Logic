@@ -2,7 +2,7 @@ var operationsWithBuyout = [
     '129',  //Pre-Printing Front Laminate
     '144',   //Pre-Printing Back Laminate
     '131',   //Front Laminating
-    '130',   //Back Laminating
+    '130'   //Back Laminating
 ]
 var buyoutOperationItems = [
     '845',
@@ -111,8 +111,7 @@ var metaFieldsActions = {
                 hasBuyout = true;
                 cu.setLabel(fields.paperType,'Substrate (Enter Desc and Size below)');
             }
-            var buyOps = cu.findOperationFromSet(operationsWithBuyout);
-            if (cu.isValueInSet(buyOps, buyoutOperationItems)) {
+            if (cu.operationInSetHasValueInSet(operationsWithBuyout, buyoutOperationItems)) {
                 hasBuyout = true;
             }
         } else {  //LF calculator

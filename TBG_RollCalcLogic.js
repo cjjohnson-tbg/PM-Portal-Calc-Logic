@@ -426,8 +426,10 @@ var rollCalcLogic = {
             if (hpInkOp) {
                 if (cu.getValue(fields.sides) == 2 ) {
                     if (cu.getValue(hpInkOp) != 509) {cu.changeField(hpInkOp, 509, true);}
+                } else if (cu.getSelectedOptionText(fields.printSubstrate).indexOf('Backlit') != -1) {
+                    if (cu.getValue(hpInkOp) != 384) {cu.changeField(hpInkOp, 384, true);}
                 } else {
-                    if (cu.getValue(hpInkOp) == 509) {cu.changeField(hpInkOp, 383, true);}
+                    if (cu.getValue(hpInkOp) != 383) {cu.changeField(hpInkOp, 383, true);}
                 }
                 cu.disableField(hpInkOp);
             }

@@ -148,7 +148,8 @@ var planningOnlyOperations = [
     166,    //LF Pre-Cut
     168,    //LF No Cutting
     // 170,     //LF Hub Cutting
-    174     //LF TBG-Fab Cut
+    174,     //LF TBG-Fab Cut
+    193     //LF Bucket Job
 ]
 var opsWithOther = [
     129,

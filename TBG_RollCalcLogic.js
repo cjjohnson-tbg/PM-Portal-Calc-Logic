@@ -10,7 +10,8 @@ var planningOnlyOps = [
     'div#operation115',   //TBG Pre-cut
     'div#operation109',  //TBG Pre-Sheet
     'div#operation108',   //TBG Pre-Slit
-    'div#operation116'    //TBG TBG-Fab Cut
+    'div#operation116',    //TBG TBG-Fab Cut
+    'div#operation125'      //TBG Bucket Job
 ]
 var planningOpsStyleBlock = createStyleBlock(planningOnlyOps, 'display: none;');
 $(function() {

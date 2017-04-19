@@ -261,7 +261,9 @@ var boardCalcLogic = {
 
                 //Change Labels for Paper Type, Weight, Color
                 cu.setLabel(fields.paperType,'Substrate');
-                cu.setLabel(fields.pages,'Pieces per Set');
+                if (fields.pages) {
+                    cu.setLabel(fields.pages,'Pieces per Set');
+                }
                 //CHange label of pages for Setrs
                 cu.setLabel(fields.paperWeight,'Thickness');
 

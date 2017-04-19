@@ -317,8 +317,9 @@ var boardCalcLogic = {
 				var sideOneInk = cu.getValue(fields.printingS1);
 				var sideTwoInk = cu.getValue(fields.printingS2);
                 var sideOneInkId = configureglobals.cquote.pjQuote.side1Ink.id;
+                var sideTwoInkId = null;
                 if (cu.hasValue(fields.printingS2)) {
-                    var sideTwoInkId = configureglobals.cquote.pjQuote.side2Ink.id;
+                    sideTwoInkId = configureglobals.cquote.pjQuote.side2Ink.id;
                 }
                 var sideOneInkOp = fields.operation98;
                 var sideTwoInkOp = fields.operation99;
@@ -339,21 +340,25 @@ var boardCalcLogic = {
 					}
 				}
                 //NEW
-                if (sideOneInkId && sideOneInkOp) {
+                if (sideOneInkId) {
                     var sideOneInkOpId = side1InkMap[sideOneInkId];
                     if (cu.getValue(sideOneInkOp) != sideOneInkOpId) {
                         cu.changeField(sideOneInkOp, sideOneInkOpId, true);
                         return
                     }
                 }
-                if (sideTwoInkId && sideTwoInkOp) {
-                    var sideTwoInkOpId = side2InkMap[sideTwoInkId];
-                    if (cu.getValue(sideTwoInkOp) != sideTwoInkOpId) {
-                        cu.changeField(sideTwoInkOp, sideTwoInkOpId, true);
-                        return
+                if (sideTwoInkOp) {
+                    if (sideTwoInkId) {
+                        var sideTwoInkOpId = side2InkMap[sideTwoInkId];
+                        if (cu.getValue(sideTwoInkOp) != sideTwoInkOpId) {
+                            cu.changeField(sideTwoInkOp, sideTwoInkOpId, true);
+                        }
+                    } else {
+                        if (cu.hasValue(sideTwoInkOp)) {
+                            cu.changeField(sideTwoInkOp,'', true);
+                        }
                     }
                 }
-
                 /********* CUTTING LOGIC */
                 var cuttingOp = fields.operation170;
                 if (cu.hasValue(cuttingOp)) {

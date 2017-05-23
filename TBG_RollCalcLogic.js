@@ -131,6 +131,7 @@ var substratesThatCanHeatBend =[
     '113',   //Expanded PVC Foamboard 1 MM - White
     '117',   //Expanded PVC Foamboard - .125in-3mm - Black
     '354',   //Acrylic Clear Extruded .118
+    '417',   //Acrylic Black Extruded .118"
     '39',   //PETG .020
     '158',   //PETG .030
     '40',   //PETG .040

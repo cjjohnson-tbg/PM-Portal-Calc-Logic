@@ -289,7 +289,8 @@ var bucketCalcLogic = {
             //zund Cutting
             if (cutMethod == 'zund') {
                 var zundMaterialId = cu.getPressSheetId();
-                var speedFactor = zundFactors.sfPressSheets[zundMaterialId] ? zundFactors.sfPressSheets[zundMaterialId] : 1;
+                var zundMaterialType = 'sfPressSheets';
+                var speedFactor = getZundSpeedFactor(zundMaterialType,zundMaterialId);
                 var zundLoadingFactor = sfZundLoadingSelections[speedFactor];
                 var zundUnloadingFactor = sfZundUnloadingSelections[speedFactor];
                 var zundCuttingFactor = sfZundCuttingSelections[speedFactor];
@@ -348,7 +349,7 @@ var bucketCalcLogic = {
 
             if (cutMethod == 'zund') {
                 
-                var zundFactor = zundFactors.lfSubstrates[substrateId] ? zundFactors.lfSubstrates[substrateId] : 1;
+                var zundFactor = getZundSpeedFactor('lfSubstrates', substrateId);
                 var zundLoading = fields.operation53;
                 var zundCutting = fields.operation55;
                 var zundUnloading = fields.operation56;

@@ -230,6 +230,11 @@ var boardCalcLogic = {
         removeClassFromOp(170,'costingOnly');
         addOtherOpClass(opsWithOther);
         removeOperationItemsWithString(156,'Print');
+
+        //initialize zund speed factor
+        if (zundSubstrateSpeeds.length < 2) {
+            cu.alert('Collaterate Zund Speed Factors list did not load propertly.  Please contact Support to ensure accurate costing.');
+        }
     },
     onCalcChanged: function(updates, product) {
         if (cu.isPOD(product)) {
@@ -378,7 +383,8 @@ var boardCalcLogic = {
                 //zund Cutting
                 if (cutMethod == 'zund') {
                     var zundMaterialId = cu.getPressSheetId();
-                    var speedFactor = zundFactors.sfPressSheets[zundMaterialId] ? zundFactors.sfPressSheets[zundMaterialId] : 1;
+                    var zundMaterialType = 'sfPressSheets';
+                    var speedFactor = getZundSpeedFactor(zundMaterialType,zundMaterialId);
                     var zundLoadingFactor = zundLoadingSelections[speedFactor];
                     var zundUnloadingFactor = zundUnloadingSelections[speedFactor];
                     var zundCuttingFactor = zundCuttingSelections[speedFactor];

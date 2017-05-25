@@ -214,9 +214,9 @@ var rollCalcLogic = {
             }
             //Zund Cut
             if (cutMethod == 'zund') {
-                var lfSubstrateZundFactor = zundFactors.lfSubstrates[substrateId] ? zundFactors.lfSubstrates[substrateId] : 1;
+                var lfSubstrateZundFactor = getZundSpeedFactor('lfSubstrates', substrateId);
                 if (cu.hasValue(fields.mountSubstrate)) {
-                    lfMountZundFactor = zundFactors.lfMounts[mountId] ? zundFactors.lfMounts[mountId] : 1;
+                    lfMountZundFactor = getZundSpeedFactor('lfMounts', mountId);
                 } else {
                     lfMountZundFactor = 0;
                 }

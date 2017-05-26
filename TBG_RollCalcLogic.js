@@ -60,8 +60,8 @@ var substratesWithBannerFinishing = [
     '73',    //18 oz. Smooth Vinyl - Opaque Matte (for heavy duty outdoor use)
     '114',   //8 oz. Mesh
     '167',     //15 oz. Smooth Vinyl Banner
-    '146',	  //Berger Samba Fabric 6.87oz.
-    '210',	//SBR-DURA-WHT-BLKBK-13OZ-126X164
+    '146',      //Berger Samba Fabric 6.87oz.
+    '210',  //SBR-DURA-WHT-BLKBK-13OZ-126X164
     '100',  //Ultraflex Poplin 7oz.
     '177',   //Verseidag Nightdrop 10oz.
     '125',   //ULTRAFLEX-MULTITEX 220-6.5OZ CANVAS-122"X164'-3257
@@ -79,11 +79,11 @@ var bannerStandMaterial = [
     '73'    //18 oz. Smooth Vinyl - Opaque Matte (for heavy duty outdoor use)
 ]
 var bannerFinishingOperations = [
-    '60',	//TBG Grommets
-    '61',	//TBG Hemming
-    '62', 	//TBG Pole Pockets
-    '63',	//TBG Keder Sewing
-    '73'	//TBG Grommet Color
+    '60',   //TBG Grommets
+    '61',   //TBG Hemming
+    '62',   //TBG Pole Pockets
+    '63',   //TBG Keder Sewing
+    '73'    //TBG Grommet Color
 ]
 var cuttingDesc = {
     302: 356 , //simple
@@ -151,7 +151,7 @@ var cu = calcUtil;
 
 var rollCalcLogic = {
     onCalcLoaded: function(product) {
-		hideCanvasOperations();  
+        hideCanvasOperations();  
         trimOperationItemName(inkOpsWithDPI, ' - ');
         trimOperationItemName(opsToTrimWithUnderscore, '_');
         if (cu.getPjcId(product) != 389) {
@@ -159,6 +159,10 @@ var rollCalcLogic = {
         }
         removeClassFromOp(111,'costingOnly');
         addClassToList(planningOnlyOps,'planning');
+        //show error message if zund object does not load
+        if (zundSubstrateSpeeds.length == 0) {
+            cu.alert('Collaterate Zund Speed Factors list did not load propertly.  Please contact Support to ensure accurate costing.');
+        }
     },
     onCalcChanged: function(updates, product) {
 
@@ -214,9 +218,9 @@ var rollCalcLogic = {
             }
             //Zund Cut
             if (cutMethod == 'zund') {
-                var lfSubstrateZundFactor = zundFactors.lfSubstrates[substrateId] ? zundFactors.lfSubstrates[substrateId] : 1;
+                var lfSubstrateZundFactor = getZundSpeedFactor('lfSubstrates', substrateId);
                 if (cu.hasValue(fields.mountSubstrate)) {
-                    lfMountZundFactor = zundFactors.lfMounts[mountId] ? zundFactors.lfMounts[mountId] : 1;
+                    lfMountZundFactor = getZundSpeedFactor('lfMounts', mountId);
                 } else {
                     lfMountZundFactor = 0;
                 }
@@ -224,23 +228,23 @@ var rollCalcLogic = {
                 //Align Zund Loading Speed Factor
                 if (zundLoading) {
                     var zundLoadingItem = !zundOpItemMapLoading[zundFactor] ? 202 : zundOpItemMapLoading[zundFactor];
-                	if (cu.getValue(zundLoading) != zundLoadingItem) {
-                		cu.changeField(zundLoading, zundLoadingItem, true);
-                	}
+                    if (cu.getValue(zundLoading) != zundLoadingItem) {
+                        cu.changeField(zundLoading, zundLoadingItem, true);
+                    }
                 }
                 //Align Zund Cutting Speed Factor
                     if (zundCutting) {
                     var zundCuttingItem = !zundOpItemMapCutting[zundFactor] ? 195 : zundOpItemMapCutting[zundFactor];
                     if (cu.getValue(zundCutting) != zundCuttingItem) {
-                		cu.changeField(zundCutting, zundCuttingItem, true);
-                	}
+                        cu.changeField(zundCutting, zundCuttingItem, true);
+                    }
                 }
                 //Align Zund Unloading Speed Factor
                 if (zundUnloading) {
                     var zundUnloadingItem = !zundOpItemMapUnloading[zundFactor] ? 195 : zundOpItemMapUnloading[zundFactor];
                     if (cu.getValue(zundUnloading) != zundUnloadingItem) {
-                    	cu.changeField(zundUnloading, zundUnloadingItem, true);
-                	}
+                        cu.changeField(zundUnloading, zundUnloadingItem, true);
+                    }
                 }
             } else {
                 if (cu.hasValue(zundLoading)) {
@@ -437,37 +441,37 @@ var rollCalcLogic = {
             }
             /************************* SHOW HARD PROOF MESSAGE ON SQUARE FOOTAGE THRESHOLDS */
             if (pmPortal) {
-				var proofOp = fields.proof;
-				var proofSelection = cu.getValue(proofOp);
-				if (totalSquareFeet >= 320) {
-					if (hardProofMessageCount == 0) {
-						if (proofSelection != 40) {
-							message += '<p>Jobs with a printable area over 320 square feet require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
-							hardProofMessageCount = 1;
-							cu.changeField(proofOp, 40, true);
-						}
-					} 
-				}
+                var proofOp = fields.proof;
+                var proofSelection = cu.getValue(proofOp);
+                if (totalSquareFeet >= 320) {
+                    if (hardProofMessageCount == 0) {
+                        if (proofSelection != 40) {
+                            message += '<p>Jobs with a printable area over 320 square feet require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
+                            hardProofMessageCount = 1;
+                            cu.changeField(proofOp, 40, true);
+                        }
+                    } 
+                }
             }
             /************************* SHOW CANVAS OPTIONS ONLY WHEN CANVAS SELECTED */
             if (pmPortal) {
-				if (!cu.isValueInSet(fields.printSubstrate, canvasSubstrates)) {
-					hideCanvasOperations();
-				}
-				else {
-					showCanvasOperations();
-				}
+                if (!cu.isValueInSet(fields.printSubstrate, canvasSubstrates)) {
+                    hideCanvasOperations();
+                }
+                else {
+                    showCanvasOperations();
+                }
             }
             /************************* SHOW BANNER FINISHING OPTIONS ONLY WHEN CANVAS SELECTED */
             //always show with Dye Sub materials
             if (!cu.getPjcId(product) == 392) {
                 if (pmPortal) {
-    				if (!cu.isValueInSet(fields.printSubstrate, substratesWithBannerFinishing)) {
-    					hideBannerOperations();
-    				}
-    				else {
-    					showBannerOperations();
-    				}
+                    if (!cu.isValueInSet(fields.printSubstrate, substratesWithBannerFinishing)) {
+                        hideBannerOperations();
+                    }
+                    else {
+                        showBannerOperations();
+                    }
                 }
             }
             //Only show Banner stands with 13 oz scrim or smooth
@@ -601,7 +605,7 @@ var rollCalcLogic = {
             }  
             /************************* REQUIRE VERSION NAMES WHEN MORE THAN ONE */
             if (cu.isMultipleVersion()) {
-            	$('input.versionName').attr('required',true);
+                $('input.versionName').attr('required',true);
             }
             /********************************************* ALERTS */
             // show an alert when necessary
@@ -610,7 +614,7 @@ var rollCalcLogic = {
                 cu.alert(message);
             }
 
-	    } // is POD
+        } // is POD
     }
 }
 function createStyleBlock(elements, styleText) {
@@ -636,24 +640,24 @@ function enableCheckoutButton() {
 }
 
 function hideCanvasOperations() {
-	$.each(canvasOperations, function() {
-		$('#operation' + this).hide();
-	});
+    $.each(canvasOperations, function() {
+        $('#operation' + this).hide();
+    });
 }
 function showCanvasOperations() {
-	$.each(canvasOperations, function() {
-		$('#operation' + this).show();
-	});
+    $.each(canvasOperations, function() {
+        $('#operation' + this).show();
+    });
 }
 function hideBannerOperations() {
-	$.each(bannerFinishingOperations, function() {
-		$('#operation' + this).hide();
-	});
+    $.each(bannerFinishingOperations, function() {
+        $('#operation' + this).hide();
+    });
 }
 function showBannerOperations() {
-	$.each(bannerFinishingOperations, function() {
-		$('#operation' + this).show();
-	});
+    $.each(bannerFinishingOperations, function() {
+        $('#operation' + this).show();
+    });
 }
 function getLeadAndTailCost() {
     var totalSubCost = configureglobals.cquote.lpjQuote.aPrintSubstratePrice;

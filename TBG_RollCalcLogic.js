@@ -140,6 +140,10 @@ var substratesThatCanHeatBend =[
     '69',   //PETG .080
     '159'   //PETG .118
 ]
+var fabrivuDirectMaterials = [
+    '398'   //Berger Flag Fabric White 4oz
+]
+
 var pmPortal = ((location.hostname.indexOf("tbg-pm.collaterate.com") != -1) || (location.hostname.indexOf("tbghub.com") != -1));
 var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") != -1);
 
@@ -551,17 +555,6 @@ var rollCalcLogic = {
                     if (cu.getValue(vutekInks) != 241) {
                         cu.changeField(vutekInks, 241, true);
                     }
-                }
-            }
-            /************************ BOARD BUCKET LIMITATIONS */
-            if (cu.getPjcId(product) == 458) {
-                //limit to 200 sq ft
-                if (totalSquareFeet > 200 ) {
-                    bucketSizeMessage = '<p>The Board Bucket product is limited to jobs less than 200 sq ft.  For jobs greater than this please use the Board Printing Product.</p>';
-                    message += bucketSizeMessage;
-                    disableCheckoutButton(bucketSizeMessage);
-                } else {
-                    enableCheckoutButton();
                 }
             }
             /************************ HEAT BENDING RULES */

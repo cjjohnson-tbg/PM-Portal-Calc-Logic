@@ -231,8 +231,8 @@ var boardCalcLogic = {
         addOtherOpClass(opsWithOther);
         removeOperationItemsWithString(156,'Print');
 
-        //initialize zund speed factor
-        if (zundSubstrateSpeeds.length < 2) {
+        //show error message if zund object does not load
+        if (zundSubstrateSpeeds.length == 0) {
             cu.alert('Collaterate Zund Speed Factors list did not load propertly.  Please contact Support to ensure accurate costing.');
         }
     },
@@ -279,7 +279,7 @@ var boardCalcLogic = {
                 var pieceWidth = cu.getWidth();
                 var pieceHeight = cu.getHeight();
                 var quantity = cu.getTotalQuantity();
-        		
+                
                 var SqInchIncreaserAnswer = fields.operation97_answer;
                 var SqInchDecreaserAnswer = fields.operation100_answer;
                 var LinInchIncreaserAnswer = fields.operation101_answer;
@@ -321,8 +321,8 @@ var boardCalcLogic = {
                     return
                 }
                 /********* Align Ink to Color in Operations */
-				var sideOneInk = cu.getValue(fields.printingS1);
-				var sideTwoInk = cu.getValue(fields.printingS2);
+                var sideOneInk = cu.getValue(fields.printingS1);
+                var sideTwoInk = cu.getValue(fields.printingS2);
                 var sideOneInkId = configureglobals.cquote.pjQuote.side1Ink.id;
                 var sideTwoInkId = null;
                 if (cu.hasValue(fields.printingS2)) {
@@ -332,20 +332,20 @@ var boardCalcLogic = {
                 var sideTwoInkOp = fields.operation99;
                 var shrinkOpTest = fields.operation143;  
 
-				//Change Ink to Full Color - Backlit if Backlit Film or translucent styrene is Selected
-				if (cu.isValueInSet(fields.paperType, substratesForceCMYKBacklit)) {
+                //Change Ink to Full Color - Backlit if Backlit Film or translucent styrene is Selected
+                if (cu.isValueInSet(fields.paperType, substratesForceCMYKBacklit)) {
                     console.log('trigger backlit logic');
-					if (cu.getValue(fields.printingS1) != 55) {
-						cu.changeField(fields.printingS1, 55, true);
-						return
-					}
-					//No printing on back side
-					if (cu.hasValue(fields.printingS2)) {
-						cu.changeField(fields.printingS2, '', true);
-						onQuoteUpdatedMessages += '<p>Backlit Film cannot be printed on the back side.</p>';
-						return
-					}
-				}
+                    if (cu.getValue(fields.printingS1) != 55) {
+                        cu.changeField(fields.printingS1, 55, true);
+                        return
+                    }
+                    //No printing on back side
+                    if (cu.hasValue(fields.printingS2)) {
+                        cu.changeField(fields.printingS2, '', true);
+                        onQuoteUpdatedMessages += '<p>Backlit Film cannot be printed on the back side.</p>';
+                        return
+                    }
+                }
                 //NEW
                 if (sideOneInkId) {
                     var sideOneInkOpId = side1InkMap[sideOneInkId];
@@ -488,23 +488,23 @@ var boardCalcLogic = {
                 /************************* ADD MOUNTING SETUP FEE WHEN MOUNT CHOSEN */
                 var mountingOp = fields.operation139;
                 if (mountingOp) {
-                	var mountingSetup = fields.operation140;
-                	if (cu.hasValue(mountingOp)) {
+                    var mountingSetup = fields.operation140;
+                    if (cu.hasValue(mountingOp)) {
                         //display pricing warning with 
                         if (mountingEstimateMessageCount == 0) {
                             onQuoteUpdatedMessages += '<p>Mounting costs in this tool are brought in per square inch.  It is highly recommended to obtain an estimate from the Estimating Team for pricing.</p>';
                             mountingEstimateMessageCount = 1;
                         }
-                		if (cu.isValueInSet(mountingOp,mountsWithClearAdhesive) || cu.isValueInSet(fields.paperType, subsratesTypesWithClearAdhesive)) {
+                        if (cu.isValueInSet(mountingOp,mountsWithClearAdhesive) || cu.isValueInSet(fields.paperType, subsratesTypesWithClearAdhesive)) {
                             if (cu.getValue(mountingSetup) != 1030) {
                                 cu.changeField(mountingSetup, 1030, true);
                             }
                         } else if (cu.getValue(mountingSetup) != 797) {
-                			cu.changeField(mountingSetup, 797, true);
-                		}
-                	} else if (cu.hasValue(mountingSetup)) {
-                		cu.changeField(mountingSetup, '', true);
-                	}
+                            cu.changeField(mountingSetup, 797, true);
+                        }
+                    } else if (cu.hasValue(mountingSetup)) {
+                        cu.changeField(mountingSetup, '', true);
+                    }
                 }
                 /************************* SHOW HARD PROOF MESSAGE ON THROUGHPUT THRESHOLDS */
                 if (pmPortal) {

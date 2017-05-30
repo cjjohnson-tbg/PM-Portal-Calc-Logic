@@ -189,6 +189,10 @@ var bucketCalcLogic = {
     onQuoteUpdated: function(updates, validation, product) {
         /*re-init on every update*/
         cu.initFields();
+        //show error message if zund object does not load
+        if (zundSubstrateSpeeds.length == 0) {
+            cu.alert('Collaterate Zund Speed Factors list did not load propertly.  Please contact Support to ensure accurate costing.');
+        }
         if (cu.isSmallFormat(product)) {
             addClassToOperation(sfPlanningOnlyOperations,'planning');
             trimOperationItemName(opsWithSubIds,'_');
@@ -350,6 +354,7 @@ var bucketCalcLogic = {
             if (cutMethod == 'zund') {
                 
                 var zundFactor = getZundSpeedFactor('lfSubstrates', substrateId);
+
                 var zundLoading = fields.operation53;
                 var zundCutting = fields.operation55;
                 var zundUnloading = fields.operation56;

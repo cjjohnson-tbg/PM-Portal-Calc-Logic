@@ -587,6 +587,20 @@ var rollCalcLogic = {
                     }
                 }
             }
+            /************************ FABRIVU LOGIC */
+            if (cu.getPjcId(product) == 450) {
+                //Choose none option for dye sub transfer material if substrate in list
+                var dyeSubTransferOp = fields.operation88;
+                if (cu.isValueInSet(fields.printSubstrate,fabrivuDirectMaterials)) {
+                    if (cu.getValue(dyeSubTransferOp) != 442) {
+                        cu.changeField(dyeSubTransferOp, 442, true);
+                    }
+                } else {
+                    if (cu.getValue(dyeSubTransferOp) != 428) {
+                        cu.changeField(dyeSubTransferOp, 428, true);
+                    }
+                }
+            }
             /************************ HIDE OPERTION ITEMS */
             //INK RESOLUTION ON INK CONFIGURATION OPERATIONS
             trimOperationItemName(inkOpsWithDPI, ' - ');

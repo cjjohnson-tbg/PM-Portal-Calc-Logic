@@ -10,10 +10,12 @@ function getZundData() {
 			zundSubstrateSpeeds.push(sheetVal);
 		});
 	});
-	//if nothing loaded show message to user
-	//needs a timeout for time to load to window
+	//if nothing loaded show message to user -- needs a timeout for time to load to window
 	setTimeout(function() {
-		cu.alert('Collaterate Zund Speed Factors list did not load propertly.  Please contact Support to ensure accurate costing.');
+		console.log('zundSubstrateSpeeds loaded with lenght of ' + zundSubstrateSpeeds.length);
+		if (zundSubstrateSpeeds.length == 0) {
+			cu.alert('Collaterate Zund Speed Factors list did not load propertly.  Please contact Support to ensure accurate costing.');
+		}
 	}, 2000);
 }
 
@@ -25,7 +27,8 @@ function getZundSpeedFactor(type, id) {
 			z = zundSubstrateSpeeds[r].zundSpeedFactor;
 			break
 		} 
+		//if completes loop without match log item not found
+		console.log('substrate not found in Collaterate Zund Speed Factors sheet. Assuming speed factor of 1.');
 	}
-	console.log('substrate not found in Collaterate Zund Speed Factors sheet. Assuming speed factor of 1.');
 	return z
 }

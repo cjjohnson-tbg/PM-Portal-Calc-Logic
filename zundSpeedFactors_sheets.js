@@ -10,6 +10,11 @@ function getZundData() {
 			zundSubstrateSpeeds.push(sheetVal);
 		});
 	});
+	//if nothing loaded show message to user
+	//needs a timeout for time to load to window
+	setTimeout(function() {
+		cu.alert('Collaterate Zund Speed Factors list did not load propertly.  Please contact Support to ensure accurate costing.');
+	}, 2000);
 }
 
 function getZundSpeedFactor(type, id) {
@@ -24,8 +29,3 @@ function getZundSpeedFactor(type, id) {
 	console.log('substrate not found in Collaterate Zund Speed Factors sheet. Assuming speed factor of 1.');
 	return z
 }
-
-
-$( document ).ready(function() {
-    getZundData();
-});

@@ -230,11 +230,6 @@ var boardCalcLogic = {
         removeClassFromOp(170,'costingOnly');
         addOtherOpClass(opsWithOther);
         removeOperationItemsWithString(156,'Print');
-
-        //show error message if zund object does not load
-        if (zundSubstrateSpeeds.length == 0) {
-            cu.alert('Collaterate Zund Speed Factors list did not load propertly.  Please contact Support to ensure accurate costing.');
-        }
     },
     onCalcChanged: function(updates, product) {
         if (cu.isPOD(product)) {

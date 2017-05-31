@@ -140,6 +140,12 @@ var substratesThatCanHeatBend =[
     '69',   //PETG .080
     '159'   //PETG .118
 ]
+
+var cutMethod;
+var lfMountZundFactor;
+//grab zund data from zundSpeedFactors_sheets
+getZundData();
+
 var pmPortal = ((location.hostname.indexOf("tbg-pm.collaterate.com") != -1) || (location.hostname.indexOf("tbghub.com") != -1));
 var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") != -1);
 
@@ -196,7 +202,7 @@ var rollCalcLogic = {
                     cu.changeField(fields.operation111,450,true);
                 }
             }
-            var cutMethod = 'zund';
+            cutMethod = 'zund';
             if (cu.hasValue(fields.operation111)) {
                 cutMethod = cutMethodId[cu.getValue(fields.operation111)];
             }
@@ -279,14 +285,6 @@ var rollCalcLogic = {
             }
             
             if (cu.hasValue(intCutOp) && cutMethod == 'zund') {
-                    /**
-                457 Simple_Route
-                454 Simple_Blade
-                456 Complex_Route
-                455 Complex_Blade
-                453 None
-                **/
-                //Blade: route
                 var intCutSetting = { 
                     454 : 457,
                     455 : 456

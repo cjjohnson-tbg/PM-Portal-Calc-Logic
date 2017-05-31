@@ -209,6 +209,8 @@ var cutMethodId = {
 }
 
 var cutMethod;
+//grab zund data from zundSpeedFactors_sheets
+getZundData();
 
 var pmPortal = (location.hostname.indexOf("tbghub.com") != -1);
 var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") != -1);
@@ -230,8 +232,6 @@ var boardCalcLogic = {
         removeClassFromOp(170,'costingOnly');
         addOtherOpClass(opsWithOther);
         removeOperationItemsWithString(156,'Print');
-        //grab zund data from zundSpeedFactors_sheets
-        getZundData();
     },
     onCalcChanged: function(updates, product) {
         if (cu.isPOD(product)) {

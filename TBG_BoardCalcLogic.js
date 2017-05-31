@@ -208,10 +208,6 @@ var cutMethodId = {
     1156: 'fabCut'  //Fab to Cut
 }
 
-var cutMethod;
-//grab zund data from zundSpeedFactors_sheets
-getZundData();
-
 var pmPortal = (location.hostname.indexOf("tbghub.com") != -1);
 var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") != -1);
 
@@ -221,6 +217,11 @@ var mountingEstimateMessageCount = 0;
 var allowHeatBend = true;
 
 var cu = calcUtil;
+
+var cutMethod;
+//grab zund data from zundSpeedFactors_sheets
+getZundData();
+
 var boardCalcLogic = {
     onCalcLoaded: function(product) {
         //Change Paper headline

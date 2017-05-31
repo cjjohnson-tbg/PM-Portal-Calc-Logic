@@ -141,11 +141,6 @@ var substratesThatCanHeatBend =[
     '159'   //PETG .118
 ]
 
-var cutMethod;
-var lfMountZundFactor;
-//grab zund data from zundSpeedFactors_sheets
-getZundData();
-
 var pmPortal = ((location.hostname.indexOf("tbg-pm.collaterate.com") != -1) || (location.hostname.indexOf("tbghub.com") != -1));
 var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") != -1);
 
@@ -154,6 +149,11 @@ var hardProofMessageCount = 0;
 var sameSideMessage = '';
 
 var cu = calcUtil;
+
+//grab zund data from zundSpeedFactors_sheets
+var cutMethod;
+var lfMountZundFactor;
+getZundData();
 
 var rollCalcLogic = {
     onCalcLoaded: function(product) {

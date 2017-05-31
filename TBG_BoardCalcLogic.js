@@ -208,8 +208,6 @@ var cutMethodId = {
     1156: 'fabCut'  //Fab to Cut
 }
 
-var cutMethod;
-
 var pmPortal = (location.hostname.indexOf("tbghub.com") != -1);
 var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") != -1);
 
@@ -219,6 +217,11 @@ var mountingEstimateMessageCount = 0;
 var allowHeatBend = true;
 
 var cu = calcUtil;
+
+var cutMethod;
+//grab zund data from zundSpeedFactors_sheets
+getZundData();
+
 var boardCalcLogic = {
     onCalcLoaded: function(product) {
         //Change Paper headline
@@ -230,11 +233,6 @@ var boardCalcLogic = {
         removeClassFromOp(170,'costingOnly');
         addOtherOpClass(opsWithOther);
         removeOperationItemsWithString(156,'Print');
-
-        //show error message if zund object does not load
-        if (zundSubstrateSpeeds.length == 0) {
-            cu.alert('Collaterate Zund Speed Factors list did not load propertly.  Please contact Support to ensure accurate costing.');
-        }
     },
     onCalcChanged: function(updates, product) {
         if (cu.isPOD(product)) {

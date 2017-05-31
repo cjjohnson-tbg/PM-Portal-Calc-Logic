@@ -230,6 +230,8 @@ var boardCalcLogic = {
         removeClassFromOp(170,'costingOnly');
         addOtherOpClass(opsWithOther);
         removeOperationItemsWithString(156,'Print');
+        //grab zund data from zundSpeedFactors_sheets
+        getZundData();
     },
     onCalcChanged: function(updates, product) {
         if (cu.isPOD(product)) {

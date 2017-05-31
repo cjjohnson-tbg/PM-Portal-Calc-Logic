@@ -21,13 +21,16 @@ function getZundData() {
 
 function getZundSpeedFactor(type, id) {
 	var z = 1;
-	for (var r = 0; r < zundSubstrateSpeeds.length-1; r++) {
+	for (var r = 0; r < zundSubstrateSpeeds.length; r++) {
 		if (zundSubstrateSpeeds[r].materialType == type && zundSubstrateSpeeds[r].id == id) {
 			console.log('speed is ' + zundSubstrateSpeeds[r].zundSpeedFactor);
 			z = zundSubstrateSpeeds[r].zundSpeedFactor;
 			break
 		} 
 		//if completes loop without match log item not found
+		
+	}
+	if (z == 1) {
 		console.log('substrate not found in Collaterate Zund Speed Factors sheet. Assuming speed factor of 1.');
 	}
 	return z

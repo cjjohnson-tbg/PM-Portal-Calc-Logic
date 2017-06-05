@@ -150,6 +150,9 @@ var side2InkMap = {
 
 var cu = calcUtil;
 
+//grab zund data from zundSpeedFactors_sheets
+getZundData();
+
 var bucketCalcLogic = {
     onCalcLoaded: function(product) {
         //Add planning class to operations
@@ -189,10 +192,7 @@ var bucketCalcLogic = {
     onQuoteUpdated: function(updates, validation, product) {
         /*re-init on every update*/
         cu.initFields();
-        //show error message if zund object does not load
-        if (zundSubstrateSpeeds.length == 0) {
-            cu.alert('Collaterate Zund Speed Factors list did not load propertly.  Please contact Support to ensure accurate costing.');
-        }
+
         if (cu.isSmallFormat(product)) {
             /************** ADD STYLE TO CERTAIN ELEMENTS */
             addClassToOperation(sfPlanningOnlyOperations,'planning');

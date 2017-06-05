@@ -194,7 +194,12 @@ var bucketCalcLogic = {
         cu.initFields();
 
         if (cu.isSmallFormat(product)) {
+            /************** ADD STYLE TO CERTAIN ELEMENTS */
             addClassToOperation(sfPlanningOnlyOperations,'planning');
+            var magGlossOp = fields.operation187;
+            if (magGlossOp) {
+                magGlossOp.css('color', 'red');
+            }
             trimOperationItemName(opsWithSubIds,'_');
             //Change Labels for Paper Type, Weight, Color
             cu.setLabel(fields.paperType,'Substrate');

@@ -182,6 +182,7 @@ var bucketCalcLogic = {
 
         $('#additionalProductFields .additionalInformation div label:contains("Date Due to Fab")').parent().addClass('fabDate');
         $('#additionalProductFields .additionalInformation div label:contains("Date Due in Kitting")').parent().addClass('kitDate');
+        $('#additionalProductFields .additionalInformation div label:contains("Kitting Code")').parent().addClass('kitCode');
         $('#additionalProductFields .additionalInformation div label:contains("Soft Proof Date")').parent().addClass('softProofDate');
         $('#additionalProductFields .additionalInformation div label:contains("Sub-out Date")').parent().addClass('subOutDate');
         $('#additionalProductFields .additionalInformation div label:contains("SKU, if Sending to Fulfillment")').parent().addClass('sku');
@@ -194,7 +195,12 @@ var bucketCalcLogic = {
         cu.initFields();
 
         if (cu.isSmallFormat(product)) {
+            /************** ADD STYLE TO CERTAIN ELEMENTS */
             addClassToOperation(sfPlanningOnlyOperations,'planning');
+            var magGlossOp = fields.operation187;
+            if (magGlossOp) {
+                magGlossOp.css('color', 'red');
+            }
             trimOperationItemName(opsWithSubIds,'_');
             //Change Labels for Paper Type, Weight, Color
             cu.setLabel(fields.paperType,'Substrate');

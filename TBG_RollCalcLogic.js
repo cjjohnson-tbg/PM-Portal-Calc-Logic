@@ -140,6 +140,10 @@ var substratesThatCanHeatBend =[
     '69',   //PETG .080
     '159'   //PETG .118
 ]
+var fabrivuDirectMaterials = [
+    '398'   //Berger Flag Fabric White 4oz
+]
+
 
 var pmPortal = ((location.hostname.indexOf("tbg-pm.collaterate.com") != -1) || (location.hostname.indexOf("tbghub.com") != -1));
 var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") != -1);
@@ -194,6 +198,15 @@ var rollCalcLogic = {
             var hasFrontLam = (cu.hasValue(fields.frontLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.frontLaminate)) == -1));
             var hasBackLam = (cu.hasValue(fields.backLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.backLaminate)) == -1));
             
+            /************************* LATEX ROLL */
+            if (cu.getPjcId(product) == 76) {
+                //show message on samba products 
+                if (cu.isLastChangedField(fields.printSubstrate)) {
+                    if (cu.getValue(fields.printSubstrate) == 146) {
+                        message += '<p>Please be aware that printing on Samba materials is not Backlit Printing.</p>';
+                    }
+                }
+            }
             /************************ SET ZUND LOADING, CUTTING, AND UNLOADING BASED ON SUBSTRATE */
             //determine cut method
             //if Suma selected set cutting Op to No Cutting
@@ -549,17 +562,11 @@ var rollCalcLogic = {
                     if (cu.getValue(vutekInks) != 241) {
                         cu.changeField(vutekInks, 241, true);
                     }
-                }
-            }
-            /************************ BOARD BUCKET LIMITATIONS */
-            if (cu.getPjcId(product) == 458) {
-                //limit to 200 sq ft
-                if (totalSquareFeet > 200 ) {
-                    bucketSizeMessage = '<p>The Board Bucket product is limited to jobs less than 200 sq ft.  For jobs greater than this please use the Board Printing Product.</p>';
-                    message += bucketSizeMessage;
-                    disableCheckoutButton(bucketSizeMessage);
                 } else {
-                    enableCheckoutButton();
+                    if (cu.getValue(vutekInks) == 241) {
+                        message += '<p>Double Strike backlit ink is only available on the Ultra Canvas Backlit.</p>';
+                        cu.changeField(vutekInks,261, true);
+                    }
                 }
             }
             /************************ HEAT BENDING RULES */
@@ -589,6 +596,20 @@ var rollCalcLogic = {
                     if (substratesThatCanHeatBend.indexOf(cu.getValue(fields.printSubstrate)) == -1) {
                         message += '<p>Heat Bending can only be chosen for Styrene, EPVC, Acrylic, or PETG in calipers less than .125" (3MM).</p>';
                         cu.changeField(heatBendingOp,'',true);
+                    }
+                }
+            }
+            /************************ FABRIVU LOGIC */
+            if (cu.getPjcId(product) == 450) {
+                //Choose none option for dye sub transfer material if substrate in list
+                var dyeSubTransferOp = fields.operation88;
+                if (cu.isValueInSet(fields.printSubstrate,fabrivuDirectMaterials)) {
+                    if (cu.getValue(dyeSubTransferOp) != 442) {
+                        cu.changeField(dyeSubTransferOp, 442, true);
+                    }
+                } else {
+                    if (cu.getValue(dyeSubTransferOp) != 428) {
+                        cu.changeField(dyeSubTransferOp, 428, true);
                     }
                 }
             }

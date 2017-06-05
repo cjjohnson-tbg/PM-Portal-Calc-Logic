@@ -194,6 +194,15 @@ var rollCalcLogic = {
             var hasFrontLam = (cu.hasValue(fields.frontLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.frontLaminate)) == -1));
             var hasBackLam = (cu.hasValue(fields.backLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.backLaminate)) == -1));
             
+            /************************* LATEX ROLL */
+            if (cu.getPjcId(product) == 76) {
+                //show message on samba products 
+                if (cu.isLastChangedField(fields.printSubstrate)) {
+                    if (cu.getValue(fields.printSubstrate) == 146) {
+                        message += '<p>Please be aware that printing on Samba materials is not Backlit Printing.</p>';
+                    }
+                }
+            }
             /************************ SET ZUND LOADING, CUTTING, AND UNLOADING BASED ON SUBSTRATE */
             //determine cut method
             //if Suma selected set cutting Op to No Cutting

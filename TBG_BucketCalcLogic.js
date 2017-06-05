@@ -157,6 +157,10 @@ var bucketCalcLogic = {
     onCalcLoaded: function(product) {
         //Add planning class to operations
         addClassToOperation(planningOnlyOps,'planning');
+        //show message reminder for Gloss Operation on Magent
+        if (cu.getPjcId(product)== 1306) {
+            cu.alert("<p>This is your friendly reminder to change the gloss level option if this is a Sephora black magnet.</p>");
+        }
 
         // apply datepicker to meta fields with Pace in label
         $('#additionalProductFields .additionalInformation div label:contains("Date")').parent().addClass('date');

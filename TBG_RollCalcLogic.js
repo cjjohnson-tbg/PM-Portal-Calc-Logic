@@ -558,6 +558,11 @@ var rollCalcLogic = {
                     if (cu.getValue(vutekInks) != 241) {
                         cu.changeField(vutekInks, 241, true);
                     }
+                } else {
+                    if (cu.getValue(vutekInks) == 241) {
+                        message += '<p>Double Strike backlit ink is only available on the Ultra Canvas Backlit.</p>';
+                        cu.changeField(vutekInks,261, true);
+                    }
                 }
             }
             /************************ BOARD BUCKET LIMITATIONS */

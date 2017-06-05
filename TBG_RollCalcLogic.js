@@ -140,6 +140,10 @@ var substratesThatCanHeatBend =[
     '69',   //PETG .080
     '159'   //PETG .118
 ]
+var fabrivuDirectMaterials = [
+    '398'   //Berger Flag Fabric White 4oz
+]
+
 
 var pmPortal = ((location.hostname.indexOf("tbg-pm.collaterate.com") != -1) || (location.hostname.indexOf("tbghub.com") != -1));
 var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") != -1);
@@ -565,17 +569,6 @@ var rollCalcLogic = {
                     }
                 }
             }
-            /************************ BOARD BUCKET LIMITATIONS */
-            if (cu.getPjcId(product) == 458) {
-                //limit to 200 sq ft
-                if (totalSquareFeet > 200 ) {
-                    bucketSizeMessage = '<p>The Board Bucket product is limited to jobs less than 200 sq ft.  For jobs greater than this please use the Board Printing Product.</p>';
-                    message += bucketSizeMessage;
-                    disableCheckoutButton(bucketSizeMessage);
-                } else {
-                    enableCheckoutButton();
-                }
-            }
             /************************ HEAT BENDING RULES */
             var heatBendingOp = fields.operation117;
             if (heatBendingOp) {
@@ -603,6 +596,20 @@ var rollCalcLogic = {
                     if (substratesThatCanHeatBend.indexOf(cu.getValue(fields.printSubstrate)) == -1) {
                         message += '<p>Heat Bending can only be chosen for Styrene, EPVC, Acrylic, or PETG in calipers less than .125" (3MM).</p>';
                         cu.changeField(heatBendingOp,'',true);
+                    }
+                }
+            }
+            /************************ FABRIVU LOGIC */
+            if (cu.getPjcId(product) == 450) {
+                //Choose none option for dye sub transfer material if substrate in list
+                var dyeSubTransferOp = fields.operation88;
+                if (cu.isValueInSet(fields.printSubstrate,fabrivuDirectMaterials)) {
+                    if (cu.getValue(dyeSubTransferOp) != 442) {
+                        cu.changeField(dyeSubTransferOp, 442, true);
+                    }
+                } else {
+                    if (cu.getValue(dyeSubTransferOp) != 428) {
+                        cu.changeField(dyeSubTransferOp, 428, true);
                     }
                 }
             }

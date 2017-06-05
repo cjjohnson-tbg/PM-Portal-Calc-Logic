@@ -149,7 +149,8 @@ var planningOnlyOperations = [
     168,    //LF No Cutting
     // 170,     //LF Hub Cutting
     174,     //LF TBG-Fab Cut
-    193     //LF Bucket Job
+    193,     //LF Bucket Job
+    187     //LF Gloss Mode
 ]
 var opsWithOther = [
     129,

@@ -211,8 +211,11 @@ var rollCalcLogic = {
             //determine cut method
             //if Suma selected set cutting Op to No Cutting
             if (cu.hasValue(fields.operation82)) {
-                if (cu.getValue(fields.operation111) != 450) {
-                    cu.changeField(fields.operation111,450,true);
+                if (cu.isLastChangedField(updates, fields.operation82)) {
+                    console.log('suma is last change ');
+                    if (cu.getValue(fields.operation111) != 450) {
+                        cu.changeField(fields.operation111,450,true);
+                    }
                 }
             }
             cutMethod = 'zund';

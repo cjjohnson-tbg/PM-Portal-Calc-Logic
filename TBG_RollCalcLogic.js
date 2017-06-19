@@ -11,7 +11,8 @@ var planningOnlyOps = [
     'div#operation109',  //TBG Pre-Sheet
     'div#operation108',   //TBG Pre-Slit
     'div#operation116',    //TBG TBG-Fab Cut
-    'div#operation125'      //TBG Bucket Job
+    'div#operation125',      //TBG Bucket Job
+    'div#operation127'      //TBG MCT Cutting
 ]
 var planningOpsStyleBlock = createStyleBlock(planningOnlyOps, 'display: none;');
 $(function() {

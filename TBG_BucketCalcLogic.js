@@ -27,7 +27,12 @@ var opsWithSubIds = [
     124,     //LF Tape, Mag, Velcro - Top & Bottom
     133      //LF Premask
 ]
-
+var lfOpsToTrimWithUnderscore = [
+    67,  //Pre-Printing Front Laminate
+    84,  //Pre-Printing Back Laminate
+    58,   //TBG Tape, Mag, Velcro
+    78  //LF Premask
+]
 var zundOpItemMapLoading = {
     1  : 202,    //Speed Factor 1
     2  : 203,    //Speed Factor 2
@@ -159,6 +164,7 @@ var bucketCalcLogic = {
     onCalcLoaded: function(product) {
         //Add planning class to operations
         addClassToOperation(planningOnlyOps,'planning');
+        trimOperationItemName(lfOpsToTrimWithUnderscore, '_');
         //show message reminder for Gloss Operation on Magent
         if (cu.getPjcId(product)== 1306) {
             cu.alert("<p>This is your friendly reminder to change the gloss level option if this is a Sephora black magnet.</p>");
@@ -357,6 +363,8 @@ var bucketCalcLogic = {
             var submessage = '';
 
             addClassToOperation(planningOnlyOps,'planning');
+            trimOperationItemName(lfOpsToTrimWithUnderscore, '_');
+            
             /************************ SET ZUND LOADING, CUTTING, AND UNLOADING BASED ON SUBSTRATE */
             //determine cut method
             var cutMethod = 'zund';

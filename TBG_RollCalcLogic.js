@@ -329,15 +329,21 @@ var rollCalcLogic = {
                 }
             }
             if (cutMethod == 'fabCut') {
-                if (cu.getValue(fabCutOp) != 478) {
-                    cu.changeField(fabCutOp, 478, true);
-                    //show TBG Fab Cut and Turn on Premask when Laser selected
-                    if (cu.getPjcId(product) == 389) {
-                        removeClassFromOp('planning', 116);
-                        if (cu.getValue(fabCutOp) == 508) {
-                            message += '<p>Fab Laser Cut requires a Premask.  This has been chosen on your behalf.</p>'
+                //show TBG Fab Cut and Turn on Premask when Laser selected
+                if (cu.getPjcId(product) == 389) {
+                    removeClassFromOp(116, 'planning');
+                    if (!cu.hasValue(fabCutOp)) {
+                        message += '<p>Please select a Cutting Option in the TBG-Fab Cut operation.</p>'
+                    }
+                    if (cu.getValue(fabCutOp) == 508) {
+                        if (!cu.hasValue(fields.operation78)) {
+                            message += '<p>Fab Laser Cut requires a Premask.  This has been chosen on your behalf.</p>';
                             cu.changeField(fields.operation78, 291, true);
                         }
+                    }
+                } else {  //or default to CNC Cut if not Finishing only
+                    if (cu.getValue(fabCutOp) != 478) {
+                        cu.changeField(fabCutOp, 478, true);
                     }
                 }
             } else if (cu.hasValue(fabCutOp)) {

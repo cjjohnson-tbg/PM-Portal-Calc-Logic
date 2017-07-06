@@ -406,6 +406,13 @@ var boardCalcLogic = {
                 if (cutMethod == 'fabCut') {
                     if (!cu.hasValue(fabCutOp)) {cu.changeField(fabCutOp, 1108, true); return}
                     removeClassFromOp(174, 'planning');
+                    //if Fab Laser Cut is chosen, force Pre-mask 2 sides=
+                    if (cu.getValue(fabCutOp) == 1162) {
+                        if (cu.getValue(fields.operation133) != 761) {
+                            cu.changeField(fields.operation133, 761, true);
+                            onQuoteUpdatedMessages += '<p>Fab Laser Cut requires Premask on both sides.  This has been chosen on your behalf.</p>';
+                        }
+                    }
                 } else {
                     if (cu.hasValue(fabCutOp)) {cu.changeField(fabCutOp, '', true); return}
                 }

@@ -1,23 +1,23 @@
 var planningOnlyOps = [
-    'div#operation99',   //TBG Cutting
-    'div#operation55',   //TBG Zund Cutting
-    'div#operation102',   //TBG Guillotine Cutting
-    'div#operation103',   //TBG Fotoba Cutting
-    'div#operation88',   //Dye Sub Transfer Paper
-    'div#operation100',   //TBG Mounting Run
-    'div#operation112',   //TBG Internal Cuts
-    'div#operation110',   //TBG No Cutting
-    'div#operation115',   //TBG Pre-cut
-    'div#operation109',  //TBG Pre-Sheet
-    'div#operation108',   //TBG Pre-Slit
-    'div#operation116',    //TBG TBG-Fab Cut
-    'div#operation125',      //TBG Bucket Job
-    'div#operation127'      //TBG MCT Cutting
+    99,  //TBGCutting
+    55,  //TBGZundCutting
+    102,  //TBGGuillotineCutting
+    103,  //TBGFotobaCutting
+    88,  //DyeSubTransferPaper
+    100,  //TBGMountingRun
+    112,  //TBGInternalCuts
+    110,  //TBGNoCutting
+    115,  //TBGPre-cut
+    109,  //TBGPre-Sheet
+    108,  //TBGPre-Slit
+    116,  //TBGTBG-FabCut
+    125,  //TBGBucketJob
+    127  //TBGMCTCutting
 ]
-var planningOpsStyleBlock = createStyleBlock(planningOnlyOps, 'display: none;');
+/*var planningOpsStyleBlock = createStyleBlock(planningOnlyOps, 'display: none;');
 $(function() {
     $('head').append(planningOpsStyleBlock);
-});
+});*/
 
 var zundOpItemMapLoading = {
 1  : 202,    //Speed Factor 1
@@ -169,7 +169,7 @@ var rollCalcLogic = {
             removeOperationItemsWithString(104,'Print');
         }
         removeClassFromOp(111,'costingOnly');
-        addClassToList(planningOnlyOps,'planning');
+        addClassToOperation(planningOnlyOps,'planning');
         //show error message if zund object does not load
         if (zundSubstrateSpeeds.length == 0) {
             cu.alert('Collaterate Zund Speed Factors list did not load propertly.  Please contact Support to ensure accurate costing.');
@@ -187,7 +187,7 @@ var rollCalcLogic = {
             var submessage = '';
 
             removeClassFromOp(111,'costingOnly');
-            addClassToList(planningOnlyOps, 'planning');
+            addClassToOperation(planningOnlyOps, 'planning');
 
             /***************** GLOBAL VARIABLES */
             
@@ -329,8 +329,22 @@ var rollCalcLogic = {
                 }
             }
             if (cutMethod == 'fabCut') {
-                if (cu.getValue(fabCutOp) != 478) {
-                    cu.changeField(fabCutOp, 478, true);
+                //show TBG Fab Cut and Turn on Premask when Laser selected
+                if (cu.getPjcId(product) == 389) {
+                    removeClassFromOp(116, 'planning');
+                    if (!cu.hasValue(fabCutOp)) {
+                        message += '<p>Please select a Cutting Option in the TBG-Fab Cut operation.</p>'
+                    }
+                    if (cu.getValue(fabCutOp) == 508) {
+                        if (!cu.hasValue(fields.operation78)) {
+                            message += '<p>Fab Laser Cut requires a Premask.  This has been chosen on your behalf.</p>';
+                            cu.changeField(fields.operation78, 291, true);
+                        }
+                    }
+                } else {  //or default to CNC Cut if not Finishing only
+                    if (cu.getValue(fabCutOp) != 478) {
+                        cu.changeField(fabCutOp, 478, true);
+                    }
                 }
             } else if (cu.hasValue(fabCutOp)) {
                 cu.changeField(fabCutOp, '', true);
@@ -646,7 +660,15 @@ function createStyleBlock(elements, styleText) {
 }
 function addClassToList(elements, newClassName) {
     for (var i = 0; i < elements.length; i++) {
-        $(elements[i]).addClass('planning');
+        $(elements[i]).addClass('newClassName');
+    }
+}
+function addClassToOperation(opList, className) {
+    if (!(Array.isArray(opList))) {
+        opList = [opList];
+    }
+    for (var i = 0; i < opList.length; i++) {
+        $('#operation' + opList[i]).addClass(className);
     }
 }
 function disableCheckoutButton(disableCheckoutText) {

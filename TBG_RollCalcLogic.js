@@ -545,9 +545,6 @@ var rollCalcLogic = {
                 if (hasFlutes) {
                     cu.showField(fluteDirectionOp);
                     fluteDirectionOp.css('color','red');
-                    if (!cu.hasValue(fluteDirectionOp)) {
-                        cu.changeField(fluteDirectionOp, 401, true);
-                    }
                 } else {
                     cu.hideField(fluteDirectionOp);
                     if (cu.hasValue(fluteDirectionOp)) {

@@ -219,16 +219,30 @@ var rollCalcLogic = {
                     }
                 }
             }
-            cutMethod = 'zund';
-            if (cu.hasValue(fields.operation111)) {
-                cutMethod = cutMethodId[cu.getValue(fields.operation111)];
-            }
             var zundLoading = fields.operation53;
             var zundCutting = fields.operation55;
             var zundUnloading = fields.operation56;
+            var mctCutting = fields.operation127;
+            var mctLoading = fields.operation128;
+            var mctUnloading = fields.operation129;
             var outsourceCutOp = fields.operation104;
             var noCutOp = fields.operation110;
             var fabCutOp = fields.operation116;
+
+            //SET CUTTING METHOD
+            //if MCT is chosen default to that selection
+            if (mctCutting) {
+                if (cu.hasValue(mctCutting)) {
+                    cutMethod = 'mct';
+                }
+            }
+            if (!(cutMethod) || cutMethod.length == 0 ) {
+                cutMethod = 'zund';
+                if (cu.hasValue(fields.operation111)) {
+                    cutMethod = cutMethodId[cu.getValue(fields.operation111)];
+                }
+            }
+
             //no cut
             if (cutMethod == 'noCutting') {
                 if (!cu.hasValue(noCutOp)) {
@@ -289,6 +303,12 @@ var rollCalcLogic = {
                 removeOperationItemsWithString(104,'Cut');
                 if (cu.getSelectedOptionText(outsourceCutOp).indexOf('Cut') != -1) {
                     cu.changeField(outsourceCutOp,'', true);
+                }
+            }
+            if (cutMethod == 'mct') {
+            } else {
+                if (cu.hasValue(mctCutting)) {
+                    cu.changeField(mctCutting,'',true);
                 }
             }
             //Change Interior cutting options.  Blade cut only speed factors 1-2

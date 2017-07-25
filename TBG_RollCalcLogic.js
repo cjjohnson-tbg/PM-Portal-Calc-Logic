@@ -654,8 +654,6 @@ var rollCalcLogic = {
             var colorCriticalOp = fields.operation130;
             var colorCritialDevice = fields.operation131;
             if (colorCriticalOp && colorCritialDevice) {
-                $('#lfVariousSettings').append($('#operation130'));
-                $('#lfVariousSettings').append($('#operation131'));
                 if (cu.hasValue(colorCriticalOp)) {
                     cu.showField(colorCritialDevice);
                 } else {

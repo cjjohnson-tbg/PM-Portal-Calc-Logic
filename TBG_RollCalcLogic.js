@@ -12,7 +12,9 @@ var planningOnlyOps = [
     108,  //TBGPre-Slit
     116,  //TBGTBG-FabCut
     125,  //TBGBucketJob
-    127  //TBGMCTCutting
+    127,  //TBGMCTCutting
+    130,  //Color Criticat (testing only)
+    131   //Color Critical device (testing only)
 ]
 /*var planningOpsStyleBlock = createStyleBlock(planningOnlyOps, 'display: none;');
 $(function() {
@@ -646,6 +648,21 @@ var rollCalcLogic = {
                     if (cu.getValue(dyeSubTransferOp) != 428) {
                         cu.changeField(dyeSubTransferOp, 428, true);
                     }
+                }
+            }
+            /************************ COLOR CRITICAL JOBS */
+            var colorCriticalOp = fields.operation130;
+            var colorCritialDevice = fields.operation131;
+            if (colorCriticalOp && colorCritialDevice) {
+                $('#lfVariousSettings').append($('#operation130'));
+                $('#lfVariousSettings').append($('#operation131'));
+                if (cu.hasValue(colorCriticalOp)) {
+                    cu.showField(colorCritialDevice);
+                } else {
+                    if (cu.hasValue(colorCritialDevice)) {
+                        cu.changeField(colorCritialDevice,'',true);
+                    }
+                    cu.hideField(colorCritialDevice);
                 }
             }
             /************************ HIDE OPERTION ITEMS */

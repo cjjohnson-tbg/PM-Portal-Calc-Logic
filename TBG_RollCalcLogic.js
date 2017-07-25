@@ -21,7 +21,7 @@ $(function() {
 
 var zundOpItemMapLoading = {
 1  : 202,    //Speed Factor 1
-2  : 203,    //Speed Factor 204
+2  : 203,    //Speed Factor 2
 3  : 204,    //Speed Factor 3
 4  : 205,    //Speed Factor 4
 5  : 206,    //Speed Factor 5

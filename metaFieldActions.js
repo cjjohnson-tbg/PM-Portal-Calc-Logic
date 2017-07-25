@@ -39,6 +39,7 @@ var metaFieldsActions = {
         $('#additionalProductFields .additionalInformation div label:contains("Sub-out Date")').parent().addClass('subOutDate');
         $('#additionalProductFields .additionalInformation div label:contains("SKU, if Sending to Fulfillment")').parent().addClass('sku');
         $('#additionalProductFields .additionalInformation div label:contains("Pace Estimate #")').parent().addClass('paceEstimate');
+        $('#additionalProductFields .additionalInformation div label:contains("Color Critical")').parent().addClass('colorCritical');
 
         //Buyout Description Max 50 characters
         $('#additionalProductFields .additionalInformation div label:contains("Hard Proof")').parent().addClass('hardProof').hide();
@@ -217,6 +218,17 @@ var metaFieldsActions = {
                 } else {
                     $('.subOutDate').hide();
                     $('.subOutDate input').val('');
+                }
+            }
+        }
+        //Only show Color Critial field when Color Critical Operations is selected
+        if (!cu.isSmallFormat(product)) {
+            if (fields.operation130) {
+                if (cu.hasValue(fields.operation130)) {
+                    $('.colorCritical').show();
+                    $('#lfVariousSettings').append($('.colorCritical'));
+                } else {
+                    $('.colorCritical').hide();
                 }
             }
         }

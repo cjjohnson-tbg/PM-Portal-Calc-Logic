@@ -165,10 +165,6 @@ var bucketCalcLogic = {
         //Add planning class to operations
         addClassToOperation(planningOnlyOps,'planning');
         trimOperationItemName(lfOpsToTrimWithUnderscore, '_');
-        //show message reminder for Gloss Operation on Magent
-        if (cu.getPjcId(product)== 1306) {
-            cu.alert("<p>This is your friendly reminder to change the gloss level option if this is a Sephora black magnet.</p>");
-        }
 
         // apply datepicker to meta fields with Pace in label
         $('#additionalProductFields .additionalInformation div label:contains("Date")').parent().addClass('date');
@@ -209,10 +205,7 @@ var bucketCalcLogic = {
         if (cu.isSmallFormat(product)) {
             /************** ADD STYLE TO CERTAIN ELEMENTS */
             addClassToOperation(sfPlanningOnlyOperations,'planning');
-            var magGlossOp = fields.operation187;
-            if (magGlossOp) {
-                magGlossOp.css('color', 'red');
-            }
+
             trimOperationItemName(opsWithSubIds,'_');
             //Change Labels for Paper Type, Weight, Color
             cu.setLabel(fields.paperType,'Substrate');

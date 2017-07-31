@@ -226,7 +226,6 @@ var metaFieldsActions = {
             if (fields.operation130) {
                 if (cu.hasValue(fields.operation130)) {
                     $('.colorCritical').show();
-                    $('#lfVariousSettings').append($('.colorCritical'));
                 } else {
                     $('.colorCritical').hide();
                 }

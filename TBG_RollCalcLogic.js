@@ -656,6 +656,9 @@ var rollCalcLogic = {
             if (colorCriticalOp && colorCritialDevice) {
                 if (cu.hasValue(colorCriticalOp)) {
                     cu.showField(colorCritialDevice);
+                    if (cu.getValue(colorCriticalOp) == 592) {
+                        cu.setLabel(colorCriticalOp,"Color Critical (Enter in Job # To Match Below)");
+                    }
                 } else {
                     if (cu.hasValue(colorCritialDevice)) {
                         cu.changeField(colorCritialDevice,'',true);

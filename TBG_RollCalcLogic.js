@@ -652,18 +652,18 @@ var rollCalcLogic = {
             }
             /************************ COLOR CRITICAL JOBS */
             var colorCriticalOp = fields.operation130;
-            var colorCritialDevice = fields.operation131;
-            if (colorCriticalOp && colorCritialDevice) {
+            var colorCriticalDevice = fields.operation131;
+            if (colorCriticalOp && colorCriticalDevice) {
                 if (cu.hasValue(colorCriticalOp)) {
-                    cu.showField(colorCritialDevice);
+                    cu.showField(colorCriticalDevice);
                     if (cu.getValue(colorCriticalOp) == 592) {
                         cu.setLabel(colorCriticalOp,"Color Critical (Enter in Job # To Match Below)");
                     }
                 } else {
-                    if (cu.hasValue(colorCritialDevice)) {
-                        cu.changeField(colorCritialDevice,'',true);
+                    if (cu.hasValue(colorCriticalDevice)) {
+                        cu.changeField(colorCriticalDevice,'',true);
                     }
-                    cu.hideField(colorCritialDevice);
+                    cu.hideField(colorCriticalDevice);
                 }
             }
             /************************ HIDE OPERTION ITEMS */

@@ -1,8 +1,12 @@
 function renderExtendedCostBreakdown () {
+    // stop for stock product
+    if (configureglobals.cstockoffering) { return } 
     // added the following line because when a validation issue happens, var quote wasn't populating on line 4. error showed in the console but it blocked futher calc processing, creating quote issues.
-    //if (configureglobals.cquote == null) { return; }
+    if (!configureglobals.cquote) { return }
+    
     var quote = configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote ? configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote : null;
     if (!quote) { return }
+    if (!configureglobals.cquote.success) { return }
     var costAndMarginData = [
         { 
             key: "Total Job Cost",

@@ -275,6 +275,7 @@ var boardCalcLogic = {
                 cu.setLabel(fields.paperWeight,'Thickness');
 
                 //STOP IF QALCULATOR NOT RETURNING QUOTE
+                if (!configureglobals.cquote) { return; }
                 if (!configureglobals.cquote.success) { return; }
 
                 /********* Convert pieces for Operation Costing */

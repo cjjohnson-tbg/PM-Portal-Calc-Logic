@@ -151,7 +151,9 @@ var planningOnlyOperations = [
     174,     //LF TBG-Fab Cut
     193,     //LF Bucket Job
     187,    //LF Gloss Mode
-    202     //LF MCT Cutting
+    202,     //LF MCT Cutting
+    205,    //LF Color Critical
+    206     //LF Color Critical Device
 ]
 var opsWithOther = [
     129,
@@ -613,6 +615,22 @@ var boardCalcLogic = {
                     }
                     return 
                 }
+                /********* Color Critical */
+                var colorCriticalOp = fields.operation205;
+                var colorCriticalDevice = fields.operation206;
+                if (colorCriticalOp && colorCriticalDevice) {
+                    if (cu.hasValue(colorCriticalOp)) {
+                        cu.showField(colorCriticalDevice);
+                        if (cu.getValue(colorCriticalOp) == 592) {
+                            cu.setLabel(colorCriticalOp,"Color Critical (Enter in Job # To Match Below)");
+                        }
+                    } else {
+                        if (cu.hasValue(colorCriticalDevice)) {
+                            cu.changeField(colorCriticalDevice,'',true);
+                        }
+                        cu.hideField(colorCriticalDevice);
+                    }
+                }
 
                 /********* Display Run Time information on Estimating Site for LF Board Estimating */
                 $('#runTime span').text(cu.getTotalRuntime());
@@ -701,6 +719,26 @@ function removeOperationItemsWithString(op, string) {
             $(this).hide();
         }
     });
+}
+function toggleAutoDeviceTypeButton() {
+    $autoDeviceSelector = $('#device a.togglePreset');
+    $autoDeviceButton = $autoDeviceSelector.length == 1 ? $autoDeviceSelector[0] : null;
+    if ($autoDeviceButton) {
+        // toggle the calculator device type mode
+        // "click" the "Let me choose"/"Use best price" button by running it's href javascript
+        eval($autoDeviceButton.href);
+    }
+}
+function setDevice(deviceId) {
+    var $deviceSelect = $('select[name="DEVICEDD"]');
+    var availableValues = $.map($deviceSelect.children('option'), function(e) { return e.value; });
+    if ($.inArray(deviceId.toString(), availableValues) != -1) {
+        $deviceSelect.val(deviceId);
+        $deviceSelect.trigger('focus').trigger('change');
+    } else {
+        console.log('device not available');
+    }
+    
 }
 
 

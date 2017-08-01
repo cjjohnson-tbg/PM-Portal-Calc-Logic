@@ -211,6 +211,15 @@ var cutMethodId = {
     1084: 'guillotineCut' , //Guillotine Cut
     1156: 'fabCut'  //Fab to Cut
 }
+var getCriticalDeviceId = {
+    1466 : 6,  //Vutek HS101
+    1467 : 6,  //Vutek HS102
+    1468 : 6,   //Vutek HS103
+    1469 : 6,  //Vutek HS104
+    1470 : 15,  //Inca X2-A
+    1471 : 15,  //Inca X2-B
+    1472 : 7  //Inca Q40
+}
 
 var pmPortal = (location.hostname.indexOf("tbghub.com") != -1);
 var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") != -1);
@@ -622,14 +631,27 @@ var boardCalcLogic = {
                 if (colorCriticalOp && colorCriticalDevice) {
                     if (cu.hasValue(colorCriticalOp)) {
                         cu.showField(colorCriticalDevice);
-                        if (cu.getValue(colorCriticalOp) == 592) {
-                            cu.setLabel(colorCriticalOp,"Color Critical (Enter in Job # To Match Below)");
+                        if (cu.hasValue(colorCriticalDevice)) {
+                            if (configureglobals.cdevicemgr.autoDeviceSwitch) {
+                                toggleAutoDeviceTypeButton();
+                                $('select[name="DEVICEDD"]').trigger('focus').trigger('change');
+                                return
+                            }
+                            var criticalDeviceId = getCriticalDeviceId[cu.getValue(colorCriticalDevice)] ? getCriticalDeviceId[cu.getValue(colorCriticalDevice)] : null;
+                            if (criticalDeviceId) {
+                                if (cu.getDeviceType() != criticalDeviceId) {
+                                    setDevice(criticalDeviceId);
+                                }
+                            }
                         }
                     } else {
                         if (cu.hasValue(colorCriticalDevice)) {
                             cu.changeField(colorCriticalDevice,'',true);
                         }
                         cu.hideField(colorCriticalDevice);
+                        if (!configureglobals.cdevicemgr.autoDeviceSwitch) {
+                            toggleAutoDeviceTypeButton();
+                        }
                     }
                 }
 

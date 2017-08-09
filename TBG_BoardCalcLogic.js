@@ -649,9 +649,10 @@ var boardCalcLogic = {
                             cu.changeField(colorCriticalDevice,'',true);
                         }
                         cu.hideField(colorCriticalDevice);
-                        if (!configureglobals.cdevicemgr.autoDeviceSwitch) {
+/*   TURNING OFF UNTIL APPROVED
+                       if (!configureglobals.cdevicemgr.autoDeviceSwitch) {
                             toggleAutoDeviceTypeButton();
-                        }
+                        }*/
                     }
                 }
 

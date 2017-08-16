@@ -16,6 +16,10 @@ var planningOnlyOps = [
     130,  //Color Criticat (testing only)
     131   //Color Critical device (testing only)
 ]
+var trainingOps = [
+    130,  //Color Criticat (testing only)
+    131   //Color Critical device (testing only)
+]
 /*var planningOpsStyleBlock = createStyleBlock(planningOnlyOps, 'display: none;');
 $(function() {
     $('head').append(planningOpsStyleBlock);
@@ -190,6 +194,7 @@ var rollCalcLogic = {
 
             removeClassFromOp(111,'costingOnly');
             addClassToOperation(planningOnlyOps, 'planning');
+            addClassToOperation(trainingOps, 'training');
 
             /***************** GLOBAL VARIABLES */
             
@@ -656,6 +661,7 @@ var rollCalcLogic = {
             if (colorCriticalOp && colorCriticalDevice) {
                 if (cu.hasValue(colorCriticalOp)) {
                     cu.showField(colorCriticalDevice);
+                    cu.setLabel(colorCriticalOp,"Color Critical - please indicate job # below");
                     if (cu.getValue(colorCriticalOp) == 592) {
                         cu.setLabel(colorCriticalOp,"Color Critical (Enter in Job # To Match Below)");
                     }
@@ -664,6 +670,7 @@ var rollCalcLogic = {
                         cu.changeField(colorCriticalDevice,'',true);
                     }
                     cu.hideField(colorCriticalDevice);
+                    cu.setSelectedOptionText(colorCriticalOp,'No');
                 }
             }
             /************************ HIDE OPERTION ITEMS */

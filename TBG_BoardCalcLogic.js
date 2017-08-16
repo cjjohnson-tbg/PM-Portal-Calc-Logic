@@ -636,6 +636,7 @@ var boardCalcLogic = {
                 if (colorCriticalOp && colorCriticalDevice) {
                     if (cu.hasValue(colorCriticalOp)) {
                         cu.showField(colorCriticalDevice);
+                        cu.setLabel(colorCriticalOp,"Color Critical - please indicate job # below");
                         if (cu.hasValue(colorCriticalDevice)) {
                             if (configureglobals.cdevicemgr.autoDeviceSwitch) {
                                 toggleAutoDeviceTypeButton();
@@ -654,6 +655,7 @@ var boardCalcLogic = {
                             cu.changeField(colorCriticalDevice,'',true);
                         }
                         cu.hideField(colorCriticalDevice);
+                        cu.setSelectedOptionText(colorCriticalOp,'No');
 /*   TURNING OFF UNTIL APPROVED
                        if (!configureglobals.cdevicemgr.autoDeviceSwitch) {
                             toggleAutoDeviceTypeButton();

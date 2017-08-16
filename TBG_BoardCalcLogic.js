@@ -288,6 +288,50 @@ var boardCalcLogic = {
                 //CHange label of pages for Setrs
                 cu.setLabel(fields.paperWeight,'Thickness');
 
+                /********* Color Critical Check */
+                if ($('body').hasClass('training-user')) {
+                    var colorCriticalOp = fields.operation205;
+                    var colorCriticalDevice = fields.operation206;
+                    if (colorCriticalOp && colorCriticalDevice) {
+                        if (cu.hasValue(colorCriticalOp)) {
+                            //Show special message if quantity of device not hit
+                            if (calcValidation.hasErrorForField(validation, fields.quantity)) {
+                                cu.alert('<p>The default settings for this device cannot run with these specifications. Resubmit the specs with your Color Critical requirements, but do not select a device. Instead, enter a press note with the device required</p>');
+                                return
+                            }
+                            cu.showField(colorCriticalDevice);
+                            cu.setLabel(colorCriticalOp,"Color Critical - please indicate job # below");
+                            if (cu.hasValue(colorCriticalDevice)) {
+                                if (configureglobals.cdevicemgr.autoDeviceSwitch) {
+                                    toggleAutoDeviceTypeButton();
+                                    $('select[name="DEVICEDD"]').trigger('focus').trigger('change');
+                                    return
+                                }
+                                var criticalDeviceId = getCriticalDeviceId[cu.getValue(colorCriticalDevice)] ? getCriticalDeviceId[cu.getValue(colorCriticalDevice)] : null;
+                                if (criticalDeviceId) {
+                                    if (cu.getDeviceType() != criticalDeviceId) {
+                                        setDevice(criticalDeviceId);
+                                    }
+                                }
+                            }
+
+                        } else {
+                            if (cu.hasValue(colorCriticalDevice)) {
+                                cu.changeField(colorCriticalDevice,'',true);
+                            }
+                            cu.hideField(colorCriticalDevice);
+                            cu.setSelectedOptionText(colorCriticalOp,'No');
+                            //only for training until launch
+                             {
+                                if (!configureglobals.cdevicemgr.autoDeviceSwitch) {
+                                    toggleAutoDeviceTypeButton();
+                                }
+                            }
+                        }
+                    }
+                }
+
+
                 //STOP IF QALCULATOR NOT RETURNING QUOTE
                 if (!configureglobals.cquote) { return; }
                 if (!configureglobals.cquote.success) { return; }
@@ -629,38 +673,6 @@ var boardCalcLogic = {
                         }
                     }
                     return 
-                }
-                /********* Color Critical */
-                var colorCriticalOp = fields.operation205;
-                var colorCriticalDevice = fields.operation206;
-                if (colorCriticalOp && colorCriticalDevice) {
-                    if (cu.hasValue(colorCriticalOp)) {
-                        cu.showField(colorCriticalDevice);
-                        cu.setLabel(colorCriticalOp,"Color Critical - please indicate job # below");
-                        if (cu.hasValue(colorCriticalDevice)) {
-                            if (configureglobals.cdevicemgr.autoDeviceSwitch) {
-                                toggleAutoDeviceTypeButton();
-                                $('select[name="DEVICEDD"]').trigger('focus').trigger('change');
-                                return
-                            }
-                            var criticalDeviceId = getCriticalDeviceId[cu.getValue(colorCriticalDevice)] ? getCriticalDeviceId[cu.getValue(colorCriticalDevice)] : null;
-                            if (criticalDeviceId) {
-                                if (cu.getDeviceType() != criticalDeviceId) {
-                                    setDevice(criticalDeviceId);
-                                }
-                            }
-                        }
-                    } else {
-                        if (cu.hasValue(colorCriticalDevice)) {
-                            cu.changeField(colorCriticalDevice,'',true);
-                        }
-                        cu.hideField(colorCriticalDevice);
-                        cu.setSelectedOptionText(colorCriticalOp,'No');
-/*   TURNING OFF UNTIL APPROVED
-                       if (!configureglobals.cdevicemgr.autoDeviceSwitch) {
-                            toggleAutoDeviceTypeButton();
-                        }*/
-                    }
                 }
 
                 /********* Display Run Time information on Estimating Site for LF Board Estimating */

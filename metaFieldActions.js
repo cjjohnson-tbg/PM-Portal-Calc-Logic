@@ -222,7 +222,15 @@ var metaFieldsActions = {
             }
         }
         //Only show Color Critial field when Color Critical Operations is selected
-        if (!cu.isSmallFormat(product)) {
+        if (cu.isSmallFormat(product)) {
+            if (fields.operation205) {
+                if (cu.hasValue(fields.operation205)) {
+                    $('.colorCritical').show();
+                } else {
+                    $('.colorCritical').hide();
+                }
+            }
+        } else {  //large format products
             if (fields.operation130) {
                 if (cu.hasValue(fields.operation130)) {
                     $('.colorCritical').show();

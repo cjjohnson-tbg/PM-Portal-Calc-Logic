@@ -155,6 +155,10 @@ var planningOnlyOperations = [
     205,    //LF Color Critical
     206     //LF Color Critical Device
 ]
+var trainingOps = [
+    205,    //LF Color Critical
+    206     //LF Color Critical Device
+]
 var opsWithOther = [
     129,
     130,
@@ -272,6 +276,7 @@ var boardCalcLogic = {
             var submessage = ''; 
             if (cu.isSmallFormat(product)) { 
                 addClassToOperation(planningOnlyOperations,'planning');
+                addClassToOperation(trainingOps,'training');
                 addOtherOpClass(opsWithOther);
                 removeClassFromOp(170,'costingOnly');
 

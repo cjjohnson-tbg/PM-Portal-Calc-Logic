@@ -7,6 +7,9 @@ function renderExtendedCostBreakdown () {
     var quote = configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote ? configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote : null;
     if (!quote) { return }
     if (!configureglobals.cquote.success) { return }
+
+    var isSmallFormat = configureglobals.cquote.pjQuote ? true : false;
+    
     var costAndMarginData = [
         { 
             key: "Total Job Cost",

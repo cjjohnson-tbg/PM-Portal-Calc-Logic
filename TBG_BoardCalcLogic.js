@@ -151,13 +151,10 @@ var planningOnlyOperations = [
     174,     //LF TBG-Fab Cut
     193,     //LF Bucket Job
     187,    //LF Gloss Mode
-    202,     //LF MCT Cutting
-    205,    //LF Color Critical
-    206     //LF Color Critical Device
+    202     //LF MCT Cutting
 ]
 var trainingOps = [
-    205,    //LF Color Critical
-    206     //LF Color Critical Device
+
 ]
 var opsWithOther = [
     129,
@@ -248,6 +245,7 @@ var boardCalcLogic = {
         trimOperationItemName(opsWithSubIds,'_');
         addClassToOperation(planningOnlyOperations,'planning');
         removeClassFromOp(170,'costingOnly');
+        removeClassFromOp(205,'costingOnly');
         addOtherOpClass(opsWithOther);
         removeOperationItemsWithString(156,'Print');
     },
@@ -279,6 +277,7 @@ var boardCalcLogic = {
                 addClassToOperation(trainingOps,'training');
                 addOtherOpClass(opsWithOther);
                 removeClassFromOp(170,'costingOnly');
+                removeClassFromOp(205,'costingOnly');
 
                 //Change Labels for Paper Type, Weight, Color
                 cu.setLabel(fields.paperType,'Substrate');
@@ -289,43 +288,44 @@ var boardCalcLogic = {
                 cu.setLabel(fields.paperWeight,'Thickness');
 
                 /********* Color Critical Check */
-                if ($('body').hasClass('training-user')) {
-                    var colorCriticalOp = fields.operation205;
-                    var colorCriticalDevice = fields.operation206;
-                    if (colorCriticalOp && colorCriticalDevice) {
-                        if (cu.hasValue(colorCriticalOp)) {
-                            //Show special message if quantity of device not hit
-                            if (calcValidation.hasErrorForField(validation, fields.quantity)) {
-                                cu.alert('<p>The default settings for this device cannot run with these specifications. Resubmit the specs with your Color Critical requirements, but do not select a device. Instead, enter a press note with the device required</p>');
+                var colorCriticalOp = fields.operation205;
+                var colorCriticalDevice = fields.operation206;
+                if (colorCriticalOp && colorCriticalDevice) {
+                    var hasQtyError = false;
+                    if (cu.hasValue(colorCriticalOp)) {
+                        //Show special message if quantity of device not hit
+                        if (calcValidation.hasErrorForField(validation, fields.quantity)) {
+                            hasQtyError = true;
+                        }
+                        cu.showField(colorCriticalDevice);
+                        cu.setLabel(colorCriticalOp,"Color Critical - please indicate job # below");
+                        if (cu.hasValue(colorCriticalDevice)) {
+                            if (configureglobals.cdevicemgr.autoDeviceSwitch) {
+                                toggleAutoDeviceTypeButton();
+                                $('select[name="DEVICEDD"]').trigger('focus').trigger('change');
                                 return
                             }
-                            cu.showField(colorCriticalDevice);
-                            cu.setLabel(colorCriticalOp,"Color Critical - please indicate job # below");
-                            if (cu.hasValue(colorCriticalDevice)) {
-                                if (configureglobals.cdevicemgr.autoDeviceSwitch) {
-                                    toggleAutoDeviceTypeButton();
-                                    $('select[name="DEVICEDD"]').trigger('focus').trigger('change');
+                            var criticalDeviceId = getCriticalDeviceId[cu.getValue(colorCriticalDevice)] ? getCriticalDeviceId[cu.getValue(colorCriticalDevice)] : null;
+                            if (criticalDeviceId && !hasQtyError) {
+                                if (cu.getDeviceType() != criticalDeviceId) {
+                                    setDevice(criticalDeviceId);
                                     return
                                 }
-                                var criticalDeviceId = getCriticalDeviceId[cu.getValue(colorCriticalDevice)] ? getCriticalDeviceId[cu.getValue(colorCriticalDevice)] : null;
-                                if (criticalDeviceId) {
-                                    if (cu.getDeviceType() != criticalDeviceId) {
-                                        setDevice(criticalDeviceId);
-                                    }
-                                }
                             }
+                        }
+                        if (hasQtyError) {
+                            cu.alert('<p>The default settings for this device cannot run with these specifications. Resubmit the specs with your Color Critical requirements, but do not select a device. Instead, enter a press note with the device required</p>');
+                        }
 
-                        } else {
-                            if (cu.hasValue(colorCriticalDevice)) {
-                                cu.changeField(colorCriticalDevice,'',true);
-                            }
-                            cu.hideField(colorCriticalDevice);
-                            cu.setSelectedOptionText(colorCriticalOp,'No');
-                            //only for training until launch
-                             {
-                                if (!configureglobals.cdevicemgr.autoDeviceSwitch) {
-                                    toggleAutoDeviceTypeButton();
-                                }
+                    } else {
+                        if (cu.hasValue(colorCriticalDevice)) {
+                            cu.changeField(colorCriticalDevice,'',true);
+                        }
+                        cu.hideField(colorCriticalDevice);
+                        cu.setSelectedOptionText(colorCriticalOp,'No');
+                         {
+                            if (!configureglobals.cdevicemgr.autoDeviceSwitch) {
+                                toggleAutoDeviceTypeButton();
                             }
                         }
                     }

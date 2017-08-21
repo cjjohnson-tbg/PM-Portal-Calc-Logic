@@ -12,7 +12,6 @@ var buyoutOperationItems = [
 ]
 
 var metaMessage = '';
-var disableCheckoutText = '';
 var outsourcePriceMessageCount = 0;
 var outsourcePriceMessage = '<p>All outsourcing costing needs to be added to configured price.</p>';
 
@@ -77,9 +76,10 @@ var metaFieldsActions = {
         /*  SHOW AND REQUIRE HARD PROOF META FIELDS WHEN HARD PROOF SELECTED */
         //set variable to disable click action on checkout
         
-        
         var disableCheckoutCount = 0;
         var checkoutButton = $('button.continueButton');
+
+        var disableCheckoutText = '';
 
         var hardProofInput = $('.hardProof input');
         if (cu.getValue(fields.proof) == 40 || cu.getValue(fields.proof) == 43) {
@@ -224,8 +224,24 @@ var metaFieldsActions = {
         //Only show Color Critial field when Color Critical Operations is selected
         if (cu.isSmallFormat(product)) {
             if (fields.operation205) {
+                $('.colorCritical label:contains("Color Critical")').parent().attr('id','colorCriticalJobMeta');
+                var colorCriticalJobInput = $('#colorCriticalJobMeta input')
                 if (cu.hasValue(fields.operation205)) {
                     $('.colorCritical').show();
+                    $('.colorCritical').css('color', 'red');
+                    if (colorCriticalJobInput.val() == '') {
+                        disableCheckoutCount++;
+                        disableCheckoutText += '<p>You have selected a Color Critical Device.  Please declare a job Number below.</p>';
+                        colorCriticalJobInput.bind('blur', function(event) {
+                            if (colorCriticalJobInput.val() !='') {
+                                disableCheckoutCount--;
+                                if (disableCheckoutCount < 1) {
+                                    //set timeout for 
+                                    enableCheckoutButton();
+                                }
+                            }
+                        });
+                    }
                 } else {
                     $('.colorCritical').hide();
                 }
@@ -240,6 +256,7 @@ var metaFieldsActions = {
             }
         }
         if (cu.getPjcId(product) != 458) { //Temp remove for bucket
+            console.log(disableCheckoutText);
             if (disableCheckoutCount > 0) {
                 disableCheckoutButton(disableCheckoutText);
             } else {

@@ -8,7 +8,8 @@ function renderExtendedCostBreakdown () {
     if (!quote) { return }
     if (!configureglobals.cquote.success) { return }
 
-    var isSmallFormat = configureglobals.cquote.pjQuote ? true : false;
+    var isSmallFormatCalc = configureglobals.cquote.pjQuote ? true : false;
+    var isLargeFormatFulfillment = configureglobals.coffering.systemOffering.fulfillmentCenter.id == 5 ? true : false;
     
     var costAndMarginData = [
         { 
@@ -45,10 +46,10 @@ function renderExtendedCostBreakdown () {
         },
         {
             cost: quote.devicePrice,
-            name: "Device",
+            name: isSmallFormatCalc && isLargeFormatFulfillment ? "Device setup" : "Device",
             item: quote.device.name,
             cost_basis: '',
-            description: 'run time with setup is '+ quote.runtime,
+            description: isSmallFormatCalc && isLargeFormatFulfillment ? '' : 'run time with setup is '+ quote.runtime,
             shouldDisplay: true,
             costingOnly: false
         },
@@ -65,14 +66,14 @@ function renderExtendedCostBreakdown () {
             cost: quote.pressSheetQuote ? quote.pressSheetPrice : null,
             name: "Press Sheet",
             item: quote.pressSheetQuote ? quote.pressSheetQuote.pressSheet.name : null,
-            cost_basis: '',
+            cost_basis: quote.pressSheetQuote ? quote.pressSheetsThroughDevice + ' sheets' : '',
             description: quote.pressSheetQuote ? quote.pressSheetQuote.piecesOnSheet + ' pieces per board ' + quote.pressSheetQuote.pressSheet.description : null,
             shouldDisplay: quote.pressSheetQuote ? true : false,
             costingOnly: false
         }, 
         {
             cost: quote.side1Ink ? quote.side1InkPrice : null,
-            name: "Side 1 Ink",
+            name: isSmallFormatCalc && isLargeFormatFulfillment ? "Side 1 Device Run" : "Side 1 Ink",
             item: quote.side1Ink ? quote.side1Ink.name : null,
             cost_basis: '',
             description: quote.side1Ink ? quote.side1Ink.description : null,
@@ -81,7 +82,7 @@ function renderExtendedCostBreakdown () {
         },
         {
             cost: quote.side2Ink ? quote.side2InkPrice : null,
-            name: "Side 2 Ink",
+            name: isSmallFormatCalc && isLargeFormatFulfillment ? "Side 2 Device Run" : "Side 2 Ink",
             item: quote.side2Ink ? quote.side2Ink.name : null,
             cost_basis: '',
             description: quote.side2Ink ? quote.side2Ink.description : null,

@@ -579,11 +579,10 @@ var boardCalcLogic = {
                     var boardThroughput = cu.getTotalPressSheets();
                     var proofOp = fields.proof;
                     var proofSelection = cu.getValue(proofOp);
-                    if (boardThroughput >= 10) {
-                        console.log('over 10');
+                    if (boardThroughput >= 20) {
                         if (hardProofMessageCount == 0) {
                             if (proofSelection != 40 && proofSelection != 43) {
-                                onQuoteUpdatedMessages += '<p>Jobs with a throughput of 10 boards require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
+                                onQuoteUpdatedMessages += '<p>Jobs with a throughput of 20 boards require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
                                 hardProofMessageCount = 1;
                                 cu.changeField(proofOp, 40, true);
                                 return

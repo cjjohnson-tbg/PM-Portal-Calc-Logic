@@ -12,14 +12,9 @@ var planningOnlyOps = [
     108,  //TBGPre-Slit
     116,  //TBGTBG-FabCut
     125,  //TBGBucketJob
-    127,  //TBGMCTCutting
-    130,  //Color Criticat (testing only)
-    131   //Color Critical device (testing only)
+    127  //TBGMCTCutting
 ]
-var trainingOps = [
-    130,  //Color Criticat (testing only)
-    131   //Color Critical device (testing only)
-]
+
 /*var planningOpsStyleBlock = createStyleBlock(planningOnlyOps, 'display: none;');
 $(function() {
     $('head').append(planningOpsStyleBlock);
@@ -194,7 +189,6 @@ var rollCalcLogic = {
 
             removeClassFromOp(111,'costingOnly');
             addClassToOperation(planningOnlyOps, 'planning');
-            addClassToOperation(trainingOps, 'training');
 
             /***************** GLOBAL VARIABLES */
             

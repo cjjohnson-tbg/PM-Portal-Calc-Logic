@@ -225,7 +225,7 @@ var metaFieldsActions = {
         if (cu.isSmallFormat(product)) {
             if (fields.operation205) {
                 $('.colorCritical label:contains("Color Critical")').parent().attr('id','colorCriticalJobMeta');
-                var colorCriticalJobInput = $('#colorCriticalJobMeta input')
+                var colorCriticalJobInput = $('#colorCriticalJobMeta input');
                 if (cu.hasValue(fields.operation205)) {
                     $('.colorCritical').show();
                     $('.colorCritical').css('color', 'red');
@@ -248,8 +248,23 @@ var metaFieldsActions = {
             }
         } else {  //large format products
             if (fields.operation130) {
+                $('.colorCritical label:contains("Color Critical")').parent().attr('id','colorCriticalJobMeta');
+                var colorCriticalJobInput = $('#colorCriticalJobMeta input');
                 if (cu.hasValue(fields.operation130)) {
                     $('.colorCritical').show();
+                    if (colorCriticalJobInput.val() == '') {
+                        disableCheckoutCount++;
+                        disableCheckoutText += '<p>You have selected a Color Critical Device.  Please declare a job Number below.</p>';
+                        colorCriticalJobInput.bind('blur', function(event) {
+                            if (colorCriticalJobInput.val() !='') {
+                                disableCheckoutCount--;
+                                if (disableCheckoutCount < 1) {
+                                    //set timeout for 
+                                    enableCheckoutButton();
+                                }
+                            }
+                        });
+                    }
                 } else {
                     $('.colorCritical').hide();
                 }
@@ -289,4 +304,3 @@ function enableCheckoutButton() {
 
 configureEvents.registerOnCalcLoadedListener(metaFieldsActions);
 configureEvents.registerOnQuoteUpdatedListener(metaFieldsActions);
-

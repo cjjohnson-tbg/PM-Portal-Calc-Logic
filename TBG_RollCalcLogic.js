@@ -493,10 +493,10 @@ var rollCalcLogic = {
             if (pmPortal) {
                 var proofOp = fields.proof;
                 var proofSelection = cu.getValue(proofOp);
-                if (totalSquareFeet >= 320) {
+                if (totalSquareFeet >= 700) {
                     if (hardProofMessageCount == 0) {
                         if (proofSelection != 40) {
-                            message += '<p>Jobs with a printable area over 320 square feet require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
+                            message += '<p>Jobs with a printable area over 700 square feet require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
                             hardProofMessageCount = 1;
                             cu.changeField(proofOp, 40, true);
                         }

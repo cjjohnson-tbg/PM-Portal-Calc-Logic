@@ -13,9 +13,6 @@ function getZundData() {
 	//if nothing loaded show message to user -- needs a timeout for time to load to window
 	setTimeout(function() {
 		console.log('zundSubstrateSpeeds loaded with lenght of ' + zundSubstrateSpeeds.length);
-		if (zundSubstrateSpeeds.length == 0) {
-			cu.alert('Collaterate Zund Speed Factors list did not load propertly.  Please contact Support to ensure accurate costing.');
-		}
 	}, 5000);
 }
 

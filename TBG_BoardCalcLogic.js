@@ -248,6 +248,7 @@ var boardCalcLogic = {
         removeClassFromOp(205,'costingOnly');
         addOtherOpClass(opsWithOther);
         removeOperationItemsWithString(156,'Print');
+        removeOperationItemsWithString(133,'Other');
     },
     onCalcChanged: function(updates, product) {
         if (cu.isPOD(product)) {
@@ -694,6 +695,7 @@ var boardCalcLogic = {
 
                 trimOperationItemName(opsWithSubIds,'_');
                 removeOperationItemsWithString(156,'Print');
+                removeOperationItemsWithString(133,'Other');
                 // renderExtendedCostBreakdown();
                 showMessages();
             }  // END SMALL FORMAT      

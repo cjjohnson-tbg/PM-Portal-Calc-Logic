@@ -232,18 +232,15 @@ var rollCalcLogic = {
 
             //SET CUTTING METHOD
             //if MCT is chosen default to that selection
-            if (mctCutting) {
-                if (cu.hasValue(mctCutting)) {
-                    cutMethod = 'mct';
-                }
+            if (cu.hasValue(mctCutting)) {
+                cutMethod = 'mct';  
+            } else if (cu.hasValue(fields.operation111)) {
+                cutMethod = cutMethodId[cu.getValue(fields.operation111)];
             }
+            //default to zund if nothing not present
             if (!(cutMethod) || cutMethod.length == 0 ) {
                 cutMethod = 'zund';
-                if (cu.hasValue(fields.operation111)) {
-                    cutMethod = cutMethodId[cu.getValue(fields.operation111)];
-                }
             }
-
             //no cut
             if (cutMethod == 'noCutting') {
                 if (!cu.hasValue(noCutOp)) {

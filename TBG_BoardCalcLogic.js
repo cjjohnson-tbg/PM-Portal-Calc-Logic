@@ -33,7 +33,22 @@ var side1InkMap = {
     117 : 834,    //Inca Q40 - CMYK (Second Surface)
     126 : 1038,  //Vutek HS100 - W + W Only (Spot / Second Surface) - 1000 DPI_HS
     96  : 1038,    //Vutek HS100 - W + W Only (Spot / First Surface) - 1000 DPI_HS
-    125 : 749   //Vutek HS100 - White Only (Spot / Second Surface) - 1000 DPI_HS
+    125 : 749,   //Vutek HS100 - White Only (Spot / Second Surface) - 1000 DPI_HS
+
+    104 : 587,  //Vutek HS125 - CMYK - 600 DPI-HS
+    115 : 614,  //Vutek HS125 - CMYK + W + CMYK (Flood / Second Surface) - 600 DPI-HS
+    114 : 614,  //Vutek HS125 - CMYK + W + CMYK (Spot / Second Surface) - 600 DPI-HS
+    121 : 614,  //Vutek HS125 - CMYK + W + CMYK (Flood / First Surface) - 600 DPI-HS
+    123 : 614,  //Vutek HS125 - CMYK + W + CMYK (Spot / First Surface) - 600 DPI-HS
+    105 : 691,  //Vutek HS125 - Backlit - 600 DPI-HS
+    107 : 612,  //Vutek HS125 - CMYK + W (Flood / Second Surface) - 600 DPI-HS
+    106 : 612,  //Vutek HS125 - CMYK + W (Spot / Second Surface) - 600 DPI-HS
+    109 : 612,  //Vutek HS125 - W + CMYK (Flood / First Surface) - 600 DPI-HS
+    108 : 612,  //Vutek HS125 - W + CMYK (Spot / First Surface) - 600 DPI-HS
+    110 : 904,  //Vutek HS125 - CMYK + W + W (Spot / Second Surface) - 600 DPI-HS
+    113 : 904,  //Vutek HS125 - W + W + CMYK (Flood / First Surface) - 600 DPI-HS
+    112 : 904   //Vutek HS125 - W + W + CMYK (Spot / First Surface) - 600 DPI-HS
+
 }
 var side2InkMap = {
     56  : 590,    //Vutek HS 1000 CMYK
@@ -67,7 +82,21 @@ var side2InkMap = {
     98 : 613,    //Vutek HS100 - W + CMYK (Spot / First Surface) - 1000 DPI_HS
     101 : 1040,    //Vutek HS100 - W + W + CMYK (Flood / First Surface) - 1000 DPI_HS
     102 : 1040,    //Vutek HS100 - W + W + CMYK (Spot / First Surface) - 1000 DPI_HS
-    96 : 1039    //Vutek HS100 - W + W Only (Spot / First Surface) - 1000 DPI_HS
+    96 : 1039,    //Vutek HS100 - W + W Only (Spot / First Surface) - 1000 DPI_HS
+    104  : 590,    //Vutek HS 1000 CMYK
+    107  : 613,    //Vutek HS 1000 CMYK + W
+    107  : 613,    //Vutek HS100 CMYK + W (Second Surface)
+    121 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Flood / First Surface) - 600 DPI_HS
+    115 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Flood / Second Surface) - 600 DPI_HS
+    123 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Spot / First Surface) - 600 DPI_HS
+    114 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Spot / Second Surface) - 600 DPI_HS
+    106 : 613,    //Vutek HS100 - CMYK + W (Spot / Second Surface) - 600 DPI_HS
+    111 : 1040,    //Vutek HS100 - CMYK + W + W (Flood / Second Surface) - 600 DPI_HS\
+    110 : 1040,    //Vutek HS100 - CMYK + W + W (Spot / Second Surface) - 600 DPI_HS
+    108 : 613,    //Vutek HS100 - W + CMYK (Spot / First Surface) - 600 DPI_HS
+    113 : 1040,    //Vutek HS100 - W + W + CMYK (Flood / First Surface) - 600 DPI_HS
+    112 : 1040,    //Vutek HS100 - W + W + CMYK (Spot / First Surface) - 600 DPI_HS
+    96 : 1039,    //Vutek HS100 - W + W Only (Spot / First Surface) - 600 DPI_HS
 }
 
 var zundLoadingSelections = {

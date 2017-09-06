@@ -34,8 +34,16 @@ var side1InkMap = {
     126 : 1038,  //Vutek HS100 - W + W Only (Spot / Second Surface) - 1000 DPI_HS
     96  : 1038,    //Vutek HS100 - W + W Only (Spot / First Surface) - 1000 DPI_HS
     125 : 749,   //Vutek HS100 - White Only (Spot / Second Surface) - 1000 DPI_HS
+    133 : 1038,   //Vutek HS125 - W + W Only (Flood / First Surface) - 1000 GS-LS
 
-    104 : 587,  //Vutek HS125 - CMYK - 600 DPI-HS
+    136 : 1038,   //Vutek HS125 - W + W Only (Flood / First Surface) - 600 DPI-HS
+    138  : 749,    //Vutek HS125 - White Only - 600 DPI-HS
+    111 : 904,    //Vutek HS125 - CMYK + W + W (Flood / Second Surface) - 600 DPI-HS
+    137 : 1038,  //Vutek HS125 - W + W Only (Spot / Second Surface) - 600 DPI-HS
+    136  : 890,    //Inca Q40 - W + W + CMYK (Flood / First Surface)
+    135 : 904,    //Vutek HS125 - W + W + CMYK (Spot / First Surface) - 600 DPI-HS
+    134 : 615,    //Vutek HS125 - CMYK (Second Surface) - 600 DPI-HS
+    104 : 587,  //Vutek HS125 - CMYK (First Surface) - 600 DPI-HS
     115 : 614,  //Vutek HS125 - CMYK + W + CMYK (Flood / Second Surface) - 600 DPI-HS
     114 : 614,  //Vutek HS125 - CMYK + W + CMYK (Spot / Second Surface) - 600 DPI-HS
     121 : 614,  //Vutek HS125 - CMYK + W + CMYK (Flood / First Surface) - 600 DPI-HS
@@ -72,6 +80,10 @@ var side2InkMap = {
     91 : 891,    //Inca Q40 - W + W
     88 : 891,    //Inca Q40 - W + W + CMYK (Flood / First Surface)
     93 : 891,    //Inca Q40 - W + W + CMYK (Spot / First Surface)
+    
+    109  : 613,    //Vutek HS100 Q40 W + CMYK (First Surface)
+    133 : 1039,   //Vutek HS125 - W + W Only (Flood / First Surface) - 1000 GS-LS
+    136 : 1039,  //Vutek HS125 - W + W Only (Flood / First Surface) - 600 DPI-HS
     120 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Flood / First Surface) - 1000 DPI_HS
     58 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Flood / Second Surface) - 1000 DPI_HS
     122 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Spot / First Surface) - 1000 DPI_HS
@@ -83,9 +95,13 @@ var side2InkMap = {
     101 : 1040,    //Vutek HS100 - W + W + CMYK (Flood / First Surface) - 1000 DPI_HS
     102 : 1040,    //Vutek HS100 - W + W + CMYK (Spot / First Surface) - 1000 DPI_HS
     96 : 1039,    //Vutek HS100 - W + W Only (Spot / First Surface) - 1000 DPI_HS
-    104  : 590,    //Vutek HS 1000 CMYK
-    107  : 613,    //Vutek HS 1000 CMYK + W
-    107  : 613,    //Vutek HS100 CMYK + W (Second Surface)
+    138  : 750,    //Vutek HS125 - White Only (Spot / First Surface) - 600 DPI-HS
+    137 : 1040,    //Vutek HS125 - W + W Only (Spot / Second Surface) - 600 DPI-HS
+    135 : 1039,    //Vutek HS100 - W + W Only (Spot / First Surface) - 1000 DPI_HS
+    136 : 1040,    //Vutek HS100 - W + W + CMYK (Flood / First Surface) - 1000 DPI_HS
+    134  : 613,    //Vutek HS100 CMYK + W (Second Surface)
+    104  : 590,    //Vutek HS125 - CMYK (First Surface) - 600 DPI-HS
+    107  : 613,    //Vutek HS125 - CMYK + W (Flood / Second Surface) - 600 DPI-HS
     121 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Flood / First Surface) - 600 DPI_HS
     115 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Flood / Second Surface) - 600 DPI_HS
     123 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Spot / First Surface) - 600 DPI_HS
@@ -96,7 +112,6 @@ var side2InkMap = {
     108 : 613,    //Vutek HS100 - W + CMYK (Spot / First Surface) - 600 DPI_HS
     113 : 1040,    //Vutek HS100 - W + W + CMYK (Flood / First Surface) - 600 DPI_HS
     112 : 1040,    //Vutek HS100 - W + W + CMYK (Spot / First Surface) - 600 DPI_HS
-    96 : 1039,    //Vutek HS100 - W + W Only (Spot / First Surface) - 600 DPI_HS
 }
 
 var zundLoadingSelections = {
@@ -439,17 +454,27 @@ var boardCalcLogic = {
                 }
                 //NEW
                 if (sideOneInkId) {
-                    var sideOneInkOpId = side1InkMap[sideOneInkId];
-                    if (cu.getValue(sideOneInkOp) != sideOneInkOpId) {
-                        cu.changeField(sideOneInkOp, sideOneInkOpId, true);
-                        return
+                    var sideOneInkOpId = side1InkMap[sideOneInkId] ? side1InkMap[sideOneInkId] : null;
+                    if (sideOneInkOpId) {
+                        if (cu.getValue(sideOneInkOp) != sideOneInkOpId) {
+                            cu.changeField(sideOneInkOp, sideOneInkOpId, true);
+                            return
+                        }
+                    } else {
+                        console.log('Side 1 ink operation not mapping for ink ' + sideOneInkId);
                     }
                 }
                 if (sideTwoInkOp) {
                     if (sideTwoInkId) {
-                        var sideTwoInkOpId = side2InkMap[sideTwoInkId];
-                        if (cu.getValue(sideTwoInkOp) != sideTwoInkOpId) {
-                            cu.changeField(sideTwoInkOp, sideTwoInkOpId, true);
+                        var sideTwoInkOpId = side2InkMap[sideTwoInkId] ? side2InkMap[sideTwoInkId] : null;
+                        if (sideTwoInkOpId) {
+                            if (cu.getValue(sideTwoInkOp) != sideTwoInkOpId) {
+                                cu.changeField(sideTwoInkOp, sideTwoInkOpId, true);
+                            }
+                        } else {
+                            if (cu.hasValue(sideTwoInkOp)) {
+                                cu.changeField(sideTwoInkOp,'', true);
+                            }
                         }
                     } else {
                         if (cu.hasValue(sideTwoInkOp)) {

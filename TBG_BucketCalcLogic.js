@@ -201,6 +201,8 @@ var bucketCalcLogic = {
     onQuoteUpdated: function(updates, validation, product) {
         /*re-init on every update*/
         cu.initFields();
+        var message = '';
+        var submessage = '';
 
         if (cu.isSmallFormat(product)) {
             /************** ADD STYLE TO CERTAIN ELEMENTS */
@@ -352,8 +354,6 @@ var bucketCalcLogic = {
             }
         } //END SMALL FORMAT
         else {
-            var message = '';
-            var submessage = '';
 
             addClassToOperation(planningOnlyOps,'planning');
             trimOperationItemName(lfOpsToTrimWithUnderscore, '_');
@@ -393,26 +393,27 @@ var bucketCalcLogic = {
                 	}
                 }
             } 
-            /************************ BOARD BUCKET LIMITATIONS */
-            //limit to 200 sq ft
-            var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
-            var message = '';
-            if (totalSquareFeet > 200 ) {
-                bucketSizeMessage = '<p>The Board Bucket product is limited to jobs less than 200 sq ft.  For jobs greater than this please use the Board Printing Product.</p>';
-                message += bucketSizeMessage;
-                disableCheckoutButton(bucketSizeMessage);
-            } else {
-                enableCheckoutButton();
-            }
-
-            /********************************************* ALERTS */
-            // show an alert when necessary
-            if (message != '' || submessage != '') {
-                message += submessage;
-                cu.alert(message);
-            }
-
 	    } //END LARGE FORMAT
+
+        /************************ BOARD BUCKET LIMITATIONS */
+        //limit to 200 sq ft
+        var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
+        var message = '';
+        if (totalSquareFeet > 200 ) {
+            bucketSizeMessage = '<p>The Bucket product is limited to jobs less than 200 sq ft.  For jobs greater than this please use the Board Printing Product.</p>';
+            message += bucketSizeMessage;
+            disableCheckoutButton(bucketSizeMessage);
+        } else {
+            enableCheckoutButton();
+        }
+
+        /********************************************* ALERTS */
+        // show an alert when necessary
+        if (message != '' || submessage != '') {
+            message += submessage;
+            cu.alert(message);
+        }
+
     }
 }
 

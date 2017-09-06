@@ -263,7 +263,9 @@ var getCriticalDeviceId = {
     1469 : 6,  //Vutek HS104
     1470 : 15,  //Inca X2-A
     1471 : 15,  //Inca X2-B
-    1472 : 7  //Inca Q40
+    1472 : 7,  //Inca Q40
+    1468 : 22,  //Vutek HS125
+    1469 : 22  //Vutek HS125
 }
 
 var pmPortal = (location.hostname.indexOf("tbghub.com") != -1);

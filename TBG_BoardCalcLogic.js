@@ -730,6 +730,21 @@ var boardCalcLogic = {
                     }
                     return 
                 }
+                /********* ADD SIDE 2 SETUP COST WHEN 2 SIDED CHOSEN */
+                var sideTwoSetupOp = fields.operation210;
+                if (sideTwoSetupOp) {
+                    if (cu.hasValue(fields.printingS2)) {
+                        if (!cu.hasValue(sideTwoSetupOp)) {
+                            cu.changeField(sideTwoSetupOp, 1498, true);
+                            return
+                        }
+                    } else {
+                        if (cu.hasValue(sideTwoSetupOp)) {
+                            cu.changeField(sideTwoSetupOp, '', true);
+                            return
+                        }
+                    }
+                }
 
                 /********* Display Run Time information on Estimating Site for LF Board Estimating */
                 $('#runTime span').text(cu.getTotalRuntime());

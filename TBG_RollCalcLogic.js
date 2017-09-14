@@ -146,6 +146,13 @@ var fabrivuDirectMaterials = [
     '398'   //Berger Flag Fabric White 4oz
 ]
 
+var lfDeviceInk = {
+    45 : {
+        'inkMaterialOpId' : 132,
+        'defaultOpItem' : 608 //TBG Vutek HS125
+    }
+}
+
 
 var pmPortal = ((location.hostname.indexOf("tbg-pm.collaterate.com") != -1) || (location.hostname.indexOf("tbghub.com") != -1));
 var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") != -1);
@@ -153,6 +160,9 @@ var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") !=
 // Message Counts
 var hardProofMessageCount = 0;
 var sameSideMessage = '';
+
+// Operation Item Keys object - in window for testing
+var operationItemKeys = new Object();  
 
 var cu = calcUtil;
 
@@ -191,7 +201,7 @@ var rollCalcLogic = {
             addClassToOperation(planningOnlyOps, 'planning');
 
             /***************** GLOBAL VARIABLES */
-            
+            var deviceId = configureglobals.cquotedata.device.id ? configureglobals.cquotedata.device.id : null;
             var substrateId = cu.getValue(fields.printSubstrate);
             var mountId = cu.getValue(fields.mountSubstrate);
             var zundFactor = 1;
@@ -199,7 +209,33 @@ var rollCalcLogic = {
             
             var hasFrontLam = (cu.hasValue(fields.frontLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.frontLaminate)) == -1));
             var hasBackLam = (cu.hasValue(fields.backLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.backLaminate)) == -1));
-            
+                       
+            /**************** OPERATION ITEM KEYS */
+            //Create object from key value pairs inserted into operation Item Description surrounded by double brackets "{{ }}"
+            //var operationItemKeys = new Object();  
+            for (const prop of Object.keys(operationItemKeys)) {
+              delete operationItemKeys[prop];
+            }
+            var quote = configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote ? configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote : null;
+            if (quote) {
+                var ops = quote.operationQuotes;
+                var descriptions = [];
+                ops.forEach(function(operationQuote) {
+                    var opItemDescription = operationQuote.operationItem.description;
+                    descriptions.push(opItemDescription);
+                    //var opItemKeyText = opItemDescription.replace(/(^.*{{|}}.*$)/g, '' );
+                    var opItemKeyText = /{{(.*?)}}/.exec(opItemDescription);
+                    if (opItemKeyText) {
+                        var opItemKeyList = opItemKeyText[1].split(',');
+                        //push to calc object
+                        opItemKeyList.forEach(function(item) {
+                            var key = item.replace(/\:.*$/g,'');
+                            var val = item.replace(/^.*\:/g,'');
+                            operationItemKeys[key.trim()] = val.trim();
+                        });
+                    }
+                });
+            }
             /************************* LATEX ROLL */
             if (cu.getPjcId(product) == 76) {
                 //show message on samba products 
@@ -374,6 +410,18 @@ var rollCalcLogic = {
                 console.log(leadAndTailCost + ' lead and tail cost')
                 if (fields.operation79_answer != leadAndTailCost) {
                     cu.changeField(fields.operation79_answer, leadAndTailCost, true);
+                }
+            }
+            /************************ ALIGN INK MATERIAL COSTS WITH DEVICE RUN*/
+            var deviceId = configureglobals.cquotedata.device.id ? configureglobals.cquotedata.device.id : null;
+            var devRunConfig = lfDeviceInk[deviceId];
+            if (devRunConfig) {
+                var inkMatOp = fields['operation' + devRunConfig.inkMaterialOpId];
+                var defaultInkOpItem = lfDeviceInk[deviceId].defaultOpItem ? lfDeviceInk[deviceId].defaultOpItem : null;
+                //Grab op item id from operation Item Keys object. If nothing, then use default
+                var inkMatOpItemId = operationItemKeys.inkMatOpItem ? operationItemKeys.inkMatOpItem : defaultInkOpItem;
+                if (cu.getValue(inkMatOp) != inkMatOpItemId) {
+                    cu.changeField(inkMatOp, inkMatOpItemId, true);
                 }
             }
             /************************ APPLY LAM SETUP FEE WHEN LAM SELECTED */

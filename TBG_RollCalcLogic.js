@@ -154,6 +154,9 @@ var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") !=
 var hardProofMessageCount = 0;
 var sameSideMessage = '';
 
+// Operation Item Keys object - in window for testing
+var operationItemKeys = new Object();  
+
 var cu = calcUtil;
 
 //grab zund data from zundSpeedFactors_sheets
@@ -199,7 +202,34 @@ var rollCalcLogic = {
             
             var hasFrontLam = (cu.hasValue(fields.frontLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.frontLaminate)) == -1));
             var hasBackLam = (cu.hasValue(fields.backLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.backLaminate)) == -1));
-            
+                       
+            /**************** OPERATION ITEM KEYS */
+            //Create object from key value pairs inserted into operation Item Description surrounded by double brackets "{{ }}"
+            //var operationItemKeys = new Object();  
+            for (const prop of Object.keys(operationItemKeys)) {
+              delete operationItemKeys[prop];
+            }
+            var quote = configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote ? configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote : null;
+            if (quote) {
+                var ops = quote.operationQuotes;
+                var descriptions = [];
+                ops.forEach(function(operationQuote) {
+                    var opItemDescription = operationQuote.operationItem.description;
+                    descriptions.push(opItemDescription);
+                    //var opItemKeyText = opItemDescription.replace(/(^.*{{|}}.*$)/g, '' );
+                    var opItemKeyText = /{{(.*?)}}/.exec(opItemDescription);
+                    console.log(opItemKeyText);
+                    if (opItemKeyText) {
+                        var opItemKeyList = opItemKeyText[1].split(',');
+                        //push to calc object
+                        opItemKeyList.forEach(function(item) {
+                            var key = item.replace(/\:.*$/g,'');
+                            var val = item.replace(/^.*\:/g,'');
+                            operationItemKeys[key.trim()] = val.trim();
+                        });
+                    }
+                });
+            }
             /************************* LATEX ROLL */
             if (cu.getPjcId(product) == 76) {
                 //show message on samba products 
@@ -376,6 +406,24 @@ var rollCalcLogic = {
                     cu.changeField(fields.operation79_answer, leadAndTailCost, true);
                 }
             }
+            /************************ ALIGN INK MATERIAL COSTS WITH DEVICE RUN 
+            Get device id
+            figure out what operations to change based on inkMatOpItem
+
+
+            */
+            var deviceRunInkOpMap = {
+                45 : {
+                    'inkOperation' : 52,
+                    'defaultOpItem' : 642 //TBG Vutek HS125
+                }
+                46 : 72 //TBG Canon
+            }
+            var deviceId = cu.getValue(fields.)
+            var inkMatOp = deviceRunInkOpMap
+            var inkMatOpItemId = operationItemKeys.inkMatOpItem ? operationItemKeys.inkMatOpItem : null;
+
+
             /************************ APPLY LAM SETUP FEE WHEN LAM SELECTED */
             //Note: "none" operation item is id 18 (front) AND 40 (back) for products using this function
             var laminatingSetup = fields.operation57;

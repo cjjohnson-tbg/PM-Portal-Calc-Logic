@@ -610,6 +610,10 @@ var boardCalcLogic = {
                         return
                     }
                 }
+                /************************* HIDE OPERATION QUESTION */
+                if (cu.hasValue(fields.operation133)) {
+                    hideOperationQuestion('133');
+                }
                 /************************* ADD MOUNTING SETUP FEE WHEN MOUNT CHOSEN */
                 var mountingOp = fields.operation139;
                 if (mountingOp) {
@@ -835,6 +839,16 @@ function removeOperationItemsWithString(op, string) {
         }
     });
 }
+function hideOperationQuestion(operation) {
+    var op = operation.toString();
+    var opQuestion = $('#operation' + op + ' div.op');
+    if (opQuestion) {
+        opQuestion.hide()
+    } else {
+        console.log('operation question does not exist for ' + operation);
+    }
+    return
+}
 function toggleAutoDeviceTypeButton() {
     $autoDeviceSelector = $('#device a.togglePreset');
     $autoDeviceButton = $autoDeviceSelector.length == 1 ? $autoDeviceSelector[0] : null;
@@ -855,7 +869,6 @@ function setDevice(deviceId) {
     }
     
 }
-
 
 configureEvents.registerOnCalcLoadedListener(boardCalcLogic);
 configureEvents.registerOnCalcChangedListener(boardCalcLogic);

@@ -150,6 +150,10 @@ var lfDeviceInk = {
     45 : {
         'inkMaterialOpId' : 132,
         'defaultOpItem' : 608 //TBG Vutek HS125
+    },
+    46 : {
+        'inkMaterialOpId' : 133,
+        'defaultOpItem' : 622 //CMYK
     }
 }
 

@@ -228,7 +228,7 @@ var rollCalcLogic = {
                     var opItemDescription = operationQuote.operationItem.description;
                     descriptions.push(opItemDescription);
                     //var opItemKeyText = opItemDescription.replace(/(^.*{{|}}.*$)/g, '' );
-                    var opItemKeyText = /{{(.*?)}}/.exec(opItemDescription);
+                    var opItemKeyText = /\[{(.*?)}\]/.exec(opItemDescription);
                     if (opItemKeyText) {
                         var opItemKeyList = opItemKeyText[1].split(',');
                         //push to calc object

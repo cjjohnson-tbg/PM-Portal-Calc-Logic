@@ -276,6 +276,9 @@ var hardProofMessageCount = 0;
 var mountingEstimateMessageCount = 0;
 var allowHeatBend = true;
 
+// Operation Item Keys object - in window for testing
+var operationItemKeys = new Object();  
+
 var cu = calcUtil;
 
 var cutMethod;
@@ -333,6 +336,31 @@ var boardCalcLogic = {
                 }
                 //CHange label of pages for Setrs
                 cu.setLabel(fields.paperWeight,'Thickness');
+
+                /**************** OPERATION ITEM KEYS */
+                //Create object from key value pairs inserted into operation Item Description surrounded by double brackets "{{ }}"
+                //var operationItemKeys = new Object();  
+                for (const prop of Object.keys(operationItemKeys)) {
+                  delete operationItemKeys[prop];
+                }
+                var quote = configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote ? configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote : null;
+                if (quote) {
+                    var ops = quote.operationQuotes;
+                    var descriptions = [];
+                    ops.forEach(function(operationQuote) {
+                        var opItemDescription = operationQuote.data.choice.description;
+                        descriptions.push(opItemDescription);
+                        //var opItemKeyText = opItemDescription.replace(/(^.*{{|}}.*$)/g, '' );
+                        var opItemKeyText = /\[(.*?)\]/.exec(opItemDescription);
+                        if (opItemKeyText) {
+                            var opItemObj = JSON.parse(opItemKeyText[1]);
+                            //push to calc object
+                            Object.keys(opItemObj).forEach(function(key) {
+                                operationItemKeys[key] = opItemObj[key];
+                            });
+                        }
+                    });
+                }
 
                 /********* Color Critical Check */
                 var colorCriticalOp = fields.operation205;
@@ -585,12 +613,49 @@ var boardCalcLogic = {
                     }
                 }
                 /************************* ADD LAMINATING SETUP FEE WHEN FRONT AND/OR BACK LAM CHOSEN */
-                var sfLaminating = cu.findOperationFromSet(smLaminatingOps);
-                if (cu.hasValue(sfLaminating)) {
-                    if (!cu.hasValue(fields.operation135)) {
-                        cu.changeField(fields.operation135, 777, true);
-                        return
-                    }
+                //var sfLaminating = cu.findOperationFromSet(smLaminatingOps);
+                var sfLaminating = getOperationsSet(smLaminatingOps);
+
+                var mountingOp = fields.operation139;
+                if (operationInSetHasValue(sfLaminating) || cu.hasValue(mountingOp)) {
+                    
+                    if (cu.hasValue(mountingOp)) {
+                        
+                        //IF MOUNT AND NO LAM, MOUNT SINGLE PASS
+                        if (!operationInSetHasValue(sfLaminating)) {
+                            if (cu.getValue(fields.operation135) != 1536) {
+                                cu.changeField(fields.operation135, 1536, true)
+                                return
+                            }
+                        } else {
+                            //IF MOUNT AND HOT LAM CHOOSE MOUNT - 2 PASS HOT, OTHERWISE DEFAULT TO MOUNT - 2 PASS COLD
+                            if (operationItemKeys.frontLamType == 'Hot Laminates' || operationItemKeys.backLamType == 'Hot Laminates') {
+                                if (cu.getValue(fields.operation135) != 1535) {
+                                    cu.changeField(fields.operation135, 1535, true)
+                                    return
+                                }
+                            } else {
+                                if (cu.getValue(fields.operation135) != 1534) {
+                                    cu.changeField(fields.operation135, 1534, true);
+                                    return
+                                }
+                            }
+                        }
+                    } else {
+                        //only Laminating
+                        //If Hot laminate, choose Hot Lam Run, otherwise default to Cold
+                        if (operationItemKeys.frontLamType == 'Hot Laminates' || operationItemKeys.backLamType == 'Hot Laminates') {
+                            if (cu.getValue(fields.operation135) != 1529) {
+                                cu.changeField(fields.operation135, 1529, true)
+                                return
+                            }
+                        } else {
+                            if (cu.getValue(fields.operation135) != 777) {
+                                cu.changeField(fields.operation135, 777, true);
+                                return
+                            }
+                        }
+                    } 
                 } else {
                     if (cu.hasValue(fields.operation135)) {
                         cu.changeField(fields.operation135, '', true);
@@ -614,27 +679,7 @@ var boardCalcLogic = {
                 if (cu.hasValue(fields.operation133)) {
                     hideOperationQuestion('133');
                 }
-                /************************* ADD MOUNTING SETUP FEE WHEN MOUNT CHOSEN */
-                var mountingOp = fields.operation139;
-                if (mountingOp) {
-                    var mountingSetup = fields.operation140;
-                    if (cu.hasValue(mountingOp)) {
-                        //display pricing warning with 
-                        if (mountingEstimateMessageCount == 0) {
-                            onQuoteUpdatedMessages += '<p>Mounting costs in this tool are brought in per square inch.  It is highly recommended to obtain an estimate from the Estimating Team for pricing.</p>';
-                            mountingEstimateMessageCount = 1;
-                        }
-                        if (cu.isValueInSet(mountingOp,mountsWithClearAdhesive) || cu.isValueInSet(fields.paperType, subsratesTypesWithClearAdhesive)) {
-                            if (cu.getValue(mountingSetup) != 1030) {
-                                cu.changeField(mountingSetup, 1030, true);
-                            }
-                        } else if (cu.getValue(mountingSetup) != 797) {
-                            cu.changeField(mountingSetup, 797, true);
-                        }
-                    } else if (cu.hasValue(mountingSetup)) {
-                        cu.changeField(mountingSetup, '', true);
-                    }
-                }
+
                 /************************* SHOW HARD PROOF MESSAGE ON THROUGHPUT THRESHOLDS */
                 if (pmPortal) {
                     var boardThroughput = cu.getTotalPressSheets();
@@ -868,6 +913,33 @@ function setDevice(deviceId) {
         console.log('device not available');
     }
     
+}
+function getOperationsSet(ops) {
+    if (ops) {
+        var set = [];
+        for (var i = 0; i < ops.length; i++) {
+            var op = 'operation' + ops[i];
+            set.push(fields[op]);
+        }
+        return set
+    } else {
+        console.log('no ops defined in set');
+        return false
+    }
+}
+function operationInSetHasValue(operationSet) {
+    if (operationSet) {
+        for (var i = 0; i < operationSet.length; i++) {
+            if (hasValue(operationSet[i].val())) {
+                return true
+            }
+        }
+        //if make it through return false 
+        return false;
+     } else {
+        console.log('OperationSet is not defined. Returning false for operationInSetHasValue.');
+        return false;
+    }
 }
 
 configureEvents.registerOnCalcLoadedListener(boardCalcLogic);

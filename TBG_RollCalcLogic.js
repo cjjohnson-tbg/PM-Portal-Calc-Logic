@@ -224,21 +224,23 @@ var rollCalcLogic = {
             if (quote) {
                 var ops = quote.operationQuotes;
                 var descriptions = [];
-                ops.forEach(function(operationQuote) {
-                    var opItemDescription = operationQuote.operationItem.description;
-                    descriptions.push(opItemDescription);
-                    //var opItemKeyText = opItemDescription.replace(/(^.*{{|}}.*$)/g, '' );
-                    var opItemKeyText = /\[{(.*?)}\]/.exec(opItemDescription);
-                    if (opItemKeyText) {
-                        var opItemKeyList = opItemKeyText[1].split(',');
-                        //push to calc object
-                        opItemKeyList.forEach(function(item) {
-                            var key = item.replace(/\:.*$/g,'');
-                            var val = item.replace(/^.*\:/g,'');
-                            operationItemKeys[key.trim()] = val.trim();
-                        });
-                    }
-                });
+                if (ops) {
+                    ops.forEach(function(operationQuote) {
+                        var opItemDescription = operationQuote.operationItem.description;
+                        descriptions.push(opItemDescription);
+                        //var opItemKeyText = opItemDescription.replace(/(^.*{{|}}.*$)/g, '' );
+                        var opItemKeyText = /\[{(.*?)}\]/.exec(opItemDescription);
+                        if (opItemKeyText) {
+                            var opItemKeyList = opItemKeyText[1].split(',');
+                            //push to calc object
+                            opItemKeyList.forEach(function(item) {
+                                var key = item.replace(/\:.*$/g,'');
+                                var val = item.replace(/^.*\:/g,'');
+                                operationItemKeys[key.trim()] = val.trim();
+                            });
+                        }
+                    });
+                }
             }
             /************************* LATEX ROLL */
             if (cu.getPjcId(product) == 76) {
@@ -847,20 +849,22 @@ function removeOperationItemsWithString(op, string) {
 
 function getOperationDetails() {
     var operations = configureglobals.cquote.lpjQuote.operationQuotes;
-    var ops = { };
-    for (var i = 0; i < operations.length; i++) {
-        var opId = operations[i].operation.id;
-        var data = operations[i].data;
-        ops['op' + opId] = {
-            'id' : opId,
-            'name' : operations[i].operation.heading,
-            'left' : data.leftSide,
-            'right' : data.rightSide,
-            'bottom' : data.bottomSide,
-            'top' : data.topSide
+    if (operations) {
+        var ops = { };
+        for (var i = 0; i < operations.length; i++) {
+            var opId = operations[i].operation.id;
+            var data = operations[i].data;
+            ops['op' + opId] = {
+                'id' : opId,
+                'name' : operations[i].operation.heading,
+                'left' : data.leftSide,
+                'right' : data.rightSide,
+                'bottom' : data.bottomSide,
+                'top' : data.topSide
+            }
         }
-    }
-    return ops
+        return ops
+    } return false
 }
 function validateSidesNotTheSame(opDetails, op1, op2) {
     var object1 = opDetails['op' + op1];

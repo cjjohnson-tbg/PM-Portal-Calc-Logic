@@ -157,7 +157,11 @@ function renderExtendedCostBreakdown () {
                     }
                     estimateDetailsData.push({
                         cost: quote.operationQuotes[i].price ? quote.operationQuotes[i].price : 0,
+<<<<<<< Updated upstream
                         name: quote.operationQuotes[i].data.heading || quote.operationQuotes[i].operation.heading,
+=======
+>>>>>>> Stashed changes
+                        name: quote.operationQuotes[i].operation.id == 52 ? 'Device Run ' : quote.operationQuotes[i].operation.heading,
                         item: selectedOperations[i].choice.name,
                         cost_basis: quote.operationQuotes[i].pieces || quote.operationQuotes[i].data.quantity,
                         description: selectedOperations[i].choice.description,

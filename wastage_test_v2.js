@@ -58,7 +58,7 @@ var testLogic = {
 		var leadWasteLF = deviceDefaults.leadWasteLF;
 		var gutter = deviceDefaults.gutter;
 
-		//establish chosen config
+		//establish chosen default susbtrate config
 		var defaultRoll = {
 			"id" : configureglobals.cprintsubstratesmgr.choice.id,
 			"name" : configureglobals.cprintsubstratesmgr.choice.productionName,
@@ -74,7 +74,7 @@ var testLogic = {
 		
 		for (var i = 0; i < x.alternateRolls.length; i++) {
 			var rollConfig = getBestPrintConfig(x.alternateRolls[i]);
-			//if smaller yield then overwrite printConfig
+			//if better cost value then overwrite printConfig
 			if (rollConfig) {
 				if (rollConfig.total_roll_cost < printConfig.total_roll_cost) {
 					printConfig = rollConfig;
@@ -99,6 +99,7 @@ var testLogic = {
 			horizontalPrintConfig['vertical_piece_orienation'] = false;
 			var vertPrintConfig = getPrintConfig(roll, pieceHeight, pieceWidth);
 			vertPrintConfig['vertical_piece_orienation'] = true;
+			//Test which orientation yields the lowest susbtrate cost
 			if (horizontalPrintConfig.valid && !vertPrintConfig.valid) {
 				bestConfig = horizontalPrintConfig;
 			} else if (!horizontalPrintConfig.valid && vertPrintConfig.valid) {

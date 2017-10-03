@@ -185,10 +185,6 @@ var rollCalcLogic = {
         }
         removeClassFromOp(111,'costingOnly');
         addClassToOperation(planningOnlyOps,'planning');
-        //show error message if zund object does not load
-        if (zundSubstrateSpeeds.length == 0) {
-            cu.alert('Collaterate Zund Speed Factors list did not load propertly.  Please contact Support to ensure accurate costing.');
-        }
     },
     onCalcChanged: function(updates, product) {
 

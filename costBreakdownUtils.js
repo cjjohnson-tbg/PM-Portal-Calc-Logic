@@ -240,7 +240,7 @@ function renderExtendedCostBreakdown () {
             var rows = '';
 
             for (var i = 0; i < estimateDetailsData.length; i++) {
-                if (estimateDetailsData[i].shouldDisplay){
+                if (estimateDetailsData[i].shouldDisplay && !estimateDetailsData[i].costingOnly){
                     rows += '<tr><td class="cell-cost">$' + estimateDetailsData[i].cost.toFixed(2) + '</td><td class="cell-name">' + estimateDetailsData[i].name + '</td><td class="cell-item">' + estimateDetailsData[i].item + '</td><td class="cell-cost-basis">' + estimateDetailsData[i].cost_basis + '</td><td class="cell-description">' + estimateDetailsData[i].description + '</td></tr>';                    
                 }
                 

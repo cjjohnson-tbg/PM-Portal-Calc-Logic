@@ -224,15 +224,18 @@ var rollCalcLogic = {
                     var opItemDescription = operationQuote.operationItem.description;
                     descriptions.push(opItemDescription);
                     //var opItemKeyText = opItemDescription.replace(/(^.*{{|}}.*$)/g, '' );
-                    var opItemKeyText = /\[{(.*?)}\]/.exec(opItemDescription);
+                    var opItemKeyText = /\{(.*?)\}/.exec(opItemDescription);
                     if (opItemKeyText) {
-                        var opItemKeyList = opItemKeyText[1].split(',');
-                        //push to calc object
-                        opItemKeyList.forEach(function(item) {
-                            var key = item.replace(/\:.*$/g,'');
-                            var val = item.replace(/^.*\:/g,'');
-                            operationItemKeys[key.trim()] = val.trim();
-                        });
+                        var opItemJSON = getJsonFromString(opItemKeyText[0]);
+                        if (opItemJSON) {
+                            for (prop in opItemJSON) {
+                                if (opItemJSON.hasOwnProperty(prop)) {
+                                    operationItemKeys[prop] = opItemJSON[prop];
+                                }
+                            }
+                        } else {
+                            console.log('invalid json string ' + opItemKeyText);
+                        }
                     }
                 });
             }
@@ -872,6 +875,13 @@ function validateSidesNotTheSame(opDetails, op1, op2) {
         message += '<p>The following sides match for operations ' + object1['name'] + ' and ' + object2['name'] + ' : ' + sidesMatch.join(', ') + '.</p><p>Please make adjustments as these operations cannot be done on the same sides.</p>';
     }
     return message
+}
+function getJsonFromString (str) {
+    try {
+        return JSON.parse(str);
+    } catch (e) {
+        return false;
+    }
 }
 
 configureEvents.registerOnCalcLoadedListener(rollCalcLogic);

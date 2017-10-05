@@ -149,13 +149,17 @@ var fabrivuDirectMaterials = [
 var lfDeviceInk = {
     45 : {
         'inkMaterialOpId' : 132,
-        'defaultOpItem' : 608 //TBG Vutek HS125
+        'inkMaterialOpIdSide2' : 136,
+        'inkConfigOpSide2' : 137,
+        'defaultOpItem' : 608, //TBG Vutek HS125
+        'defaultInkConfigSide2OpItem' : 641 //TBG Vutek HS125
     },
     46 : {
         'inkMaterialOpId' : 133,
         'defaultOpItem' : 622 //CMYK
     }
 }
+
 
 
 var pmPortal = ((location.hostname.indexOf("tbg-pm.collaterate.com") != -1) || (location.hostname.indexOf("tbghub.com") != -1));
@@ -415,16 +419,49 @@ var rollCalcLogic = {
                     cu.changeField(fields.operation79_answer, leadAndTailCost, true);
                 }
             }
-            /************************ ALIGN INK MATERIAL COSTS WITH DEVICE RUN*/
+                        /************************ ALIGN INK MATERIAL COSTS WITH DEVICE RUN*/
             var deviceId = configureglobals.cquotedata.device.id ? configureglobals.cquotedata.device.id : null;
             var devRunConfig = lfDeviceInk[deviceId];
             if (devRunConfig) {
                 var inkMatOp = fields['operation' + devRunConfig.inkMaterialOpId];
                 var defaultInkOpItem = lfDeviceInk[deviceId].defaultOpItem ? lfDeviceInk[deviceId].defaultOpItem : null;
+
+                var inkMatOpSide2 = fields['operation' + devRunConfig.inkMaterialOpIdSide2];
+                var inkConfigOpSide2 = fields['operation' + devRunConfig.inkConfigOpSide2];
+                var defaultInkConfigSide2OpItem = lfDeviceInk[deviceId].defaultInkConfigSide2OpItem ? lfDeviceInk[deviceId].defaultInkConfigSide2OpItem : null;
                 //Grab op item id from operation Item Keys object. If nothing, then use default
                 var inkMatOpItemId = operationItemKeys.inkMatOpItem ? operationItemKeys.inkMatOpItem : defaultInkOpItem;
+                var inkMatOpSide2ItemId = operationItemKeys.inkMatOpItemSide2 ? operationItemKeys.inkMatOpItemSide2 : '';
                 if (cu.getValue(inkMatOp) != inkMatOpItemId) {
                     cu.changeField(inkMatOp, inkMatOpItemId, true);
+                    return
+                }
+                //side 2
+                if (inkConfigOpSide2) {
+                    if (cu.getValue(fields.sides) == "2") {
+                        //default if sides was last changed
+                        if (cu.isLastChangedField(updates, fields.sides)) {
+                            cu.changeField(inkConfigOpSide2, defaultInkConfigSide2OpItem, true);
+                            return
+                        }
+                        cu.showField(inkConfigOpSide2);
+                        if (operationItemKeys.inkMatOpItemSide2) {
+                            if (cu.getValue(inkMatOpSide2) != inkMatOpSide2ItemId) {
+                                cu.changeField(inkMatOpSide2,inkMatOpSide2ItemId,true);
+                                return
+                            }
+                        }
+                    } else {
+                        if (cu.hasValue(inkConfigOpSide2)) { 
+                            cu.changeField(inkConfigOpSide2, '', true) 
+                            return
+                        }
+                        if (cu.hasValue(inkMatOpSide2)) {
+                            cu.changeField(inkMatOpSide2, '', true) 
+                            return
+                        }
+                        cu.hideField(inkConfigOpSide2);
+                    }
                 }
             }
             /************************ APPLY LAM SETUP FEE WHEN LAM SELECTED */

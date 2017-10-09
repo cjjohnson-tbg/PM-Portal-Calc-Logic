@@ -816,7 +816,36 @@ var boardCalcLogic = {
                 trimOperationItemName(opsWithSubIds,'_');
                 removeOperationItemsWithString(156,'Print');
                 removeOperationItemsWithString(133,'Other');
-                // renderExtendedCostBreakdown();
+
+                /******************* TEAM MARKUP OPERATIONS */
+                var estJobCostInc = fields.operation248;
+                var priceDecOp = fields.operation249;
+                var teamMarkupOp = fields.operation250;
+                if (estJobCostInc && priceDecOp && teamMarkupOp) {
+                    var markup = quote.markupPercent;
+                    var teamPrice = getTeamPrice();
+                    var estJobCost = ((quote.jobCostPrice + quote.operationsPrice - teamPrice) * 100) / quantity;
+                    var estJobCostFactor = parseInt(estJobCost / (1 + quote.markupPercent));
+                    var estJobCostIncAnswer = fields.operation248_answer;
+                    var estJobCostDecAnswer = fields.operation249_answer;
+                    if (cu.getValue(estJobCostIncAnswer) != estJobCostFactor) {
+                            cu.changeField(estJobCostIncAnswer, estJobCostFactor, true);
+                    }
+                    if (cu.getValue(estJobCostDecAnswer) != estJobCostFactor) {
+                            cu.changeField(estJobCostDecAnswer, estJobCostFactor, true);
+                    }
+                    console.log('estJobCost  = ' + estJobCost + ' estJobCostFacto = ' + estJobCostFactor);
+                }
+
+                function getTeamPrice() {
+                    var operationQuotes = quote.operationQuotes;
+                    for (var i = 0; i < operationQuotes.length; i++) {
+                        if (operationQuotes[i].data.heading == "TBG Team") {
+                            return operationQuotes[i].price
+                        }
+                    }
+                }
+
                 showMessages();
             }  // END SMALL FORMAT      
         }

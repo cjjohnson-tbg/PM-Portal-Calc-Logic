@@ -214,7 +214,7 @@ var rollCalcLogic = {
             var hasFrontLam = (cu.hasValue(fields.frontLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.frontLaminate)) == -1));
             var hasBackLam = (cu.hasValue(fields.backLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.backLaminate)) == -1));
             
-            var quote = configureglobals.cquote.pjQuote || quote ? configureglobals.cquote.pjQuote || quote : null;
+            var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
 
             /**************** OPERATION ITEM KEYS */
             //Create object from key value pairs inserted into operation Item Description surrounded by double brackets "{{ }}"
@@ -766,6 +766,29 @@ var rollCalcLogic = {
             if (cu.isMultipleVersion()) {
                 $('input.versionName').attr('required',true);
             }
+            //calculate the cost per piece to product and insert that value into the "TBG Team answer"
+            var teamMarkupOp = fields.operation170;
+            if (teamMarkupOp) {
+                var teamMarkupFactor = fields.operation170_answer;
+                var markup = quote.markupPercent;
+                var teamPrice = getTeamPrice();
+                var estJobCost = ((quote.jobCostPrice + quote.operationsPrice - teamPrice) * 100) / quantity;
+                var estJobCostFactor = parseInt(estJobCost / (1 + quote.markupPercent));
+
+                if (cu.getValue(teamMarkupFactor) != estJobCostFactor) {
+                    cu.changeField(teamMarkupFactor, estJobCostFactor, true)
+                }
+
+            }
+            
+            function getTeamPrice() {
+                var operationQuotes = quote.operationQuotes;
+                for (var i = 0; i < operationQuotes.length; i++) {
+                    if (operationQuotes[i].operation.id == 170) {
+                        return operationQuotes[i].price
+                    }
+                }
+            }
             /********************************************* ALERTS */
             // show an alert when necessary
             if (message != '' || submessage != '') {
@@ -827,6 +850,7 @@ function showBannerOperations() {
     });
 }
 function getLeadAndTailCost() {
+    var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
     var totalSubCost = quote.aPrintSubstratePrice;
     var totalSquareFeet = quote.piece.totalSquareFeet;
     var subSqFtCost = totalSubCost / totalSquareFeet;
@@ -883,6 +907,7 @@ function removeOperationItemsWithString(op, string) {
 }
 
 function getOperationDetails() {
+    var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
     var operations = quote.operationQuotes;
     var ops = { };
     for (var i = 0; i < operations.length; i++) {

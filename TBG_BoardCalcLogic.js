@@ -829,10 +829,12 @@ var boardCalcLogic = {
                     var estJobCostIncAnswer = fields.operation248_answer;
                     var estJobCostDecAnswer = fields.operation249_answer;
                     if (cu.getValue(estJobCostIncAnswer) != estJobCostFactor) {
-                            cu.changeField(estJobCostIncAnswer, estJobCostFactor, true);
+                        cu.changeField(estJobCostIncAnswer, estJobCostFactor, true);
+                        return
                     }
                     if (cu.getValue(estJobCostDecAnswer) != estJobCostFactor) {
-                            cu.changeField(estJobCostDecAnswer, estJobCostFactor, true);
+                        cu.changeField(estJobCostDecAnswer, estJobCostFactor, true);
+                        return
                     }
                     console.log('estJobCost  = ' + estJobCost + ' estJobCostFacto = ' + estJobCostFactor);
                 }

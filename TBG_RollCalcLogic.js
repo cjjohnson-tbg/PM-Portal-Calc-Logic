@@ -213,14 +213,15 @@ var rollCalcLogic = {
             
             var hasFrontLam = (cu.hasValue(fields.frontLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.frontLaminate)) == -1));
             var hasBackLam = (cu.hasValue(fields.backLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.backLaminate)) == -1));
-                       
+            
+            var quote = configureglobals.cquote.pjQuote || quote ? configureglobals.cquote.pjQuote || quote : null;
+
             /**************** OPERATION ITEM KEYS */
             //Create object from key value pairs inserted into operation Item Description surrounded by double brackets "{{ }}"
             //var operationItemKeys = new Object();  
             for (const prop of Object.keys(operationItemKeys)) {
               delete operationItemKeys[prop];
             }
-            var quote = configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote ? configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote : null;
             if (quote) {
                 var ops = quote.operationQuotes;
                 var descriptions = [];
@@ -484,7 +485,7 @@ var rollCalcLogic = {
             if (laminatingRun) {
                 if (hasLaminatingChosen) {
                     if (configureglobals.cquote == null) { return; }
-                    var frontLamType = configureglobals.cquote.lpjQuote.piece.frontLaminate.type.name;
+                    var frontLamType = quote.piece.frontLaminate.type.name;
                     if (frontLamType == 'Cold') {
                         if (cu.getValue(laminatingRun) != 363) {
                             cu.changeField(laminatingRun, 363, true);
@@ -826,12 +827,12 @@ function showBannerOperations() {
     });
 }
 function getLeadAndTailCost() {
-    var totalSubCost = configureglobals.cquote.lpjQuote.aPrintSubstratePrice;
-    var totalSquareFeet = configureglobals.cquote.lpjQuote.piece.totalSquareFeet;
+    var totalSubCost = quote.aPrintSubstratePrice;
+    var totalSquareFeet = quote.piece.totalSquareFeet;
     var subSqFtCost = totalSubCost / totalSquareFeet;
-    var subWidth = configureglobals.cquote.lpjQuote.piece.aPrintSubstrate.width;
+    var subWidth = quote.piece.aPrintSubstrate.width;
     var subLinearFootCost = subWidth * subSqFtCost / 12;
-    var totalQuantity = configureglobals.cquote.lpjQuote.productionQuantity;
+    var totalQuantity = quote.productionQuantity;
     var leadTailCost = parseInt(subLinearFootCost * 10 / totalQuantity);
 return leadTailCost;
 }
@@ -882,7 +883,7 @@ function removeOperationItemsWithString(op, string) {
 }
 
 function getOperationDetails() {
-    var operations = configureglobals.cquote.lpjQuote.operationQuotes;
+    var operations = quote.operationQuotes;
     var ops = { };
     for (var i = 0; i < operations.length; i++) {
         var opId = operations[i].operation.id;

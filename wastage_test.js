@@ -1,7 +1,9 @@
 var deviceDefaults = {
-	"leadWasteLF" : 10,
-	"bleed" : .25,
-	"margin" : 1
+    "leadWasteLF" : 10,
+    "bleed" : .25,
+	"margin" : 1,
+	"gutter" : 0,
+	"attrition" : .02
 }
 var x = {
 	"alternateRolls" : 
@@ -31,17 +33,22 @@ var x = {
 				"length" : 1968
 			}
 		]
-};
+}
 
 var printConfig = {};
 
 var cu = calcUtil;
 var testLogic = {
+	onCalcLoaded: function() {
+		$('#additionalProductFields .additionalInformation div label:contains("Optimum Roll Substrate Name")').parent().attr('id','optimum-substrate');
+		$('#additionalProductFields .additionalInformation div label:contains("Optimum Roll Substrate ID")').parent().attr('id','optimum-substrate-id');
+	},
 	onQuoteUpdated: function(updates, validation, product) {
 		cu.initFields();
 		var pieceWidth = Number(cu.getWidth());
 		var pieceHeight = Number(cu.getHeight());
-		var qty = cu.getTotalQuantity();
+		var pieceQty = cu.getTotalQuantity();
+		var qty = Math.ceil(pieceQty * (1 + deviceDefaults.attrition));
 		
 		var totalSubCost = configureglobals.cquote.lpjQuote.aPrintSubstratePrice;
 		var totalSquareFeet = configureglobals.cquote.lpjQuote.piece.totalSquareFeet;
@@ -50,77 +57,107 @@ var testLogic = {
 		var bleed = deviceDefaults.bleed;
 		var devMargin = deviceDefaults.margin;
 		var leadWasteLF = deviceDefaults.leadWasteLF;
+		var gutter = deviceDefaults.gutter;
 
-		//establish chosen config
+		//establish chosen default susbtrate config
 		var defaultRoll = {
 			"id" : configureglobals.cprintsubstratesmgr.choice.id,
-			"name" : configureglobals.cprintsubstratesmgr.choice.name,
+			"name" : configureglobals.cprintsubstratesmgr.choice.productionName,
 			"width" : configureglobals.cprintsubstratesmgr.choice.width,
-			"height" : configureglobals.cprintsubstratesmgr.choice.height
+			"length" : configureglobals.cprintsubstratesmgr.choice.height
 		}
-		printConfig = getPrintConfig(defaultRoll);
-		console.log(printConfig);
+		//get default roll config
+		printConfig = getBestPrintConfig(defaultRoll);
 
 		/*
-		Loop through each availableRoll, 
-		determine imposisition
-		determine total substrate sq ft needed
-		waste = total finished - total needed
-		after loop, enter waste $ into operation
+		Loop through each alternateRolls and check for best imposition 
 		*/
 		
-		x.alternateRolls.forEach(function(roll) {
-			var rollConfig = getPrintConfig(roll);
-			if (rollConfig.total_substrate_cost < printConfig.total_substrate_cost && rollConfig.valid) {
-				printConfig = rollConfig;
+		for (var i = 0; i < x.alternateRolls.length; i++) {
+			var rollConfig = getBestPrintConfig(x.alternateRolls[i]);
+			//if better cost value then overwrite printConfig
+			if (rollConfig) {
+				if (rollConfig.total_roll_cost < printConfig.total_roll_cost) {
+					printConfig = rollConfig;
+				}
 			}
-		});
+		}
+		console.log(printConfig);
+
+		//Paste difference from total_roll_cost - printed_roll_cost
+		printConfig['roll_wastage'] = Math.ceil( ((printConfig.total_roll_cost - totalSubCost) * 100) / pieceQty );
+		if (cu.getValue(fields.operation135_answer) != printConfig.roll_wastage) {
+			cu.changeField(fields.operation135_answer,printConfig.roll_wastage,true);
+			$('#optimum-substrate input').val(printConfig.substrate);
+			$('#optimum-substrate-id input').val(printConfig.substrate_id);
+		}
 
 
-		function getPrintConfig(roll) {
+
+
+		function getBestPrintConfig(roll) {
+			var bestConfig;
+
+			var horizontalPrintConfig = getPrintConfig(roll, pieceWidth, pieceHeight);
+			horizontalPrintConfig['vertical_piece_orienation'] = false;
+			var vertPrintConfig = getPrintConfig(roll, pieceHeight, pieceWidth);
+			vertPrintConfig['vertical_piece_orienation'] = true;
+			//Test which orientation yields the lowest susbtrate cost
+			if (horizontalPrintConfig.valid && !vertPrintConfig.valid) {
+				bestConfig = horizontalPrintConfig;
+			} else if (!horizontalPrintConfig.valid && vertPrintConfig.valid) {
+				bestConfig = vertPrintConfig;
+			} else if (horizontalPrintConfig.total_roll_cost < vertPrintConfig.total_roll_cost) {
+				bestConfig = horizontalPrintConfig;
+			} else {
+				bestConfig = vertPrintConfig;
+			}
+			return bestConfig
+		}
+		
+		function getPrintConfig(roll, width, height) {
+			var numDown, numRolls, printLfNeeded, numDownPerRoll, rollsNeeded, fullRolls, numDownLastRoll, lastRollLf, lastRollSqFt;
 			var config = {};
 			var vertical_piece_orienation = false;
 
+			var printableLF = (roll.length / 12) - leadWasteLF;
+			var fullRollArea = roll.width * roll.length / 144;
+			var fullRollCost = fullRollArea * subSqFtCost; 
+
 			//horizontal orientation
-			var numAcross = Math.floor( (roll.width - (devMargin * 2)) / (pieceWidth + (bleed * 2)) );
-			var hValid = false;
+			var numAcross = Math.floor( (roll.width - (devMargin * 2)) / (width + (bleed * 2)) );
+			var valid_quote = false;
 			if (numAcross > 0) {
-				hValid = true;
-				var numDown = Math.ceil(qty / numAcross);
-				var numRolls = Math.ceil((numDown * pieceHeight + (bleed * 2)) / (roll.height - leadWasteLF));
-				// wastage + print
-				//var totalSubsSqFoot = (roll.width * (pieceHeight + (bleed * 2)) * numDown / 144) + (leadWasteLF * numRolls * 12);
-
-				//##### STOPING HERE FOR THE NIGHT.  NEED TO FIGURE OUT EQUATION FOR NUMBER OF ROLLS AND REMAINDER ON LAST ROLL ###
-				
-				var totalSubsSqFoot = FullRollCost - remainder;
-				var totalSubsSqFoot = ((numRolls - 1) * (roll.width * roll.height) * subSqFtCost) 
-					+ ((roll.width / 12));
+				valid_quote = true;
+				numDown = Math.ceil(qty / numAcross);
+				numRolls = Math.ceil( (numDown * (height + (bleed * 2))) / (roll.length - (leadWasteLF * 12)) );
+				printLfNeeded = numDown * (height + (2 * bleed)) / 12 ;
+				numDownPerRoll = Math.floor(printableLF / ((height + (2 * bleed)) / 12));
+				rollsNeeded = Math.ceil(numDown / numDownPerRoll);
+				fullRolls = rollsNeeded - 1;
+				numDownLastRoll = numDown % numDownPerRoll;
+				lastRollLf = numDownLastRoll * (height + (2 * bleed)) / 12;
+				lastRollSqFt = (lastRollLf + leadWasteLF) * roll.width / 12;
 			}
 
-			//vertical orientiation
-			var vertNumAcross = Math.floor( (roll.width - (devMargin * 2)) / (pieceHeight + (bleed * 2)) );
-			var vValid = false
-			if (vertNumAcross > 0) {
-				vValid = true;
-				var vertNumDown = Math.ceil(qty / vertNumAcross);
-				var vertNumRolls = Math.ceil((vertNumDown * pieceWidth + (bleed * 2)) / (roll.height -leadWasteLF));
-				var vertTotalSubsSqFoot = (roll.width * (pieceWidth + (bleed * 2)) * numDown / 144) + (leadWasteLF * numRolls * 12);
-			}
-			
-			if (vertTotalSubsSqFoot < totalSubsSqFoot) {
-				vertical_piece_orienation = true;
-			}
 			config = {
-				'valid' : (!hValid && !vValid) ? false : true,
-				'vertical_piece_orienation' : vertical_piece_orienation,
-				'piece_width_across' : vertical_piece_orienation ? pieceWidth : pieceHeight,
-				'piece_width_down' : vertical_piece_orienation ? pieceHeight : pieceWidth,
-				'piece_number_across' : vertical_piece_orienation ? vertNumAcross : numDown,
-				'piece_number_down' : vertical_piece_orienation ? vertNumDown : vertNumDown,
-				'total_substrate_square_feet' : vertical_piece_orienation ? vertTotalSubsSqFoot : totalSubsSqFoot ,
-				'total_substrate_cost' : vertical_piece_orienation ? vertTotalSubsSqFoot * subSqFtCost : totalSubsSqFoot * subSqFtCost,
-				'number_rolls' : vertical_piece_orienation ? vertNumRolls : numRolls,
+				'valid' : valid_quote,
+				'roll_printable_LF' : printableLF,
+				'piece_width_across' : width,
+				'piece_width_down' : height,
+				'piece_number_across' : numAcross,
+				'piece_number_down' : numDown,
+				'print_LF_needed' : printLfNeeded,
+				'total_rolls' : rollsNeeded,
+				'full_rolls' : fullRolls,
+				'numDown_down_on_last_roll' : numDownLastRoll,
+				'full_rolls_area' : fullRollArea * fullRolls,
+				'full_rolls_cost' : fullRollCost * fullRolls,
+				'last_roll_lf' : lastRollLf,
+				'last_roll_square_feet' : lastRollSqFt,
+				'last_roll_cost' : lastRollSqFt * subSqFtCost,
+				'total_roll_square_feet' : (fullRollArea * fullRolls) + lastRollSqFt,
+				'total_roll_cost' : (fullRolls * fullRollCost) + (lastRollSqFt * subSqFtCost),
 				'substrate_id' : roll.id,
 				'substrate' : roll.name,
 				'substrate_width' : roll.width,
@@ -134,6 +171,6 @@ var testLogic = {
 
 
 
-//configureEvents.registerOnCalcLoadedListener(testLogic);
+configureEvents.registerOnCalcLoadedListener(testLogic);
 //configureEvents.registerOnCalcChangedListener(testLogic);
 configureEvents.registerOnQuoteUpdatedListener(testLogic);

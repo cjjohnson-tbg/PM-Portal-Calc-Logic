@@ -1,13 +1,26 @@
-var deviceDefaults = {
-    "leadWasteLF" : 8,
-	"bleed" : .25,
-	"margin" : 1,
-	"gutter" : 0,
-	"attrition" : .02,
-	"rollChangeMins" : 10,
-	"hourlyRate" : 98
+var deviceDetails = {
+	"45" : {
+		"name" : "TBG Vutek HS125 Roll",
+	    "leadWasteLF" : 8,
+		"bleed" : .25,
+		"margin" : 1,
+		"gutter" : 0,
+		"attrition" : .02,
+		"rollChangeMins" : 10,
+		"hourlyRate" : 98
+	},
+	"46" : {
+		"name" : "TBG Canon",
+	    "leadWasteLF" : 6,
+		"bleed" : .25,
+		"margin" : 1,
+		"gutter" : 0,
+		"attrition" : .02,
+		"rollChangeMins" : 3,
+		"hourlyRate" : 39
+	}
 }
-//renaming 
+
 var altRolls = {
 	"23" : 
 		[
@@ -33,16 +46,27 @@ var altRolls = {
 }
 
 var printConfig = {};
+var deviceDefaults;
+
 
 var cu = calcUtil;
 var testLogic = {
 	onCalcLoaded: function() {
+		// get Device defaults from id
+		var deviceId = configureglobals.cquote.lpjQuote.device.id;
+		deviceDefaults = deviceDetails[deviceId] ? deviceDetails[deviceId] : null;
 		$('#additionalProductFields .additionalInformation div label:contains("Optimum Roll Substrate Name")').parent().attr('id','optimum-substrate');
 		$('#additionalProductFields .additionalInformation div label:contains("Optimum Roll Substrate ID")').parent().attr('id','optimum-substrate-id');
 	},
 	onQuoteUpdated: function(updates, validation, product) {
 		cu.initFields();
 
+		//if no device default the break out
+		if (!deviceDefaults) {
+			console.log('no device defaults defined');
+			return
+		}
+		
 		var rollWasteOp = fields.opeation135;
 		if (rollWasteOp) {
 

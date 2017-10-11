@@ -69,7 +69,7 @@ function renderExtendedCostBreakdown () {
             item: quote.piece.aPrintSubstrate.productionName ? quote.piece.aPrintSubstrate.productionName : null,
             item: quote.piece.aPrintSubstrate ? quote.piece.aPrintSubstrate.productionName : null,
             cost_basis: '',
-            description: printConfig.substrate ? 'OPTIMUM ROLL ' + printConfig.substrate : quote.piece.aPrintSubstrate.referenceId ? quote.piece.aPrintSubstrate.referenceId : null,
+            description: printConfig ? 'OPTIMUM ROLL ' + printConfig.substrate : quote.piece.aPrintSubstrate.referenceId ? quote.piece.aPrintSubstrate.referenceId : null,
             shouldDisplay: quote.piece.aPrintSubstrate ? true : false,
             costingOnly: false
         },

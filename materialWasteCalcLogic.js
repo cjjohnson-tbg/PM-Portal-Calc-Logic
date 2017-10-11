@@ -98,21 +98,22 @@ var testLogic = {
 				$('#optimum-substrate-id input').val(printConfig.substrate_pace_id);
 			}
 		}
-		var rollChangeOp = fields.operation171;
+		var rollChangeOp = fields.operation138;
+		var rollChangeOpAnswer = fields.operation138_answer;
 		if (rollChangeOp) {
 			if (printConfig.roll_change_cost > 0) {
-				if (cu.getValue(rollChangeOp) != 709) {
-					cu.changeField(rollChangeOp, 709, true);
+				if (!cu.hasValue(rollChangeOp)) {
+					cu.changeField(rollChangeOp, 682, true);
 					return
 				}
 				var rollChangeFactor = parseInt(printConfig.roll_change_cost * 100000 / pieceQty);
-				if (cu.getValue(fields.operation171_answer) != rollChangeFactor) {
-					cu.changeField(fields.operation171_answer, rollChangeFactor, true);
+				if (cu.getValue(rollChangeOpAnswer) != rollChangeFactor) {
+					cu.changeField(rollChangeOpAnswer, rollChangeFactor, true);
 					return
 				}
 			} else {
-				if (cu.getValue(rollChangeOp) != 710) {
-					cu.changeField(rollChangeOp, 710, true);
+				if (cu.hasValue(rollChangeOp)) {
+					cu.changeField(rollChangeOp, '', true);
 					return
 				}
 			}

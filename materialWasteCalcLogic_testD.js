@@ -101,7 +101,7 @@ var testLogic = {
 		var rollChangeOp = fields.operation171;
 		if (rollChangeOp) {
 			if (printConfig.roll_change_cost > 0) {
-				if (cu.getValue(rollChangeOp) != 709) {
+				if (!cu.hasValue(rollChangeOp)) {
 					cu.changeField(rollChangeOp, 709, true);
 					return
 				}
@@ -111,8 +111,8 @@ var testLogic = {
 					return
 				}
 			} else {
-				if (cu.getValue(rollChangeOp) != 710) {
-					cu.changeField(rollChangeOp, 710, true);
+				if (cu.hasValue(rollChangeOp)) {
+					cu.changeField(rollChangeOp, '', true);
 					return
 				}
 			}

@@ -1,9 +1,11 @@
 var deviceDefaults = {
-    "leadWasteLF" : 10,
+    "leadWasteLF" : 8,
 	"bleed" : .25,
 	"margin" : 1,
 	"gutter" : 0,
-	"attrition" : .02
+	"attrition" : .02,
+	"rollChangeMins" : 10,
+	"hourlyRate" : 98
 }
 //renaming 
 var altRolls = {
@@ -87,15 +89,34 @@ var testLogic = {
 		}
 
 		//Paste difference from total_roll_cost - printed_roll_cost
-		printConfig['roll_wastage'] = Math.ceil( ((printConfig.total_roll_cost - totalSubCost) * 100) / pieceQty );
+		printConfig['roll_wastage'] = printConfig.total_roll_cost - totalSubCost;
+		printConfig['roll_wastage_factor'] = Math.ceil( (printConfig.roll_wastage * 100) / pieceQty );
 		if (fields.operation135_answer) {
-			if (cu.getValue(fields.operation135_answer) != printConfig.roll_wastage) {
-				cu.changeField(fields.operation135_answer,printConfig.roll_wastage,true);
+			if (cu.getValue(fields.operation135_answer) != printConfig.roll_wastage_factor) {
+				cu.changeField(fields.operation135_answer,printConfig.roll_wastage_factor,true);
 				$('#optimum-substrate input').val(printConfig.substrate);
 				$('#optimum-substrate-id input').val(printConfig.substrate_pace_id);
 			}
 		}
-		
+		var rollChangeOp = fields.operation171;
+		if (rollChangeOp) {
+			if (printConfig.roll_change_cost > 0) {
+				if (cu.getValue(rollChangeOp) != 709) {
+					cu.changeField(rollChangeOp, 709, true);
+					return
+				}
+				var rollChangeFactor = parseInt(printConfig.roll_change_cost * 100000 / pieceQty);
+				if (cu.getValue(fields.operation171_answer) != rollChangeFactor) {
+					cu.changeField(fields.operation171_answer, rollChangeFactor, true);
+					return
+				}
+			} else {
+				if (cu.getValue(rollChangeOp) != 710) {
+					cu.changeField(rollChangeOp, 710, true);
+					return
+				}
+			}
+		}
 
 
 		function getBestPrintConfig(roll) {
@@ -110,7 +131,7 @@ var testLogic = {
 				bestConfig = horizontalPrintConfig;
 			} else if (!horizontalPrintConfig.valid && vertPrintConfig.valid) {
 				bestConfig = vertPrintConfig;
-			} else if (horizontalPrintConfig.total_roll_cost < vertPrintConfig.total_roll_cost) {
+			} else if (horizontalPrintConfig.total_roll_cost_plus_labor < vertPrintConfig.total_roll_cost_plus_labor) {
 				bestConfig = horizontalPrintConfig;
 			} else {
 				bestConfig = vertPrintConfig;
@@ -119,7 +140,7 @@ var testLogic = {
 		}
 		
 		function getPrintConfig(roll, width, height) {
-			var numDown, numRolls, printLfNeeded, numDownPerRoll, rollsNeeded, fullRolls, numDownLastRoll, lastRollLf, lastRollSqFt;
+			var numDown, numRolls, printLfNeeded, numDownPerRoll, rollsNeeded, fullRolls, numDownLastRoll, lastRollLf, lastRollSqFt, rollChangeCost;
 			var config = {};
 			var vertical_piece_orienation = false;
 
@@ -137,10 +158,11 @@ var testLogic = {
 				printLfNeeded = numDown * (height + (2 * bleed)) / 12 ;
 				numDownPerRoll = Math.floor(printableLF / ((height + (2 * bleed)) / 12));
 				rollsNeeded = Math.ceil(numDown / numDownPerRoll);
-				fullRolls = rollsNeeded - 1;
+				fullRolls = Math.floor(numDown / numDownPerRoll);
 				numDownLastRoll = numDown % numDownPerRoll;
 				lastRollLf = numDownLastRoll * (height + (2 * bleed)) / 12;
 				lastRollSqFt = (lastRollLf + leadWasteLF) * roll.width / 12;
+				rollChangeCost = (rollsNeeded - 1) * deviceDefaults.rollChangeMins * deviceDefaults.hourlyRate / 60;
 			}
 
 			config = {
@@ -153,6 +175,7 @@ var testLogic = {
 				'print_LF_needed' : printLfNeeded,
 				'total_rolls' : rollsNeeded,
 				'full_rolls' : fullRolls,
+				'roll_change_cost' : rollChangeCost,
 				'numDown_down_on_last_roll' : numDownLastRoll,
 				'full_rolls_area' : fullRollArea * fullRolls,
 				'full_rolls_cost' : fullRollCost * fullRolls,
@@ -161,11 +184,13 @@ var testLogic = {
 				'last_roll_cost' : lastRollSqFt * subSqFtCost,
 				'total_roll_square_feet' : (fullRollArea * fullRolls) + lastRollSqFt,
 				'total_roll_cost' : (fullRolls * fullRollCost) + (lastRollSqFt * subSqFtCost),
+				'total_roll_cost_plus_labor' : (fullRolls * fullRollCost) + (lastRollSqFt * subSqFtCost) + rollChangeCost,
 				'substrate' : roll.name,
 				'substrate_width' : roll.width,
 				'substrate_length' : roll.length,
 				'substrate_pace_id' : roll.paceId ? roll.paceId : null
 			}
+			//calculate roll 
 
 			return config
 		}

@@ -7,7 +7,7 @@ var deviceDefaults = {
 }
 //renaming 
 var altRolls = {
-	23 : 
+	"23" : 
 		[
 			{ 
 				"paceId" : 3259,
@@ -48,7 +48,7 @@ var testLogic = {
 		
 		var totalSubCost = quote.aPrintSubstratePrice;
 		var totalSquareFeet = quote.piece.totalSquareFeet;
-		var subSqFtCost = totalSubCost / totalSquareFeet / qty;
+		var subSqFtCost = totalSubCost / totalSquareFeet / pieceQty;
 
 		var bleed = deviceDefaults.bleed;
 		var devMargin = deviceDefaults.margin;
@@ -63,6 +63,7 @@ var testLogic = {
 			"length" : configureglobals.cprintsubstratesmgr.choice.height,
 			"paceId" : configureglobals.cprintsubstratesmgr.choice.referenceId
 		}
+		console.log(defaultRoll.id);
 		//get default roll config
 		printConfig = getBestPrintConfig(defaultRoll);
 
@@ -90,8 +91,6 @@ var testLogic = {
 			$('#optimum-substrate input').val(printConfig.substrate);
 			$('#optimum-substrate-id input').val(printConfig.substrate_pace_id);
 		}
-
-
 
 
 		function getBestPrintConfig(roll) {

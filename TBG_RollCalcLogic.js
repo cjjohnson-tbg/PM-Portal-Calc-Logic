@@ -149,13 +149,17 @@ var fabrivuDirectMaterials = [
 var lfDeviceInk = {
     45 : {
         'inkMaterialOpId' : 132,
-        'defaultOpItem' : 608 //TBG Vutek HS125
+        'inkMaterialOpIdSide2' : 136,
+        'inkConfigOpSide2' : 137,
+        'defaultOpItem' : 608, //TBG Vutek HS125
+        'defaultInkConfigSide2OpItem' : 641 //TBG Vutek HS125
     },
     46 : {
         'inkMaterialOpId' : 133,
         'defaultOpItem' : 622 //CMYK
     }
 }
+
 
 
 var pmPortal = ((location.hostname.indexOf("tbg-pm.collaterate.com") != -1) || (location.hostname.indexOf("tbghub.com") != -1));
@@ -185,10 +189,6 @@ var rollCalcLogic = {
         }
         removeClassFromOp(111,'costingOnly');
         addClassToOperation(planningOnlyOps,'planning');
-        //show error message if zund object does not load
-        if (zundSubstrateSpeeds.length == 0) {
-            cu.alert('Collaterate Zund Speed Factors list did not load propertly.  Please contact Support to ensure accurate costing.');
-        }
     },
     onCalcChanged: function(updates, product) {
 
@@ -229,15 +229,18 @@ var rollCalcLogic = {
                         var opItemDescription = operationQuote.operationItem.description;
                         descriptions.push(opItemDescription);
                         //var opItemKeyText = opItemDescription.replace(/(^.*{{|}}.*$)/g, '' );
-                        var opItemKeyText = /\[{(.*?)}\]/.exec(opItemDescription);
+                        var opItemKeyText = /\{(.*?)\}/.exec(opItemDescription);
                         if (opItemKeyText) {
-                            var opItemKeyList = opItemKeyText[1].split(',');
-                            //push to calc object
-                            opItemKeyList.forEach(function(item) {
-                                var key = item.replace(/\:.*$/g,'');
-                                var val = item.replace(/^.*\:/g,'');
-                                operationItemKeys[key.trim()] = val.trim();
-                            });
+                            var opItemJSON = getJsonFromString(opItemKeyText[0]);
+                            if (opItemJSON) {
+                                for (prop in opItemJSON) {
+                                    if (opItemJSON.hasOwnProperty(prop)) {
+                                        operationItemKeys[prop] = opItemJSON[prop];
+                                    }
+                                }
+                            } else {
+                                console.log('invalid json string ' + opItemKeyText);
+                            }
                         }
                     });
                 }
@@ -425,17 +428,49 @@ var rollCalcLogic = {
                 cu.changeField(fabCutOp, '', true);
                 return
             }
-            /************************ ALIGN INK MATERIAL COSTS WITH DEVICE RUN*/
+                        /************************ ALIGN INK MATERIAL COSTS WITH DEVICE RUN*/
             var deviceId = configureglobals.cquotedata.device.id ? configureglobals.cquotedata.device.id : null;
             var devRunConfig = lfDeviceInk[deviceId];
             if (devRunConfig) {
                 var inkMatOp = fields['operation' + devRunConfig.inkMaterialOpId];
                 var defaultInkOpItem = lfDeviceInk[deviceId].defaultOpItem ? lfDeviceInk[deviceId].defaultOpItem : null;
+
+                var inkMatOpSide2 = fields['operation' + devRunConfig.inkMaterialOpIdSide2];
+                var inkConfigOpSide2 = fields['operation' + devRunConfig.inkConfigOpSide2];
+                var defaultInkConfigSide2OpItem = lfDeviceInk[deviceId].defaultInkConfigSide2OpItem ? lfDeviceInk[deviceId].defaultInkConfigSide2OpItem : null;
                 //Grab op item id from operation Item Keys object. If nothing, then use default
                 var inkMatOpItemId = operationItemKeys.inkMatOpItem ? operationItemKeys.inkMatOpItem : defaultInkOpItem;
+                var inkMatOpSide2ItemId = operationItemKeys.inkMatOpItemSide2 ? operationItemKeys.inkMatOpItemSide2 : '';
                 if (cu.getValue(inkMatOp) != inkMatOpItemId) {
                     cu.changeField(inkMatOp, inkMatOpItemId, true);
                     return
+                }
+                //side 2
+                if (inkConfigOpSide2) {
+                    if (cu.getValue(fields.sides) == "2") {
+                        //default if sides was last changed
+                        if (cu.isLastChangedField(updates, fields.sides)) {
+                            cu.changeField(inkConfigOpSide2, defaultInkConfigSide2OpItem, true);
+                            return
+                        }
+                        cu.showField(inkConfigOpSide2);
+                        if (operationItemKeys.inkMatOpItemSide2) {
+                            if (cu.getValue(inkMatOpSide2) != inkMatOpSide2ItemId) {
+                                cu.changeField(inkMatOpSide2,inkMatOpSide2ItemId,true);
+                                return
+                            }
+                        }
+                    } else {
+                        if (cu.hasValue(inkConfigOpSide2)) { 
+                            cu.changeField(inkConfigOpSide2, '', true) 
+                            return
+                        }
+                        if (cu.hasValue(inkMatOpSide2)) {
+                            cu.changeField(inkMatOpSide2, '', true) 
+                            return
+                        }
+                        cu.hideField(inkConfigOpSide2);
+                    }
                 }
             }
             /************************ APPLY LAM SETUP FEE WHEN LAM SELECTED */
@@ -914,6 +949,13 @@ function validateSidesNotTheSame(opDetails, op1, op2) {
         message += '<p>The following sides match for operations ' + object1['name'] + ' and ' + object2['name'] + ' : ' + sidesMatch.join(', ') + '.</p><p>Please make adjustments as these operations cannot be done on the same sides.</p>';
     }
     return message
+}
+function getJsonFromString (str) {
+    try {
+        return JSON.parse(str);
+    } catch (e) {
+        return false;
+    }
 }
 
 configureEvents.registerOnCalcLoadedListener(rollCalcLogic);

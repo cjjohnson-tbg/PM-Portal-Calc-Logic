@@ -66,9 +66,10 @@ function renderExtendedCostBreakdown () {
         {
             cost: quote.aPrintSubstratePrice,
             name: "Print Substrate",
+            item: quote.piece.aPrintSubstrate.productionName ? quote.piece.aPrintSubstrate.productionName : null,
             item: quote.piece.aPrintSubstrate ? quote.piece.aPrintSubstrate.productionName : null,
             cost_basis: '',
-            description: quote.piece.aPrintSubstrate ? quote.piece.aPrintSubstrate.referenceId : null,
+            description: printConfig ? 'OPTIMUM ROLL ' + printConfig.substrate : quote.piece.aPrintSubstrate.referenceId ? quote.piece.aPrintSubstrate.referenceId : null,
             shouldDisplay: quote.piece.aPrintSubstrate ? true : false,
             costingOnly: false
         },
@@ -146,20 +147,22 @@ function renderExtendedCostBreakdown () {
                 //if pre-press, Add to Desktop estimate details
                 for (var i = 0; i < quote.operationQuotes.length; i++) {
                     //if pre-press operation push to desktop with version change
-                    if (selectedOperations[i].lpjcOperation.operation.id == 69) {
-                        for (var j = 0; j < estimateDetailsData.length; j++) {
-                            if (estimateDetailsData[j].name == 'Desktop') {
-                                estimateDetailsData[j].cost += (quote.operationQuotes[i].price ? quote.operationQuotes[i].price : 0);
-                                break
+                    if (selectedOperations[i]) {
+                        if (selectedOperations[i].lpjcOperation.operation.id == 69) {
+                            for (var j = 0; j < estimateDetailsData.length; j++) {
+                                if (estimateDetailsData[j].name == 'Desktop') {
+                                    estimateDetailsData[j].cost += (quote.operationQuotes[i].price ? quote.operationQuotes[i].price : 0);
+                                    break
+                                }
                             }
+                            continue
                         }
-                        continue
                     }
+                        
                     estimateDetailsData.push({
                         cost: quote.operationQuotes[i].price ? quote.operationQuotes[i].price : 0,
-                        name: quote.operationQuotes[i].data.heading || quote.operationQuotes[i].operation.heading,
                         name: quote.operationQuotes[i].operation.id == 52 ? 'Device Run ' : quote.operationQuotes[i].operation.heading,
-                        item: selectedOperations[i].choice.name,
+                        item: selectedOperations[i].choice.name ? selectedOperations[i].choice.name : null,
                         cost_basis: quote.operationQuotes[i].pieces || quote.operationQuotes[i].data.quantity,
                         description: selectedOperations[i].choice.description,
                         shouldDisplay: true,

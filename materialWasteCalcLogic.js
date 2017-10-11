@@ -40,6 +40,11 @@ var testLogic = {
 	},
 	onQuoteUpdated: function(updates, validation, product) {
 		cu.initFields();
+
+		var rollWasteOp = fields.opeation135;
+		if (rollWasteOp) {
+
+		}
 		var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
 		var pieceWidth = Number(cu.getWidth());
 		var pieceHeight = Number(cu.getHeight());
@@ -66,10 +71,8 @@ var testLogic = {
 		console.log(defaultRoll.id);
 		//get default roll config
 		printConfig = getBestPrintConfig(defaultRoll);
-
 		/*
-		IF altRoll exist for substrate then 
-		Loop through each alternateRolls and check for best imposition 
+		IF altRoll exist for substrate then Loop through each alternateRolls and check for best imposition 
 		*/
 		if (altRolls[defaultRoll.id]) {
 			for (var i = 0; i < altRolls[defaultRoll.id].length; i++) {
@@ -81,16 +84,18 @@ var testLogic = {
 					}
 				}
 			}
-			console.log(printConfig);
 		}
 
 		//Paste difference from total_roll_cost - printed_roll_cost
 		printConfig['roll_wastage'] = Math.ceil( ((printConfig.total_roll_cost - totalSubCost) * 100) / pieceQty );
-		if (cu.getValue(fields.operation135_answer) != printConfig.roll_wastage) {
-			cu.changeField(fields.operation135_answer,printConfig.roll_wastage,true);
-			$('#optimum-substrate input').val(printConfig.substrate);
-			$('#optimum-substrate-id input').val(printConfig.substrate_pace_id);
+		if (fields.operation135_answer) {
+			if (cu.getValue(fields.operation135_answer) != printConfig.roll_wastage) {
+				cu.changeField(fields.operation135_answer,printConfig.roll_wastage,true);
+				$('#optimum-substrate input').val(printConfig.substrate);
+				$('#optimum-substrate-id input').val(printConfig.substrate_pace_id);
+			}
 		}
+		
 
 
 		function getBestPrintConfig(roll) {

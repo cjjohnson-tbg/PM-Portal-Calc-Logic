@@ -21,31 +21,8 @@ var deviceDetails = {
 	}
 }
 
-
-//renaming 
-var altRolls = {
-	"23" : 
-		[
-			{ 
-				"paceId" : 3259,
-				"name" : "13OZ-38X164-ULTRAFLEX BANNER SCRIM-1 SIDED-WHITE",
-				"width" : 38,
-				"length" : 1968
-			},
-			{ 
-				"paceId" : 3260,
-				"name" : "13OZ-54X164-ULTRAFLEX BANNER SCRIM-1 SIDED-WHITE",
-				"width" : 54,
-				"length" : 1968
-			},
-			{ 
-				"paceId" : 3262,
-				"name" : "13OZ-80X164-ULTRAFLEX BANNER SCRIM-1 SIDED-WHITE",
-				"width" : 80,
-				"length" : 1968
-			}
-		]
-}
+//Create altRolls Object through Alt Roll Worksheet in Google Drive - PM Portal - Substrate Management to get 1 line retult
+var altRolls = {"137":[{"paceId":"3105","name":"SBR-3M-WHT-IJ3552C-02MIL-54X150","width":54,"length":1800}],"146":[{"paceId":"2681","name":"SBR-BRGR SMB-FAB-UV-1SD-6.87OZ-102X330","width":102,"length":3960}],"26":[{"paceId":"3130","name":"SBR-DURA-WHT-MAT-13OZ2SD-38X164","width":38,"length":1968},{"paceId":"3131","name":"SBR-DURA-WHT-MAT-13OZ2SD-54X164","width":54,"length":1968},{"paceId":"3134","name":"SBR-DURA-WHT-MAT-13OZ2SD-80X164","width":80,"length":1968},{"paceId":"6044","name":"SBR-DURA-WHT-MAT-13OZ2SD-63X164","width":63,"length":1968},{"paceId":"6049","name":"SBR-DURA-WHT-MAT-13OZ2SD-100X164","width":100,"length":1968}],"2":[{"paceId":"3123","name":"SBR-DURATEX BACKLIT 8MIL 72X1200","width":72,"length":1200},{"paceId":"3124","name":"SBR-DURATEX BACKLIT 8MIL 80X1200","width":80,"length":1200}],"282":[{"paceId":"5572","name":"SBR-3M-WHT-IJ180C10-02MIL-60X150","width":60,"length":1800}],"134":[{"paceId":"5850","name":"SBR-3M-WHT-IJ180CV3-02MIL-60X150","width":60,"length":1800}],"200":[{"paceId":"3242","name":"SBR-SIL-SLV-SAT-08MIL-42X165","width":42,"length":1980}],"73":[{"paceId":"3268","name":"SBR-ULTFX-MTWHT-18OZ-2SD-38X164","width":38,"length":1968},{"paceId":"3269","name":"SBR-ULTFX-MTWHT-18OZ-2SD-54X164","width":54,"length":1968},{"paceId":"3270","name":"SBR-ULTFX-MTWHT-18OZ-2SD-80X164","width":80,"length":1968}],"329":[{"paceId":"6169","name":"SUB-ULTRAFLEX-TEXTURED-2MM-78X98.4","width":78,"length":1180}],"23":[{"paceId":"3259","name":"SBR-ULTFX-MTWHT-13OZ-1SD-38X164","width":38,"length":""},{"paceId":"3260","name":"SBR-ULTFX-MTWHT-13OZ-1SD-54X164","width":54,"length":1968},{"paceId":"3262","name":"SBR-ULTFX-MTWHT-13OZ-1SD-80X164","width":80,"length":1968}]};
 
 var printConfig = {};
 var deviceDefaults;
@@ -103,6 +80,7 @@ var testLogic = {
 		if (altRolls[defaultRoll.id]) {
 			for (var i = 0; i < altRolls[defaultRoll.id].length; i++) {
 				var rollConfig = getBestPrintConfig(altRolls[defaultRoll.id][i]);
+				console.log(rollConfig);
 				//if better cost value then overwrite printConfig
 				if (rollConfig) {
 					if (rollConfig.total_roll_cost < printConfig.total_roll_cost) {

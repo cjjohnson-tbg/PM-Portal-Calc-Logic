@@ -197,6 +197,9 @@ var planningOnlyOperations = [
     187,    //LF Gloss Mode
     202     //LF MCT Cutting
 ]
+var estimstingOnlyOperations = [
+    218    //TBG Team Factor (temporary)
+]
 var trainingOps = [
 
 ]
@@ -293,6 +296,7 @@ var boardCalcLogic = {
         $('.overrideDevice').hide();
         trimOperationItemName(opsWithSubIds,'_');
         addClassToOperation(planningOnlyOperations,'planning');
+        addClassToOperation(estimstingOnlyOperations,'estimating');
         removeClassFromOp(170,'costingOnly');
         removeClassFromOp(205,'costingOnly');
         addOtherOpClass(opsWithOther);
@@ -324,6 +328,7 @@ var boardCalcLogic = {
             var submessage = ''; 
             if (cu.isSmallFormat(product)) { 
                 addClassToOperation(planningOnlyOperations,'planning');
+                addClassToOperation(estimstingOnlyOperations,'estimating');
                 addClassToOperation(trainingOps,'training');
                 addOtherOpClass(opsWithOther);
                 removeClassFromOp(170,'costingOnly');
@@ -818,16 +823,16 @@ var boardCalcLogic = {
                 removeOperationItemsWithString(133,'Other');
 
                 /******************* TEAM MARKUP OPERATIONS */
-                var estJobCostInc = fields.operation248;
-                var priceDecOp = fields.operation249;
-                var teamMarkupOp = fields.operation250;
-                if (estJobCostInc && priceDecOp && teamMarkupOp) {
+                var estJobCostInc = fields.operation216;
+                var estJobCostDec = fields.operation217;
+                var teamMarkupOp = fields.operation218;
+                if (estJobCostInc && estJobCostDec && teamMarkupOp) {
                     var markup = quote.markupPercent;
                     var teamPrice = getTeamPrice();
                     var estJobCost = ((quote.jobCostPrice + quote.operationsPrice - teamPrice) * 100) / quantity;
                     var estJobCostFactor = parseInt(estJobCost / (1 + quote.markupPercent));
-                    var estJobCostIncAnswer = fields.operation248_answer;
-                    var estJobCostDecAnswer = fields.operation249_answer;
+                    var estJobCostIncAnswer = fields.operation216_answer;
+                    var estJobCostDecAnswer = fields.operation217_answer;
                     if (cu.getValue(estJobCostIncAnswer) != estJobCostFactor) {
                         cu.changeField(estJobCostIncAnswer, estJobCostFactor, true);
                         return

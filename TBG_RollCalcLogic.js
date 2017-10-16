@@ -12,7 +12,8 @@ var planningOnlyOps = [
     108,  //TBGPre-Slit
     116,  //TBGTBG-FabCut
     125,  //TBGBucketJob
-    127  //TBGMCTCutting
+    127,  //TBGMCTCutting
+    134    //TBG Gutter
 ]
 var estimatingOnlyOps = [
     139     //TBG Team Factor

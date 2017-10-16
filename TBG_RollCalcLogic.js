@@ -213,14 +213,15 @@ var rollCalcLogic = {
             
             var hasFrontLam = (cu.hasValue(fields.frontLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.frontLaminate)) == -1));
             var hasBackLam = (cu.hasValue(fields.backLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.backLaminate)) == -1));
-                       
+            
+            var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
+
             /**************** OPERATION ITEM KEYS */
             //Create object from key value pairs inserted into operation Item Description surrounded by double brackets "{{ }}"
             //var operationItemKeys = new Object();  
             for (const prop of Object.keys(operationItemKeys)) {
               delete operationItemKeys[prop];
             }
-            var quote = configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote ? configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote : null;
             if (quote) {
                 var ops = quote.operationQuotes;
                 var descriptions = [];
@@ -495,7 +496,7 @@ var rollCalcLogic = {
             if (laminatingRun) {
                 if (hasLaminatingChosen) {
                     if (configureglobals.cquote == null) { return; }
-                    var frontLamType = configureglobals.cquote.lpjQuote.piece.frontLaminate.type.name;
+                    var frontLamType = quote.piece.frontLaminate.type.name;
                     if (frontLamType == 'Cold') {
                         if (cu.getValue(laminatingRun) != 363) {
                             cu.changeField(laminatingRun, 363, true);
@@ -800,6 +801,29 @@ var rollCalcLogic = {
             }
             /******************** INITIATE COST BREAKDOWN */
             renderExtendedCostBreakdown();
+            //calculate the cost per piece to product and insert that value into the "TBG Team answer"
+            var teamMarkupOp = fields.operation170;
+            if (teamMarkupOp) {
+                var teamMarkupFactor = fields.operation170_answer;
+                var markup = quote.markupPercent;
+                var teamPrice = getTeamPrice();
+                var estJobCost = ((quote.jobCostPrice + quote.operationsPrice - teamPrice) * 100) / quantity;
+                var estJobCostFactor = parseInt(estJobCost / (1 + quote.markupPercent));
+
+                if (cu.getValue(teamMarkupFactor) != estJobCostFactor) {
+                    cu.changeField(teamMarkupFactor, estJobCostFactor, true)
+                }
+
+            }
+            
+            function getTeamPrice() {
+                var operationQuotes = quote.operationQuotes;
+                for (var i = 0; i < operationQuotes.length; i++) {
+                    if (operationQuotes[i].operation.id == 170) {
+                        return operationQuotes[i].price
+                    }
+                }
+            }
             /********************************************* ALERTS */
             // show an alert when necessary
             if (message != '' || submessage != '') {
@@ -861,12 +885,13 @@ function showBannerOperations() {
     });
 }
 function getLeadAndTailCost() {
-    var totalSubCost = configureglobals.cquote.lpjQuote.aPrintSubstratePrice;
-    var totalSquareFeet = configureglobals.cquote.lpjQuote.piece.totalSquareFeet;
+    var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
+    var totalSubCost = quote.aPrintSubstratePrice;
+    var totalSquareFeet = quote.piece.totalSquareFeet;
     var subSqFtCost = totalSubCost / totalSquareFeet;
-    var subWidth = configureglobals.cquote.lpjQuote.piece.aPrintSubstrate.width;
+    var subWidth = quote.piece.aPrintSubstrate.width;
     var subLinearFootCost = subWidth * subSqFtCost / 12;
-    var totalQuantity = configureglobals.cquote.lpjQuote.productionQuantity;
+    var totalQuantity = quote.productionQuantity;
     var leadTailCost = parseInt(subLinearFootCost * 10 / totalQuantity);
 return leadTailCost;
 }
@@ -917,20 +942,19 @@ function removeOperationItemsWithString(op, string) {
 }
 
 function getOperationDetails() {
-    var operations = configureglobals.cquote.lpjQuote.operationQuotes;
-    if (operations) {
-        var ops = { };
-        for (var i = 0; i < operations.length; i++) {
-            var opId = operations[i].operation.id;
-            var data = operations[i].data;
-            ops['op' + opId] = {
-                'id' : opId,
-                'name' : operations[i].operation.heading,
-                'left' : data.leftSide,
-                'right' : data.rightSide,
-                'bottom' : data.bottomSide,
-                'top' : data.topSide
-            }
+    var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
+    var operations = quote.operationQuotes;
+    var ops = { };
+    for (var i = 0; i < operations.length; i++) {
+        var opId = operations[i].operation.id;
+        var data = operations[i].data;
+        ops['op' + opId] = {
+            'id' : opId,
+            'name' : operations[i].operation.heading,
+            'left' : data.leftSide,
+            'right' : data.rightSide,
+            'bottom' : data.bottomSide,
+            'top' : data.topSide
         }
         return ops
     } return false

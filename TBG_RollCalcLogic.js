@@ -14,12 +14,9 @@ var planningOnlyOps = [
     125,  //TBGBucketJob
     127  //TBGMCTCutting
 ]
-
-/*var planningOpsStyleBlock = createStyleBlock(planningOnlyOps, 'display: none;');
-$(function() {
-    $('head').append(planningOpsStyleBlock);
-});*/
-
+var estimatingOnlyOps = [
+    139     //TBG Team Factor
+]
 var zundOpItemMapLoading = {
 1  : 202,    //Speed Factor 1
 2  : 203,    //Speed Factor 2
@@ -189,6 +186,7 @@ var rollCalcLogic = {
         }
         removeClassFromOp(111,'costingOnly');
         addClassToOperation(planningOnlyOps,'planning');
+        addClassToOperation(estimatingOnlyOps,'estimating');
     },
     onCalcChanged: function(updates, product) {
 
@@ -203,6 +201,7 @@ var rollCalcLogic = {
 
             removeClassFromOp(111,'costingOnly');
             addClassToOperation(planningOnlyOps, 'planning');
+            addClassToOperation(estimatingOnlyOps,'estimating');
 
             /***************** GLOBAL VARIABLES */
             var deviceId = configureglobals.cquotedata.device.id ? configureglobals.cquotedata.device.id : null;
@@ -802,9 +801,9 @@ var rollCalcLogic = {
             /******************** INITIATE COST BREAKDOWN */
             renderExtendedCostBreakdown();
             //calculate the cost per piece to product and insert that value into the "TBG Team answer"
-            var teamMarkupOp = fields.operation170;
+            var teamMarkupOp = fields.operation139;
             if (teamMarkupOp) {
-                var teamMarkupFactor = fields.operation170_answer;
+                var teamMarkupFactor = fields.operation139_answer;
                 var markup = quote.markupPercent;
                 var teamPrice = getTeamPrice();
                 var estJobCost = ((quote.jobCostPrice + quote.operationsPrice - teamPrice) * 100) / quantity;
@@ -819,7 +818,7 @@ var rollCalcLogic = {
             function getTeamPrice() {
                 var operationQuotes = quote.operationQuotes;
                 for (var i = 0; i < operationQuotes.length; i++) {
-                    if (operationQuotes[i].operation.id == 170) {
+                    if (operationQuotes[i].operation.id == 139) {
                         return operationQuotes[i].price
                     }
                 }

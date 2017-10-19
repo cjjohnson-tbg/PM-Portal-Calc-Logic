@@ -974,6 +974,39 @@ function validateSidesNotTheSame(opDetails, op1, op2) {
     }
     return message
 }
+
+/*
+sends in text from a text block to search for a Json object
+convert to json object
+add properties to target window object for 
+*/
+
+function setPropertyFromTextJson(text, targetObj) {
+    if (!text) {
+        console.log('no text to search for property');
+        return
+    }
+    var jsonBlock = /\{(.*?)\}/.exec(text);
+    if (jsonBlock) {
+        var jsonStr = getJsonFromString(jsonBlock[0]);
+        if (jsonStr) {
+            //create objects and properties if not exists on window
+            if (!window.targetObj) {
+                window[targetObj] = {};
+            }
+            if (!targetObj.property) {
+                target.property;
+            }
+            for (prop in jsonStr) {
+                targetObj[prop] = jsonStr[prop];
+            }
+        } else {
+            console.log('invalid json string ' + opItemKeyText);
+        }
+    }
+}
+
+
 function getJsonFromString (str) {
     try {
         return JSON.parse(str);

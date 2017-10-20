@@ -510,7 +510,7 @@ var rollCalcLogic = {
                         console.log('unable to classify Lam Run configuration');
                     }
                     //Get LF needed and enter in .01LF per piece as operation answer
-                    var lamRunFactor = parseInt(print_LF_needed / totalQuantity * 100);
+                    var lamRunFactor = parseInt(printConfig.print_LF_needed / totalQuantity * 100);
                     validateValue(laminatingRunAnswer, lamRunFactor);
                 }
                  else {

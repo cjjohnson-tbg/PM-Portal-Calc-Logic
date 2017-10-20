@@ -209,10 +209,12 @@ var rollCalcLogic = {
             var substrateId = cu.getValue(fields.printSubstrate);
             var mountId = cu.getValue(fields.mountSubstrate);
             var zundFactor = 1;
+            var totalQuantity = cu.getTotalQuantity();
             var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
             
             var hasFrontLam = (cu.hasValue(fields.frontLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.frontLaminate)) == -1));
             var hasBackLam = (cu.hasValue(fields.backLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.backLaminate)) == -1));
+            var hasMount = cu.hasValue(fields.mountSubstrate);
             
             var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
 
@@ -429,7 +431,7 @@ var rollCalcLogic = {
                 cu.changeField(fabCutOp, '', true);
                 return
             }
-                        /************************ ALIGN INK MATERIAL COSTS WITH DEVICE RUN*/
+            /************************ ALIGN INK MATERIAL COSTS WITH DEVICE RUN*/
             var deviceId = configureglobals.cquotedata.device.id ? configureglobals.cquotedata.device.id : null;
             var devRunConfig = lfDeviceInk[deviceId];
             if (devRunConfig) {
@@ -474,44 +476,45 @@ var rollCalcLogic = {
                     }
                 }
             }
-            /************************ APPLY LAM SETUP FEE WHEN LAM SELECTED */
+            /************************ APPLY LAM RUN OPERATION WITH OPERATION ANSWER AS LINEAR FEET NEEDED (.01 LF) WHEN LAM SELECTED */
             //Note: "none" operation item is id 18 (front) AND 40 (back) for products using this function
-            var laminatingSetup = fields.operation57;
-            //create variable that ignores "None" operation Items
-            var hasLaminatingChosen = (cu.hasValue(fields.frontLaminate) && cu.getValue(fields.frontLaminate) != 18) || (cu.hasValue(fields.backLaminate) && cu.getValue(fields.backLaminate) != 40 && cu.getValue(fields.backLaminate) != 18);
-            if (laminatingSetup) {
-                if (hasLaminatingChosen) {
-                    if (!cu.hasValue(laminatingSetup)) {
-                        cu.changeField(laminatingSetup,213,true);
-                        return
-                    }
-                }
-                else if (cu.hasValue(laminatingSetup)) {
-                    cu.changeField(laminatingSetup,'',true);
-                    return
-                }
-            }
-            //add laminating run operatoin
             var laminatingRun = fields.operation96;
+            var laminatingRunAnswer = fields.operation96_answer;
             if (laminatingRun) {
-                if (hasLaminatingChosen) {
-                    if (configureglobals.cquote == null) { return; }
-                    var frontLamType = quote.piece.frontLaminate.type.name;
-                    if (frontLamType == 'Cold') {
-                        if (cu.getValue(laminatingRun) != 363) {
-                            cu.changeField(laminatingRun, 363, true);
-                            return
-                        }
-                    } else {
-                        if (cu.getValue(laminatingRun) != 364) {
-                            cu.changeField(laminatingRun, 364, true);
-                            return
-                        }
+                if (configureglobals.cquote == null) { return; }
+                var frontLamType = quote.piece.frontLaminate ? quote.piece.frontLaminate.type.name : null;
+                var backLamType = quote.piece.backLaminate ? quote.piece.backLaminate.type.name : null;
+
+                var mountSingle = hasMount && !hasFrontLam && !hasBackLam;
+                var mountDoubleHot = hasMount && ( (hasFrontLam && frontLamType == 'Hot') || (hasBackLam && backLamType == 'Hot'));
+                var mountDoubleCold = hasMount && ( (hasFrontLam && frontLamType == 'Cold') || (hasBackLam && backLamType == 'Cold'));
+                var coldLamSingle = !hasMount && ( (hasFrontLam && frontLamType == 'Cold') || (hasBackLam && backLamType == 'Cold'));
+                var hotLamSingle = !hasMount && ( (hasFrontLam && frontLamType == 'Hot') || (hasBackLam && backLamType == 'Hot'));
+
+                if (hasMount || hasFrontLam || hasBackLam) {
+                    if (mountSingle) {
+                        validateValue(laminatingRun, 721);
                     }
+                    else if (mountDoubleHot) {
+                        validateValue(laminatingRun, 723);
+                    }
+                    else if (mountDoubleCold) {
+                        validateValue(laminatingRun, 722);
+                    }
+                    else if (coldLamSingle) {
+                        validateValue(laminatingRun, 363);
+                    }
+                    else if (hotLamSingle) {
+                        validateValue(laminatingRun, 364);
+                    } else {
+                        console.log('unable to classify Lam Run configuration');
+                    }
+                    //Get LF needed and enter in .01LF per piece as operation answer
+                    var lamRunFactor = parseInt(print_LF_needed / totalQuantity * 100);
+                    validateValue(laminatingRunAnswer, lamRunFactor);
                 }
-                else if (cu.hasValue(laminatingRun)) {
-                    cu.changeField(laminatingRun,'',true);
-                    return
+                 else {
+                    validateValue(laminatingRun, '');
                 }
             }
             //pre-printing lam run
@@ -526,38 +529,6 @@ var rollCalcLogic = {
                 } else if (cu.hasValue(prePrintingLamRun)) {
                     cu.changeField(prePrintingLamRun, '', true);
                     return
-                }
-            }
-            /************************ APPLY MOUNT SETUP FEE WHEN LAM SELECTED */
-            var mountingSetup = fields.operation59;
-            if (mountingSetup) {
-                if(cu.hasValue(fields.mountSubstrate)) {
-                    if (!cu.hasValue(mountingSetup)) {
-                        cu.changeField(mountingSetup,215,true);
-                        return
-                    }
-                }
-                else if (cu.hasValue(mountingSetup)) {
-                    cu.changeField(mountingSetup,'',true);
-                    return
-                }
-            }
-            var mountingRun = fields.operation100;
-            if (mountingRun) {
-                //Turn on Mounting Run only when No laminating is selected (run costs come in through Lam Run)
-                var turnMtRunOn = false;
-                var turnMtRunOff = false;
-                if (laminatingRun) {
-                    if (cu.hasValue(fields.mountSubstrate)) {
-                        if (!cu.hasValue(laminatingRun)) {
-                            if (!cu.hasValue(mountingRun)) {
-                                cu.changeField(mountingRun,388, true);
-                                return
-                            } else {
-                                
-                            }
-                        }
-                    }
                 }
             }
             /************************ CANNON PRINTS */
@@ -834,6 +805,14 @@ var rollCalcLogic = {
         } // is POD
     }
 }
+//simplifies changing values of operation items
+function validateValue(field, value) {
+    if (field) {
+        if (cu.getValue(field) != value) {
+            cu.changeField(field, value, true);
+        }
+    }
+}
 function createStyleBlock(elements, styleText) {
     var x = '<style type="text/css">' + elements.join(", ") + ' {' + styleText + '}</style>';
     return x
@@ -883,17 +862,6 @@ function showBannerOperations() {
     $.each(bannerFinishingOperations, function() {
         $('#operation' + this).show();
     });
-}
-function getLeadAndTailCost() {
-    var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
-    var totalSubCost = quote.aPrintSubstratePrice;
-    var totalSquareFeet = quote.piece.totalSquareFeet;
-    var subSqFtCost = totalSubCost / totalSquareFeet;
-    var subWidth = quote.piece.aPrintSubstrate.width;
-    var subLinearFootCost = subWidth * subSqFtCost / 12;
-    var totalQuantity = quote.productionQuantity;
-    var leadTailCost = parseInt(subLinearFootCost * 10 / totalQuantity);
-return leadTailCost;
 }
 function trimOperationItemName(opList, deliminater) {
     //change single operation to array

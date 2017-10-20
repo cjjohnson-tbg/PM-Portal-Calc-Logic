@@ -828,6 +828,8 @@ var boardCalcLogic = {
                 var estJobCostDec = fields.operation217;
                 var teamMarkupOp = fields.operation218;
                 if (estJobCostInc && estJobCostDec && teamMarkupOp) {
+                //temp disable until device switch looping issue is resolved with fullQuoteMode
+                /*
                     var markup = quote.markupPercent;
                     var teamPrice = getTeamPrice();
                     var estJobCost = ((quote.jobCostPrice + quote.operationsPrice - teamPrice) * 100) / quantity;
@@ -843,7 +845,7 @@ var boardCalcLogic = {
                         return
                     }
                     console.log('estJobCost  = ' + estJobCost + ' estJobCostFacto = ' + estJobCostFactor);
-                }
+                } */
 
                 function getTeamPrice() {
                     var operationQuotes = quote.operationQuotes;

@@ -511,7 +511,7 @@ var rollCalcLogic = {
                     }
                     //Get LF needed and enter in .01LF per piece as operation answer
                     var lamRunWithSpoil = getLamWithSpoilage();
-                    console.log('lam with spoil is ' +lamRunWithSpoil);
+                    printConfig['lam_lf_with_spoilage'] = lamRunWithSpoil;
                     if (!isNaN(lamRunWithSpoil)) {
                         var lamRunFactor = parseInt(lamRunWithSpoil / totalQuantity * 100);
                         validateValue(laminatingRunAnswer, lamRunFactor);    

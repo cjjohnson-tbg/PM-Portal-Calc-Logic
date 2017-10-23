@@ -493,13 +493,13 @@ var rollCalcLogic = {
 
                 if (hasMount || hasFrontLam || hasBackLam) {
                     if (mountSingle) {
-                        validateValue(laminatingRun, 721);
+                        validateValue(laminatingRun, 728);
                     }
                     else if (mountDoubleHot) {
-                        validateValue(laminatingRun, 723);
+                        validateValue(laminatingRun, 727);
                     }
                     else if (mountDoubleCold) {
-                        validateValue(laminatingRun, 722);
+                        validateValue(laminatingRun, 726);
                     }
                     else if (coldLamSingle) {
                         validateValue(laminatingRun, 363);
@@ -510,13 +510,38 @@ var rollCalcLogic = {
                         console.log('unable to classify Lam Run configuration');
                     }
                     //Get LF needed and enter in .01LF per piece as operation answer
-                    var lamRunFactor = parseInt(printConfig.print_LF_needed / totalQuantity * 100);
-                    validateValue(laminatingRunAnswer, lamRunFactor);
+                    var lamRunWithSpoil = getLamWithSpoilage();
+                    console.log('lam with spoil is ' +lamRunWithSpoil);
+                    if (!isNaN(lamRunWithSpoil)) {
+                        var lamRunFactor = parseInt(lamRunWithSpoil / totalQuantity * 100);
+                        validateValue(laminatingRunAnswer, lamRunFactor);    
+                    }
                 }
                  else {
                     validateValue(laminatingRun, '');
                 }
+                //loop through points to create cumulative spoilage
+                function getLamWithSpoilage() {
+                    var printLf = printConfig.print_LF_needed;
+                    var spoilPoints = [[999, .06],[1999, .04],[2999, .03],[3999,.025],[4999,.02],[5000,.015]];
+                    var spoilLf = 0;
+                    var lastPt = 0;
+                    for (var i = 0; i < spoilPoints.length; i++) {
+                        if (printLf < spoilPoints[i][0]) {
+                            spoilLf += ((printLf - lastPt) * spoilPoints[i][1]);
+                            break
+                        } else if (i == (spoilPoints.length - 1)) {
+                            spoilLf += (printLf - spoilPoints[i][0]) * spoilPoints[i][1];
+                            break
+                        } else {
+                            spoilLf += (spoilPoints[i][0] - lastPt) * spoilPoints[i][1];
+                            lastPt = spoilPoints[i][0];
+                        }
+                    }
+                    return printLf + spoilLf
+                }
             }
+            
             //pre-printing lam run
             var prePrintingLamRun = fields.operation106;
             var prePrintingLamMatl = fields.operation105;

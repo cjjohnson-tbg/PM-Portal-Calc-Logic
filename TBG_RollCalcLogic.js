@@ -483,8 +483,8 @@ var rollCalcLogic = {
             //Note: "none" operation item is id 18 (front) AND 40 (back) for products using this function
             var laminatingRun = fields.operation96;
             var laminatingRunAnswer = fields.operation96_answer;
-            var laminatingRun2 = fields.operation173;
-            var laminatingRunAnswer2 = fields.operation173_answer;
+            var laminatingRun2 = fields.operation141;
+            var laminatingRunAnswer2 = fields.operation141_answer;
             var premask = fields.operation78;
             var premaskRunAnswer = fields.operation78_answer;
             if (laminatingRun) {

@@ -489,12 +489,11 @@ var rollCalcLogic = {
             var premaskRunAnswer = fields.operation78_answer;
             if (laminatingRun) {
                 if (configureglobals.cquote == null) { return; }
-                
-                //TEMP BUILD OBJECT TO MAKE AVAILABLE TO VALIDATE RESULTS
                 //wipe lc object properties
                 for (const prop of Object.keys(lc)) {
                   delete lc[prop];
                 }
+                //TEMP BUILD OBJECT TO MAKE AVAILABLE 
                 lc["frontLamType"]= (hasFrontLam && quote.piece.frontLaminate) ? quote.piece.frontLaminate.type.name : null;
                 lc["backLamType"]= (hasBackLam && quote.piece.backLaminate) ? quote.piece.backLaminate.type.name : null;
                 lc["hasMount"] = hasMount;
@@ -528,57 +527,57 @@ var rollCalcLogic = {
                         if (hasPremask) {
                             if (!hasFrontLam && !hasBackLam) { 
                                 if (selfAdhesive) {  // 1. Mount + Premask 
-                                    validateValue(laminatingRun, 711);
+                                    validateValue(laminatingRun, 727);
                                     validateValue(laminatingRun2,'');
                                 } else { // 1. Adhesive  2. Mount + Premask
-                                    validateValue(laminatingRun, 706);
-                                    validateValue(laminatingRun2, 717);
+                                    validateValue(laminatingRun, 741);
+                                    validateValue(laminatingRun2, 740);
                                 }
                             } else if (hasHotFront) { 
                                 if (selfAdhesive) { // 1. Mount  2. Hot  3. Premask
-                                    validateValue(laminatingRun, 710);
-                                    validateValue(laminatingRun2, 718);
+                                    validateValue(laminatingRun, 728);
+                                    validateValue(laminatingRun2, 735);
                                 }
                                 else { //  1. Hot / Adhesive  2. Mount + Premask
-                                    validateValue(laminatingRun, 709);
-                                    validateValue(laminatingRun2, 717);
+                                    validateValue(laminatingRun, 731);
+                                    validateValue(laminatingRun2, 740);
                                 }
                             } else if (hasColdFront) {
                                 if (selfAdhesive) { // 1. Cold / Adhesive  2.  Mount + Premask
-                                    validateValue(laminatingRun, 708);
-                                    validateValue(laminatingRun2, 717);
+                                    validateValue(laminatingRun, 726);
+                                    validateValue(laminatingRun2, 740);
                                 }
                                 else { //  1. Cold / Adhesive  2. Mount + Premask
-                                    validateValue(laminatingRun, 708);
-                                    validateValue(laminatingRun2, 717);
+                                    validateValue(laminatingRun, 726);
+                                    validateValue(laminatingRun2, 740);
                                 }
                             }
                         } else {  //mounted but no premask
                            if (!hasFrontLam && !hasBackLam) { 
                                 if (selfAdhesive) {  // 1. Mount 
-                                    validateValue(laminatingRun, 710);
+                                    validateValue(laminatingRun, 728);
                                     validateValue(laminatingRun2,'');
                                 } else { // 1. Adhesive  2. Mount
-                                    validateValue(laminatingRun, 706);
-                                    validateValue(laminatingRun2, 716);
+                                    validateValue(laminatingRun, 741);
+                                    validateValue(laminatingRun2, 739);
                                 }
                             } else if (hasHotFront) { 
                                 if (selfAdhesive) { // 1. Mount  2. Hot 
-                                    validateValue(laminatingRun, 710);
-                                    validateValue(laminatingRun2, 715);
+                                    validateValue(laminatingRun, 728);
+                                    validateValue(laminatingRun2, 737);
                                 }
                                 else { //  1. Hot / Adhesive  2. Mount
-                                    validateValue(laminatingRun, 709);
-                                    validateValue(laminatingRun2, 716);
+                                    validateValue(laminatingRun, 731);
+                                    validateValue(laminatingRun2, 739);
                                 }
                             } else if (hasColdFront) {
                                 if (selfAdhesive) { // 1. Mount  2. Cold 
-                                    validateValue(laminatingRun, 710);
-                                    validateValue(laminatingRun2, 714);
+                                    validateValue(laminatingRun, 728);
+                                    validateValue(laminatingRun2, 736);
                                 }
                                 else { //  1. Cold / Adhesive  2. Mount
-                                    validateValue(laminatingRun, 708);
-                                    validateValue(laminatingRun2, 716);
+                                    validateValue(laminatingRun, 726);
+                                    validateValue(laminatingRun2, 739);
                                 }
                             }
                         }
@@ -586,28 +585,28 @@ var rollCalcLogic = {
                         if (hasPremask) {
                             if (hasHotFront) {
                                 if (hasAdhesiveBack) { // 1. Hot / Adhesive 2. Premask
-                                    validateValue(laminatingRun, 709);
-                                    validateValue(laminatingRun2,718);
+                                    validateValue(laminatingRun, 731);
+                                    validateValue(laminatingRun2,735);
                                 } else if (hasHotBack) { // 1. Hot / Hot 2. Premask
                                     validateValue(laminatingRun, 364);
-                                    validateValue(laminatingRun2,718);
+                                    validateValue(laminatingRun2,735);
                                 }
                             } else if (hasColdFront) {
                                 if (hasColdBack) {  // 1. Cold  2. Premask
                                     validateValue(laminatingRun, 363);
-                                    validateValue(laminatingRun2,718);
+                                    validateValue(laminatingRun2,735);
                                 } else if (hasAdhesiveBack) { // 1. Cold / Adhesive 2. Premask
-                                    validateValue(laminatingRun, 708);
-                                    validateValue(laminatingRun2,718);
+                                    validateValue(laminatingRun, 726);
+                                    validateValue(laminatingRun2,735);
                                 } else { // 1. Cold + Pre-mask
-                                    validateValue(laminatingRun, 707);
+                                    validateValue(laminatingRun, 730);
                                     validateValue(laminatingRun2,'');
                                 }
                             } else if (hasAdhesiveBack) { // 1. Adhesive  2. Premask
-                                validateValue(laminatingRun, 706);
-                                validateValue(laminatingRun2,718);
+                                validateValue(laminatingRun, 741);
+                                validateValue(laminatingRun2,735);
                             } else { // 1. Premask
-                                validateValue(laminatingRun, 712);
+                                validateValue(laminatingRun, 734);
                                 validateValue(laminatingRun2,'');
                             }
                         } else {  // no mount, no premask
@@ -616,24 +615,24 @@ var rollCalcLogic = {
                                     validateValue(laminatingRun, 364);
                                     validateValue(laminatingRun2,'');
                                 } else if (hasAdhesiveBack) {  // 1. Hot / Adhesive
-                                    validateValue(laminatingRun, 709);
+                                    validateValue(laminatingRun, 731);
                                     validateValue(laminatingRun2,'');
                                 } else {
                                     message += invalidLamMessage;
                                 }
                             } else if (hasColdFront) {
                                 if (hasColdBack) {  // 1. Cold / Adhesive
-                                    validateValue(laminatingRun, 708);
+                                    validateValue(laminatingRun, 726);
                                     validateValue(laminatingRun2,'');
                                 } else if (hasAdhesiveBack) {  // 1. Cold / Adhesive
-                                    validateValue(laminatingRun, 708);
+                                    validateValue(laminatingRun, 726);
                                     validateValue(laminatingRun2,'');
                                 } else {  // 1. Cold
                                     validateValue(laminatingRun, 363);
                                     validateValue(laminatingRun2,'');
                                 }
                             } else if (hasAdhesiveBack) { // 1. Adhesive
-                                validateValue(laminatingRun, 706);
+                                validateValue(laminatingRun, 741);
                                 validateValue(laminatingRun2,'');
                             }
                         }

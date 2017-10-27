@@ -845,7 +845,8 @@ var boardCalcLogic = {
                         return
                     }
                     console.log('estJobCost  = ' + estJobCost + ' estJobCostFacto = ' + estJobCostFactor);
-                } */
+                    */
+                } 
 
                 function getTeamPrice() {
                     var operationQuotes = quote.operationQuotes;
@@ -855,6 +856,8 @@ var boardCalcLogic = {
                         }
                     }
                 }
+
+                renderExtendedCostBreakdown();
 
                 showMessages();
             }  // END SMALL FORMAT      

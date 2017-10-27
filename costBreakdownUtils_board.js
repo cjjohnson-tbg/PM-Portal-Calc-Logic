@@ -100,15 +100,19 @@ function renderExtendedCostBreakdown () {
                         continue
                     }
                     //else push new line
-                    estimateDetailsData.push({
-                        cost: quote.operationQuotes[i].price ? quote.operationQuotes[i].price : 0,
-                        name: quote.operationQuotes[i].data.heading || quote.operationQuotes[i].operation.heading,
-                        item: selectedOperations[i].choice.name,
-                        cost_basis: quote.operationQuotes[i].pieces || quote.operationQuotes[i].data.quantity,
-                        description: selectedOperations[i].choice.description,
-                        shouldDisplay: true,
-                        costingOnly: selectedOperations[i].pjcOperation ? selectedOperations[i].pjcOperation.operation.costingOnly : quote.operationQuotes[i].operation.costingOnly
-                    });
+                    if (!selectedOperations[i]) {
+                        console.log("error on selectedOperations for " + quote.operationQuotes[i])
+                    } else {
+                        estimateDetailsData.push({
+                            cost: quote.operationQuotes[i].price ? quote.operationQuotes[i].price : 0,
+                            name: quote.operationQuotes[i].operation.id == 52 ? 'Device Run ' : quote.operationQuotes[i].operation.heading,
+                            item: selectedOperations[i].choice.name ? selectedOperations[i].choice.name : null,
+                            cost_basis: quote.operationQuotes[i].pieces || quote.operationQuotes[i].data.quantity,
+                            description: selectedOperations[i].choice.description,
+                            shouldDisplay: true,
+                            costingOnly: selectedOperations[i].pjcOperation ? selectedOperations[i].pjcOperation.operation.costingOnly : quote.operationQuotes[i].operation.costingOnly
+                        });
+                    }
                 }
             }
         }

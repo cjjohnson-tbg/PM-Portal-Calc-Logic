@@ -599,9 +599,9 @@ var rollCalcLogic = {
                                 } else if (hasAdhesiveBack) { // 1. Cold / Adhesive 2. Premask
                                     validateValue(laminatingRun, 708);
                                     validateValue(laminatingRun2,718);
-                                } else { // 1. Cold + Pre-mask
-                                    validateValue(laminatingRun, 707);
-                                    validateValue(laminatingRun2,'');
+                                } else { // 1. Cold  2. Pre-mask
+                                    validateValue(laminatingRun, 363);
+                                    validateValue(laminatingRun2,718);
                                 }
                             } else if (hasAdhesiveBack) { // 1. Adhesive  2. Premask
                                 validateValue(laminatingRun, 706);

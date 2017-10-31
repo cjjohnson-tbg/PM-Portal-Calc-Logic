@@ -155,6 +155,10 @@ var lfDeviceInk = {
     46 : {
         'inkMaterialOpId' : 133,
         'defaultOpItem' : 622 //CMYK
+    },
+    54 : {
+        'inkMaterialOpId' : 143,
+        'defaultOpItem' : 720 //CMYK
     }
 }
 

@@ -222,6 +222,7 @@ function renderExtendedCostBreakdown () {
                         });
                     }
                 }
+            }
         }
 
         function buildCostAndMarginTable () {

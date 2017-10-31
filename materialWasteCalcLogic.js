@@ -1,23 +1,33 @@
 var deviceDetails = {
 	"45" : {
 		"name" : "TBG Vutek HS125 Roll",
-	    "leadWasteLF" : 8,
+		"leadWasteLF" : 8,
 		"bleed" : .25,
 		"margin" : 1,
 		"gutter" : 0,
 		"attrition" : .02,
 		"rollChangeMins" : 10,
-		"hourlyRate" : 98
+		"hourlyRate" : 149
 	},
 	"46" : {
 		"name" : "TBG Canon",
-	    "leadWasteLF" : 6,
+		"leadWasteLF" : 6,
 		"bleed" : .25,
 		"margin" : 1,
 		"gutter" : 0,
 		"attrition" : .02,
 		"rollChangeMins" : 3,
-		"hourlyRate" : 39
+		"hourlyRate" : 149
+	},
+	"54" : {
+		"name" : "TBG FabriVu 340",
+		"leadWasteLF" : 20,
+		"bleed" : .25,
+		"margin" : 1,
+		"gutter" : 0,
+		"attrition" : .02,
+		"rollChangeMins" : 40,
+		"hourlyRate" : 149
 	}
 }
 

@@ -326,7 +326,11 @@ var boardCalcLogic = {
         if (cu.isPOD(product)) {
          /*re-init on every update*/
             cu.initFields();
+            //TEMP ADD IN FIELDS.CHOICE UNTIL CREATED IN CALCULATORUTILIES.JS
+            addOperationChoiceProps();
+
             var submessage = ''; 
+            
             if (cu.isSmallFormat(product)) { 
                 addClassToOperation(planningOnlyOperations,'planning');
                 addClassToOperation(estimstingOnlyOperations,'estimating');
@@ -618,55 +622,30 @@ var boardCalcLogic = {
                         }
                     }
                 }
-                /************************* ADD LAMINATING SETUP FEE WHEN FRONT AND/OR BACK LAM CHOSEN */
-                //var sfLaminating = cu.findOperationFromSet(smLaminatingOps);
-                var sfLaminating = getOperationsSet(smLaminatingOps);
+                /************************* ADD LAMINATING RUN 1 AND 2 FOR LAMINATING, MOUNTING, AND PREMASK */
+                var frontLamOp = fields.operation131;
+                var backLamOp = fields.operation130;
+                var mountOp = fields.operation139;
+                var premaskOp = fields.operation133;
+                var hasFrontLam = cu.hasValue(frontLamOp);
+                var hasBackLam = cu.hasValue(backLamOp);
+                var hasMount = cu.hasValue(mountOp);
+                var hasPremask = cu.hasValue(premaskOp);
 
-                var mountingOp = fields.operation139;
-                if (operationInSetHasValue(sfLaminating) || cu.hasValue(mountingOp)) {
-                    
-                    if (cu.hasValue(mountingOp)) {
-                        
-                        //IF MOUNT AND NO LAM, MOUNT SINGLE PASS
-                        if (!operationInSetHasValue(sfLaminating)) {
-                            if (cu.getValue(fields.operation135) != 1536) {
-                                cu.changeField(fields.operation135, 1536, true)
-                                return
-                            }
-                        } else {
-                            //IF MOUNT AND HOT LAM CHOOSE MOUNT - 2 PASS HOT, OTHERWISE DEFAULT TO MOUNT - 2 PASS COLD
-                            if (operationItemKeys.frontLamType == 'Hot' || operationItemKeys.backLamType == 'Hot') {
-                                if (cu.getValue(fields.operation135) != 1535) {
-                                    cu.changeField(fields.operation135, 1535, true)
-                                    return
-                                }
-                            } else {
-                                if (cu.getValue(fields.operation135) != 1534) {
-                                    cu.changeField(fields.operation135, 1534, true);
-                                    return
-                                }
-                            }
-                        }
-                    } else {
-                        //only Laminating
-                        //If Hot laminate, choose Hot Lam Run, otherwise default to Cold
-                        if (operationItemKeys.frontLamType == 'Hot' || operationItemKeys.backLamType == 'Hot') {
-                            if (cu.getValue(fields.operation135) != 1529) {
-                                cu.changeField(fields.operation135, 1529, true)
-                                return
-                            }
-                        } else {
-                            if (cu.getValue(fields.operation135) != 777) {
-                                cu.changeField(fields.operation135, 777, true);
-                                return
-                            }
-                        }
-                    } 
-                } else {
-                    if (cu.hasValue(fields.operation135)) {
-                        cu.changeField(fields.operation135, '', true);
-                        return
-                    }
+                if (frontLamOp) {
+                    var hasColdFront = fields.operation131.choice ? fields.operation131.choice.frontLamType == 'Cold' : false;
+                    var hasHotFront = fields.operation131.choice ? fields.operation131.choice.frontLamType == 'Hot' : false;
+                    var hasAdhesiveFront = fields.operation131.choice ? fields.operation131.choice.frontLamType == 'Adhesive' : false;
+                }
+                if (backLamOp) {
+                    var hasColdBack = fields.operation130.choice ? fields.operation130.choice.backLamType == 'Cold' : false;
+                    var hasHotBack = fields.operation130.choice ? fields.operation130.choice.backLamType == 'Hot' : false;
+                    var hasAdhesiveBack = fields.operation130.choice ? fields.operation130.choice.backLamType == 'Adhesive' : false;
+                }
+                var laminatingRun = fields.operation135;
+                var laminatingRun2 = fields.operation221;
+                if (laminatingRun && laminatingRun2) {
+                    setLamRunOperations();
                 }
                 /************************* ADD PRE- PRINTING LAMINATING SETUP FEE AND RUN WHEN FRONT AND/OR BACK LAM CHOSEN */
                 var sfPreLaminating = cu.findOperationFromSet(sfPrePrintLamOps);
@@ -862,8 +841,103 @@ var boardCalcLogic = {
                 showMessages();
             }  // END SMALL FORMAT      
         }
-        
-        /********************************************* ALERTS */
+        /**********************
+            functions called in onQuoteUpdated
+        ****************/
+        function setLamRunOperations() {
+            if (hasMount || hasFrontLam || hasBackLam || hasPremask) {
+                if (hasMount) {
+                    if (hasPremask) {
+                        if (!hasFrontLam && !hasBackLam) { // 1. Adhesive  2. Mount + Premask
+                            validateValue(laminatingRun, 1595);
+                            validateValue(laminatingRun2, 1605);
+                        } else if (hasHotFront) { //  1. Hot / Adhesive  2. Mount + Premask
+                            validateValue(laminatingRun, 1598);
+                            validateValue(laminatingRun2, 1605);
+                        } else if (hasColdFront) { //  1. Cold / Adhesive  2. Mount + Premask
+                            validateValue(laminatingRun, 1597);
+                            validateValue(laminatingRun2, 1605);
+                        }
+                    } else {  //mounted but no premask
+                       if (!hasFrontLam && !hasBackLam) { // 1. Adhesive  2. Mount
+                            validateValue(laminatingRun, 1595);
+                            validateValue(laminatingRun2, 1604);
+                        } else if (hasHotFront) { //  1. Hot / Adhesive  2. Mount
+                            validateValue(laminatingRun, 1598);
+                            validateValue(laminatingRun2, 1604);
+                        } else if (hasColdFront) { //  1. Cold / Adhesive  2. Mount
+                                validateValue(laminatingRun, 1597);
+                                validateValue(laminatingRun2, 1604);
+                        }
+                    }
+                } else {  //everything not mounted
+                    if (hasPremask) {
+                        if (hasHotFront) {
+                            if (hasAdhesiveBack) { // 1. Hot / Adhesive 2. Premask
+                                validateValue(laminatingRun, 1598);
+                                validateValue(laminatingRun2,1606);
+                            } else if (hasHotBack) { // 1. Hot / Hot 2. Premask
+                                validateValue(laminatingRun, 1529);
+                                validateValue(laminatingRun2,1606);
+                            } else { // 1. Hot / Hot 2. Premask
+                                validateValue(laminatingRun, 1529);
+                                validateValue(laminatingRun2,1606);
+                            }
+                        } else if (hasColdFront) {
+                            if (hasColdBack) {  // 1. Cold  2. Premask
+                                validateValue(laminatingRun, 777);
+                                validateValue(laminatingRun2,1606);
+                            } else if (hasAdhesiveBack) { // 1. Cold / Adhesive 2. Premask
+                                validateValue(laminatingRun, 1597);
+                                validateValue(laminatingRun2,1606);
+                            } else { // 1. Cold  2. Pre-mask
+                                validateValue(laminatingRun, 777);
+                                validateValue(laminatingRun2,1606);
+                            }
+                        } else if (hasAdhesiveBack) { // 1. Adhesive  2. Premask
+                            validateValue(laminatingRun, 1595);
+                            validateValue(laminatingRun2,1606);
+                        } else { // 1. Premask
+                            validateValue(laminatingRun, 1601);
+                            validateValue(laminatingRun2,'');
+                        }
+                    } else {  // no mount, no premask
+                        if (hasHotFront) {
+                            if (hasHotBack) { // 1. Hot / Hot
+                                validateValue(laminatingRun, 1529);
+                                validateValue(laminatingRun2,'');
+                            } else if (hasAdhesiveBack) {  // 1. Hot / Adhesive
+                                validateValue(laminatingRun, 1598);
+                                validateValue(laminatingRun2,'');
+                            } else {// 1. Hot 
+                                validateValue(laminatingRun, 1607);
+                                validateValue(laminatingRun2,'');
+                            }
+                        } else if (hasColdFront) {
+                            if (hasColdBack) {  // 1. Cold / Adhesive
+                                validateValue(laminatingRun, 1597);
+                                validateValue(laminatingRun2,'');
+                            } else if (hasAdhesiveBack) {  // 1. Cold / Adhesive
+                                validateValue(laminatingRun, 1597);
+                                validateValue(laminatingRun2,'');
+                            } else {  // 1. Cold
+                                validateValue(laminatingRun, 777);
+                                validateValue(laminatingRun2,'');
+                            }
+                        } else if (hasAdhesiveBack) { // 1. Adhesive
+                            validateValue(laminatingRun, 1595);
+                            validateValue(laminatingRun2,'');
+                        } else if (hasAdhesiveFront) { // 1. Adhesive
+                            validateValue(laminatingRun, 1595);
+                            validateValue(laminatingRun2,'');
+                        }
+                    }
+                }
+            } else {
+                validateValue(laminatingRun,'');
+                validateValue(laminatingRun2,'');
+            }
+        }
         function  showMessages () {
             // show an alert when necessary
             if (onQuoteUpdatedMessages != '' || submessage != '') {
@@ -980,6 +1054,57 @@ function operationInSetHasValue(operationSet) {
         return false;
      } else {
         console.log('OperationSet is not defined. Returning false for operationInSetHasValue.');
+        return false;
+    }
+}
+//simplifies changing values of operation items
+function validateValue(field, value) {
+    if (field) {
+        if (cu.getValue(field) != value) {
+            cu.changeField(field, value, true);
+        }
+    }
+}
+
+//TEMP UNTIL BUILT INTO CALCULATOR UTILITIES
+function addOperationChoiceProps() {
+    /*  loop through all items in Fields, 
+        check for a Operation field
+        If selection made pull out any json in description or notes
+    */
+    if (fields) {
+        var opsList = configureglobals.coperationsmgr.operations; //both calculators?
+        for (prop in fields) {
+            if (prop.indexOf('operation') != 1) {
+                if (prop.value != "") {
+                    fields[prop]['choice'] = {};
+                    var opId = prop.replace(/(operation)/,'');
+                    //loop through operations in configure global operations manager
+                    for (var j = 0; j < opsList.length; j++) {
+                        if (opsList[j].pjcOperation.operation.id == opId) {
+                            var desc = opsList[j].choice ? opsList[j].choice.description : null;
+                            //Json properties must be wrapped in "[{ }]"
+                            var jsonBlock = /\{(.*?)\}/.exec(desc);
+                            if (jsonBlock) {
+                                var jsonStr = this.getJsonFromString(jsonBlock[0]);
+                                for (property in jsonStr) {
+                                    fields[prop].choice[property] = jsonStr[property];
+                                }
+                            }
+                            break
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        console.log('field not defined')
+    }
+}
+function getJsonFromString (str) {
+    try {
+        return JSON.parse(str);
+    } catch (e) {
         return false;
     }
 }

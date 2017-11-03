@@ -635,7 +635,7 @@ var boardCalcLogic = {
                             }
                         } else {
                             //IF MOUNT AND HOT LAM CHOOSE MOUNT - 2 PASS HOT, OTHERWISE DEFAULT TO MOUNT - 2 PASS COLD
-                            if (operationItemKeys.frontLamType == 'Hot Laminates' || operationItemKeys.backLamType == 'Hot Laminates') {
+                            if (operationItemKeys.frontLamType == 'Hot' || operationItemKeys.backLamType == 'Hot') {
                                 if (cu.getValue(fields.operation135) != 1535) {
                                     cu.changeField(fields.operation135, 1535, true)
                                     return
@@ -650,7 +650,7 @@ var boardCalcLogic = {
                     } else {
                         //only Laminating
                         //If Hot laminate, choose Hot Lam Run, otherwise default to Cold
-                        if (operationItemKeys.frontLamType == 'Hot Laminates' || operationItemKeys.backLamType == 'Hot Laminates') {
+                        if (operationItemKeys.frontLamType == 'Hot' || operationItemKeys.backLamType == 'Hot') {
                             if (cu.getValue(fields.operation135) != 1529) {
                                 cu.changeField(fields.operation135, 1529, true)
                                 return

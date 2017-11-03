@@ -327,7 +327,7 @@ var boardCalcLogic = {
          /*re-init on every update*/
             cu.initFields();
             //TEMP ADD IN FIELDS.CHOICE UNTIL CREATED IN CALCULATORUTILIES.JS
-            addOperationChoiceProps();
+            addOperationChoiceProperties();
 
             var submessage = ''; 
             
@@ -848,16 +848,19 @@ var boardCalcLogic = {
             if (hasMount || hasFrontLam || hasBackLam || hasPremask) {
                 if (hasMount) {
                     if (hasPremask) {
-                        if (!hasFrontLam && !hasBackLam) { // 1. Adhesive  2. Mount + Premask
-                            validateValue(laminatingRun, 1595);
-                            validateValue(laminatingRun2, 1605);
+                        if (!hasFrontLam && !hasBackLam) { // 1. Premask / Adhesive  2. Mount
+                            validateValue(laminatingRun, 1600);
+                            validateValue(laminatingRun2, 1604);
                         } else if (hasHotFront) { //  1. Hot / Adhesive  2. Mount + Premask
                             validateValue(laminatingRun, 1598);
                             validateValue(laminatingRun2, 1605);
                         } else if (hasColdFront) { //  1. Cold / Adhesive  2. Mount + Premask
                             validateValue(laminatingRun, 1597);
                             validateValue(laminatingRun2, 1605);
-                        }
+                        } else { // 1. Premask / Adhesive  2. Mount  --CATCH ALL UNFORESEEN
+                            validateValue(laminatingRun, 1600);
+                            validateValue(laminatingRun2, 1604);
+                        } 
                     } else {  //mounted but no premask
                        if (!hasFrontLam && !hasBackLam) { // 1. Adhesive  2. Mount
                             validateValue(laminatingRun, 1595);
@@ -866,8 +869,14 @@ var boardCalcLogic = {
                             validateValue(laminatingRun, 1598);
                             validateValue(laminatingRun2, 1604);
                         } else if (hasColdFront) { //  1. Cold / Adhesive  2. Mount
-                                validateValue(laminatingRun, 1597);
-                                validateValue(laminatingRun2, 1604);
+                            validateValue(laminatingRun, 1597);
+                            validateValue(laminatingRun2, 1604);
+                        } else if (hasAdhesiveFront || hasAdhesiveFront) { // 1. Adhesive  2. Mount
+                            validateValue(laminatingRun, 1597);
+                            validateValue(laminatingRun2, 1604);
+                        } else { // 1. Adhesive  2. Mount  --CATCH ALL UNFORESEEN
+                            validateValue(laminatingRun, 1595);
+                            validateValue(laminatingRun2, 1604);
                         }
                     }
                 } else {  //everything not mounted
@@ -894,7 +903,7 @@ var boardCalcLogic = {
                                 validateValue(laminatingRun, 777);
                                 validateValue(laminatingRun2,1606);
                             }
-                        } else if (hasAdhesiveBack) { // 1. Adhesive  2. Premask
+                        } else if (hasAdhesiveBack || hasAdhesiveFront) { // 1. Adhesive  2. Premask
                             validateValue(laminatingRun, 1595);
                             validateValue(laminatingRun2,1606);
                         } else { // 1. Premask
@@ -909,25 +918,23 @@ var boardCalcLogic = {
                             } else if (hasAdhesiveBack) {  // 1. Hot / Adhesive
                                 validateValue(laminatingRun, 1598);
                                 validateValue(laminatingRun2,'');
-                            } else {// 1. Hot 
-                                validateValue(laminatingRun, 1607);
+                            } else { // WARNING
+                                validateValue(laminatingRun, '');
                                 validateValue(laminatingRun2,'');
+                                message += '<p> Must have a Hot Lam, Adhesive, or Mount on back side</p>';
                             }
                         } else if (hasColdFront) {
-                            if (hasColdBack) {  // 1. Cold / Adhesive
-                                validateValue(laminatingRun, 1597);
-                                validateValue(laminatingRun2,'');
-                            } else if (hasAdhesiveBack) {  // 1. Cold / Adhesive
-                                validateValue(laminatingRun, 1597);
+                            if (hasColdBack) {  // 1. Cold  2. Cold
+                                validateValue(laminatingRun, 777);
+                                validateValue(laminatingRun2, 1602); 
+                            } else if (hasAdhesiveBack) { // 1. Adhesive
+                                validateValue(laminatingRun, 1595);
                                 validateValue(laminatingRun2,'');
                             } else {  // 1. Cold
                                 validateValue(laminatingRun, 777);
-                                validateValue(laminatingRun2,'');
+                                validateValue(laminatingRun2, ''); 
                             }
-                        } else if (hasAdhesiveBack) { // 1. Adhesive
-                            validateValue(laminatingRun, 1595);
-                            validateValue(laminatingRun2,'');
-                        } else if (hasAdhesiveFront) { // 1. Adhesive
+                        } else if (hasAdhesiveBack || hasAdhesiveFront) { // 1. Adhesive
                             validateValue(laminatingRun, 1595);
                             validateValue(laminatingRun2,'');
                         }
@@ -1067,7 +1074,7 @@ function validateValue(field, value) {
 }
 
 //TEMP UNTIL BUILT INTO CALCULATOR UTILITIES
-function addOperationChoiceProps() {
+function addOperationChoiceProperties() {
     /*  loop through all items in Fields, 
         check for a Operation field
         If selection made pull out any json in description or notes

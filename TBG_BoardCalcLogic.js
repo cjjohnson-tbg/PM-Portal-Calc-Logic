@@ -812,28 +812,18 @@ var boardCalcLogic = {
                 removeOperationItemsWithString(133,'Other');
 
                 /******************* TEAM MARKUP OPERATIONS */
-                var estJobCostInc = fields.operation216;
-                var estJobCostDec = fields.operation217;
                 var teamMarkupOp = fields.operation218;
-                if (estJobCostInc && estJobCostDec && teamMarkupOp) {
-                //temp disable until device switch looping issue is resolved with fullQuoteMode
-                /*
+                var teamMarkupOp_answer = fields.operation218_answer;
+                if (teamMarkupOp && teamMarkupOp_answer) {
                     var markup = quote.markupPercent;
-                    var teamPrice = getTeamPrice();
-                    var estJobCost = ((quote.jobCostPrice + quote.operationsPrice - teamPrice) * 100) / quantity;
-                    var estJobCostFactor = parseInt(estJobCost / (1 + quote.markupPercent));
-                    var estJobCostIncAnswer = fields.operation216_answer;
-                    var estJobCostDecAnswer = fields.operation217_answer;
-                    if (cu.getValue(estJobCostIncAnswer) != estJobCostFactor) {
-                        cu.changeField(estJobCostIncAnswer, estJobCostFactor, true);
-                        return
+                    var teamCost = getTeamPrice();
+                    var costMinusTeam = (quote.jobCostPrice + quote.operationsPrice - teamCost);
+                    if (cu.hasValue(teamMarkupOp)) {
+                        if (cu.getValue(teamMarkupOp_answer) != costMinusTeam) {
+                            cu.changeField(teamMarkupOp_answer, costMinusTeam, true);
+                            return
+                        }
                     }
-                    if (cu.getValue(estJobCostDecAnswer) != estJobCostFactor) {
-                        cu.changeField(estJobCostDecAnswer, estJobCostFactor, true);
-                        return
-                    }
-                    console.log('estJobCost  = ' + estJobCost + ' estJobCostFacto = ' + estJobCostFactor);
-                    */
                 } 
 
                 function getTeamPrice() {

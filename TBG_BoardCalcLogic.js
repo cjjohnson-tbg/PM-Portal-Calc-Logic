@@ -817,7 +817,7 @@ var boardCalcLogic = {
                 if (teamMarkupOp && teamMarkupOp_answer) {
                     var markup = quote.markupPercent;
                     var teamCost = getTeamPrice();
-                    var costMinusTeam = (quote.jobCostPrice + quote.operationsPrice - teamCost);
+                    var costMinusTeam = parseInt((quote.jobCostPrice + quote.operationsPrice - teamCost));
                     if (cu.hasValue(teamMarkupOp)) {
                         if (cu.getValue(teamMarkupOp_answer) != costMinusTeam) {
                             cu.changeField(teamMarkupOp_answer, costMinusTeam, true);

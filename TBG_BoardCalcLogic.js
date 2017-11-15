@@ -25,6 +25,7 @@ var side1InkMap = {
     101 : 904,    //Vutek HS100 - W + W + CMYK (Flood / First Surface) - 1000 DPI_HS
     102 : 904,    //Vutek HS100 - W + W + CMYK (Spot / First Surface) - 1000 DPI_HS
     74  : 837,    //Inca X2 CMYK
+    141 : 837,    //Inca X2 CMYK
     81  : 834,    //Inca Q40 Backlit
     89  : 890,    //Inca Q40 - CMYK + W + W (Flood / Second Surface)
     94  : 890,    //Inca Q40 - CMYK + W + W (Spot / Second Surface)

@@ -920,20 +920,19 @@ var rollCalcLogic = {
             if (cu.isMultipleVersion()) {
                 $('input.versionName').attr('required',true);
             }
-            //calculate the cost per piece to product and insert that value into the "TBG Team answer"
+
+            /************************* TBG TEAM COSTING */
+            //material and labor costs are inputted into operation to create cost and markup based on team selected
+            //teams carry % of total job cost which is subject to markup
             var teamMarkupOp = fields.operation139;
             if (teamMarkupOp) {
                 var teamMarkupFactor = fields.operation139_answer;
-                var markup = quote.markupPercent;
                 var teamPrice = getTeamPrice();
-                var estJobCost = ((quote.jobCostPrice + quote.operationsPrice - teamPrice) * 100) / quantity;
-                var estJobCostFactor = parseInt(estJobCost / (1 + quote.markupPercent));
-
-                if (cu.getValue(teamMarkupFactor) != estJobCostFactor) {
-                    cu.changeField(teamMarkupFactor, estJobCostFactor, true);
+                var costMinusTeam = parseInt((quote.jobCostPrice + quote.operationsPrice - teamPrice));
+                if (cu.getValue(teamMarkupFactor) != costMinusTeam) {
+                    cu.changeField(teamMarkupFactor, costMinusTeam, true);
                     return
                 }
-
             }
             function getTeamPrice() {
                 var operationQuotes = quote.operationQuotes;
@@ -943,6 +942,7 @@ var rollCalcLogic = {
                     }
                 }
             }
+
             /******************** INITIATE COST BREAKDOWN */
             renderExtendedCostBreakdown();
             /********************************************* ALERTS */

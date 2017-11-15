@@ -223,6 +223,10 @@ var boardTypesThatCanHeatBend = [
     '197',   // Sintra Expanded PVC - black
     '231',   // Komatex Expanded PVC - White
     '232',   // Komatex Expanded PVC - Black
+    '301',    //EPVC Komatex - White
+    '302',    //EPVC Komatex - Black
+    '303',    //EPVC Sintra - Black
+    '304',    //EPVC Sintra - White
     '138',   // Acrylic - non TBG*
     '185',   // Optix DA Digital Acrylic
     '253',   // Acrylic P95 Frosted 1 Side

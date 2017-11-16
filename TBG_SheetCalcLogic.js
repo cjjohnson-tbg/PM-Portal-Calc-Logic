@@ -19,6 +19,8 @@ var sfSheetCalcLogic = {
         // $('.operation66').addClass('hideIt');
         // $('.operation67').addClass('hideIt');
         $('#operation141').removeClass('costingOnly');
+        //run meta field action
+        metaFieldsActions.onCalcLoaded(product);
     },
     onCalcChanged: function(updates, product) {
         if (cu.isPOD(product)) {
@@ -36,6 +38,10 @@ var sfSheetCalcLogic = {
          /*re-init on every update*/
             cu.initFields();
             var submessage = '';
+
+            //run meta field action
+            metaFieldsActions.onQuoteUpdated(product);
+
             if (cu.isSmallFormat(product)) { 
                 /************ ADD DIE LIST TO OUTSIDE FINISHING */
                 var outsideDieOp = fields.operation153;

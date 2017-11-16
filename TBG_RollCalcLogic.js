@@ -195,6 +195,8 @@ var rollCalcLogic = {
         removeClassFromOp(111,'costingOnly');
         addClassToOperation(planningOnlyOps,'planning');
         addClassToOperation(estimatingOnlyOps,'estimating');
+        //run meta field action
+        metaFieldsActions.onCalcLoaded(product);
     },
     onCalcChanged: function(updates, product) {
 
@@ -206,6 +208,9 @@ var rollCalcLogic = {
             var operationDetails = getOperationDetails();
             var message = '';
             var submessage = '';
+
+            //run meta field action
+            metaFieldsActions.onQuoteUpdated(product);
 
             removeClassFromOp(111,'costingOnly');
             addClassToOperation(planningOnlyOps, 'planning');

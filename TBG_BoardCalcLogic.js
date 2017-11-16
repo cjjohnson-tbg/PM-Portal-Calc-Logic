@@ -296,6 +296,8 @@ getZundData();
 
 var boardCalcLogic = {
     onCalcLoaded: function(product) {
+        //run meta field action
+        metaFieldsActions.onCalcLoaded(product);
         //Change Paper headline
         $('#paper h3').text('Substrate');
         $('#additionalProductFields .additionalInformation div label:contains("Override")').parent().addClass('overrideDevice');
@@ -335,6 +337,9 @@ var boardCalcLogic = {
             addOperationChoiceProperties();
 
             var submessage = ''; 
+
+            //run meta field action
+            metaFieldsActions.onQuoteUpdated(product);
             
             if (cu.isSmallFormat(product)) { 
                 addClassToOperation(planningOnlyOperations,'planning');

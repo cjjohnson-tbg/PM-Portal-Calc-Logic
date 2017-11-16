@@ -196,19 +196,30 @@ var rollCalcLogic = {
         addClassToOperation(planningOnlyOps,'planning');
         addClassToOperation(estimatingOnlyOps,'estimating');
         //run meta field action
-        metaFieldsActions.onCalcLoaded(product);
+        metaFieldsActions.onCalcLoaded();
     },
     onCalcChanged: function(updates, product) {
 
     },
     onQuoteUpdated: function(updates, validation, product) {
         if (!cu.isSmallFormat(product)) {
+            //search commet object for custom properties inserted into notes or descriptions//set custom properties
+            var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
+            setCustomProperties(quote.device,"description","customProperties");
+            var jobMaterials = quote.piece;
+            for (prop in jobMaterials) {
+                if (jobMaterials.hasOwnProperty(prop)) {
+                    setCustomProperties(jobMaterials[prop], "notes","customProperties")
+                }
+            }
+
             /*re-init on every update*/
             cu.initFields();
-            var operationDetails = getOperationDetails();
             var message = '';
             var submessage = '';
 
+            var operationDetails = getOperationDetails();
+            
             //run meta field action
             metaFieldsActions.onQuoteUpdated(product);
 
@@ -1125,6 +1136,36 @@ function setPropertyFromTextJson(text, targetObj) {
             }
         } else {
             console.log('invalid json string ' + opItemKeyText);
+        }
+    }
+}
+
+// for each property in object search for text property for JSON written text and insert into customProperties properties, if designated
+function setCustomProperties (obj, textProp, newProp) {
+    if (!obj) {
+        return
+    }
+    if (!obj[textProp]) {
+        return
+    }
+    //create new property if newProp defined
+    if (newProp) {
+        obj[newProp] = {};
+    }
+    var text = obj[textProp];
+    // remove line breaks 
+    text = text.replace(/[\n\r]/g, '');
+    //Json properties must be property formed and wrapped in "[[{ }]]"
+    var taggedBlock = /\[{2}(.*?)\]{2}/.exec(text);
+    if (taggedBlock) {
+        var jsonBlock = taggedBlock[0].slice(2,-2);
+        var jsonStr = getJsonFromString(jsonBlock);
+        for (property in jsonStr) {
+            //if new property inputted insert there otherwise AND on original object (make querying results easier)
+            if (newProp) {
+                obj[newProp][property] = jsonStr[property];
+            } 
+            obj[property] = jsonStr[property]; 
         }
     }
 }

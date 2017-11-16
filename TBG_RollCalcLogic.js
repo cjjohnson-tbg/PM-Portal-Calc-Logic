@@ -234,12 +234,6 @@ var rollCalcLogic = {
             var zundFactor = 1;
             var totalQuantity = cu.getTotalQuantity();
             var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
-            
-            var hasFrontLam = (cu.hasValue(fields.frontLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.frontLaminate)) == -1));
-            var hasBackLam = (cu.hasValue(fields.backLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.backLaminate)) == -1));
-            var hasMount = cu.hasValue(fields.mountSubstrate);
-            
-            var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
 
             /**************** OPERATION ITEM KEYS */
             //Create object from key value pairs inserted into operation Item Description surrounded by double brackets "{{ }}"
@@ -271,6 +265,8 @@ var rollCalcLogic = {
                     });
                 }
             }
+            // CALL printConfig CREATION SCRIPT
+            
             /************************* LATEX ROLL */
             if (cu.getPjcId(product) == 76) {
                 //show message on samba products 
@@ -455,7 +451,6 @@ var rollCalcLogic = {
                 return
             }
             /************************ ALIGN INK MATERIAL COSTS WITH DEVICE RUN*/
-            var deviceId = configureglobals.cquotedata.device.id ? configureglobals.cquotedata.device.id : null;
             var devRunConfig = lfDeviceInk[deviceId];
             if (devRunConfig) {
                 var inkMatOp = fields['operation' + devRunConfig.inkMaterialOpId];
@@ -501,6 +496,10 @@ var rollCalcLogic = {
             }
             /************************ APPLY LAM RUN OPERATION WITH OPERATION ANSWER AS LINEAR FEET NEEDED (.01 LF) WHEN LAM SELECTED */
             //Note: "none" operation item is id 18 (front) AND 40 (back) for products using this function
+            var hasFrontLam = (cu.hasValue(fields.frontLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.frontLaminate)) == -1));
+            var hasBackLam = (cu.hasValue(fields.backLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.backLaminate)) == -1));
+            var hasMount = cu.hasValue(fields.mountSubstrate);
+
             var laminatingRun = fields.operation96;
             var laminatingRunAnswer = fields.operation96_answer;
             var laminatingRun2 = fields.operation141;

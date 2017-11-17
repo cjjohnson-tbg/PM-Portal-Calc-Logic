@@ -175,6 +175,7 @@ var sameSideMessage = '';
 var operationItemKeys = new Object();  
 
 // Object for Lam and Mount choices
+var printConfig = {};
 var lc = new Object();
 
 var cu = calcUtil;
@@ -204,7 +205,9 @@ var rollCalcLogic = {
     onQuoteUpdated: function(updates, validation, product) {
         if (!cu.isSmallFormat(product)) {
             //search commet object for custom properties inserted into notes or descriptions//set custom properties
+            if (!configureglobals.cquote) {return}
             var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
+            if (!quote) {return}
             setCustomProperties(quote.device,"description","customProperties");
             var jobMaterials = quote.piece;
             for (prop in jobMaterials) {
@@ -266,7 +269,44 @@ var rollCalcLogic = {
                 }
             }
             // CALL printConfig CREATION SCRIPT
-            
+            calcConfig.getUpdatedConfig(quote);
+
+            /************************ 
+                WASTAGE CALCULATORS 
+                *************************/
+            //NEED TIMER SO DOESN'T RUN ASYNC???
+            if (printConfig) {
+                //Paste difference from total_roll_cost - printed_roll_cost
+                printConfig['roll_wastage'] = printConfig.total_roll_cost - quote.aPrintSubstratePrice;
+                if (fields.operation135_answer) {
+                    if (cu.getValue(fields.operation135_answer) != printConfig.roll_wastage) {
+                        $('#optimum-substrate input').val(printConfig.substrate);
+                        $('#optimum-substrate-id input').val(printConfig.substrate_pace_id);
+                        cu.changeField(fields.operation135_answer,printConfig.roll_wastage,true);
+                    }
+                }
+                var rollChangeOp = fields.operation138;
+                var rollChangeOpAnswer = fields.operation138_answer;
+                if (rollChangeOp) {
+                    if (printConfig.roll_change_cost > 0) {
+                        if (!cu.hasValue(rollChangeOp)) {
+                            cu.changeField(rollChangeOp, 682, true);
+                            return
+                        }
+                        var rollChangeFactor = parseInt(printConfig.roll_change_cost * 100000 / pieceQty);
+                        if (cu.getValue(rollChangeOpAnswer) != rollChangeFactor) {
+                            cu.changeField(rollChangeOpAnswer, rollChangeFactor, true);
+                            return
+                        }
+                    } else {
+                        if (cu.hasValue(rollChangeOp)) {
+                            cu.changeField(rollChangeOp, '', true);
+                            return
+                        }
+                    }
+                }
+            }
+
             /************************* LATEX ROLL */
             if (cu.getPjcId(product) == 76) {
                 //show message on samba products 

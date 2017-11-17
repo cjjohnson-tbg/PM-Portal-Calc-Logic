@@ -40,7 +40,7 @@ var calcConfig = {
 		/*
 		IF altRoll exist for substrate then Loop through each alternateRolls and check for best imposition 
 		*/
-		var altRolls = quote.device.altRolls;
+		var altRolls = quote.piece.aPrintSubstrate.altRolls;
 		if (altRolls) {
 			for (var i = 0; i < altRolls.length; i++) {
 				var altRollConfig = getBestPrintConfig(altRolls[i]);

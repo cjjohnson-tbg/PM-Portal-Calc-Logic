@@ -175,6 +175,7 @@ var sameSideMessage = '';
 var operationItemKeys = new Object();  
 
 // Object for Lam and Mount choices
+var printConfig = {};
 var lc = new Object();
 
 var cu = calcUtil;
@@ -195,17 +196,36 @@ var rollCalcLogic = {
         removeClassFromOp(111,'costingOnly');
         addClassToOperation(planningOnlyOps,'planning');
         addClassToOperation(estimatingOnlyOps,'estimating');
+        //run meta field action
+        metaFieldsActions.onCalcLoaded();
     },
     onCalcChanged: function(updates, product) {
 
     },
     onQuoteUpdated: function(updates, validation, product) {
         if (!cu.isSmallFormat(product)) {
+            
+            //search commet object for custom properties inserted into notes or descriptions//set custom properties
+            if (!configureglobals.cquote) {return}
+            var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
+            if (!quote) {return}
+            setCustomProperties(quote.device,"description","customProperties");
+            var jobMaterials = quote.piece;
+            for (prop in jobMaterials) {
+                if (jobMaterials.hasOwnProperty(prop)) {
+                    setCustomProperties(jobMaterials[prop], "notes","customProperties")
+                }
+            }
+
             /*re-init on every update*/
             cu.initFields();
-            var operationDetails = getOperationDetails();
             var message = '';
             var submessage = '';
+
+            var operationDetails = getOperationDetails();
+            
+            //run meta field action
+            metaFieldsActions.onQuoteUpdated(product);
 
             removeClassFromOp(111,'costingOnly');
             addClassToOperation(planningOnlyOps, 'planning');
@@ -218,12 +238,6 @@ var rollCalcLogic = {
             var zundFactor = 1;
             var totalQuantity = cu.getTotalQuantity();
             var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
-            
-            var hasFrontLam = (cu.hasValue(fields.frontLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.frontLaminate)) == -1));
-            var hasBackLam = (cu.hasValue(fields.backLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.backLaminate)) == -1));
-            var hasMount = cu.hasValue(fields.mountSubstrate);
-            
-            var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
 
             /**************** OPERATION ITEM KEYS */
             //Create object from key value pairs inserted into operation Item Description surrounded by double brackets "{{ }}"
@@ -255,6 +269,45 @@ var rollCalcLogic = {
                     });
                 }
             }
+            // CALL printConfig CREATION SCRIPT
+            calcConfig.getUpdatedConfig(quote);
+
+            /************************ 
+                WASTAGE CALCULATORS 
+                *************************/
+            //NEED TIMER SO DOESN'T RUN ASYNC???
+            if (printConfig) {
+                //Paste difference from total_roll_cost - printed_roll_cost
+                printConfig['roll_wastage'] = roundTo(printConfig.total_roll_cost - quote.aPrintSubstratePrice,2);
+                if (fields.operation135_answer) {
+                    if (cu.getValue(fields.operation135_answer) != printConfig.roll_wastage) {
+                        $('#optimum-substrate input').val(printConfig.substrate);
+                        $('#optimum-substrate-id input').val(printConfig.substrate_pace_id);
+                        cu.changeField(fields.operation135_answer,printConfig.roll_wastage,true);
+                    }
+                }
+                var rollChangeOp = fields.operation138;
+                var rollChangeOpAnswer = fields.operation138_answer;
+                if (rollChangeOp) {
+                    if (printConfig.roll_change_cost > 0) {
+                        if (!cu.hasValue(rollChangeOp)) {
+                            cu.changeField(rollChangeOp, 682, true);
+                            return
+                        }
+                        var rollChangeFactor = parseInt(printConfig.roll_change_cost * 100000 / pieceQty);
+                        if (cu.getValue(rollChangeOpAnswer) != rollChangeFactor) {
+                            cu.changeField(rollChangeOpAnswer, rollChangeFactor, true);
+                            return
+                        }
+                    } else {
+                        if (cu.hasValue(rollChangeOp)) {
+                            cu.changeField(rollChangeOp, '', true);
+                            return
+                        }
+                    }
+                }
+            }
+
             /************************* LATEX ROLL */
             if (cu.getPjcId(product) == 76) {
                 //show message on samba products 
@@ -439,7 +492,6 @@ var rollCalcLogic = {
                 return
             }
             /************************ ALIGN INK MATERIAL COSTS WITH DEVICE RUN*/
-            var deviceId = configureglobals.cquotedata.device.id ? configureglobals.cquotedata.device.id : null;
             var devRunConfig = lfDeviceInk[deviceId];
             if (devRunConfig) {
                 var inkMatOp = fields['operation' + devRunConfig.inkMaterialOpId];
@@ -485,6 +537,10 @@ var rollCalcLogic = {
             }
             /************************ APPLY LAM RUN OPERATION WITH OPERATION ANSWER AS LINEAR FEET NEEDED (.01 LF) WHEN LAM SELECTED */
             //Note: "none" operation item is id 18 (front) AND 40 (back) for products using this function
+            var hasFrontLam = (cu.hasValue(fields.frontLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.frontLaminate)) == -1));
+            var hasBackLam = (cu.hasValue(fields.backLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.backLaminate)) == -1));
+            var hasMount = cu.hasValue(fields.mountSubstrate);
+
             var laminatingRun = fields.operation96;
             var laminatingRunAnswer = fields.operation96_answer;
             var laminatingRun2 = fields.operation141;
@@ -1124,6 +1180,35 @@ function setPropertyFromTextJson(text, targetObj) {
     }
 }
 
+// for each property in object search for text property for JSON written text and insert into customProperties properties, if designated
+function setCustomProperties (obj, textProp, newProp) {
+    if (!obj) {
+        return
+    }
+    if (!obj[textProp]) {
+        return
+    }
+    //create new property if newProp defined
+    if (newProp) {
+        obj[newProp] = {};
+    }
+    var text = obj[textProp];
+    // remove line breaks 
+    text = text.replace(/[\n\r]/g, '');
+    //Json properties must be property formed and wrapped in "[[{ }]]"
+    var taggedBlock = /\[{2}(.*?)\]{2}/.exec(text);
+    if (taggedBlock) {
+        var jsonBlock = taggedBlock[0].slice(2,-2);
+        var jsonStr = getJsonFromString(jsonBlock);
+        for (property in jsonStr) {
+            //if new property inputted insert there otherwise AND on original object (make querying results easier)
+            if (newProp) {
+                obj[newProp][property] = jsonStr[property];
+            } 
+            obj[property] = jsonStr[property]; 
+        }
+    }
+}
 
 function getJsonFromString (str) {
     try {
@@ -1131,6 +1216,24 @@ function getJsonFromString (str) {
     } catch (e) {
         return false;
     }
+}
+
+function roundTo(n, digits) {
+    var negative = false;
+    if (digits === undefined) {
+        digits = 0;
+    }
+        if( n < 0) {
+        negative = true;
+      n = n * -1;
+    }
+    var multiplicator = Math.pow(10, digits);
+    n = parseFloat((n * multiplicator).toFixed(11));
+    n = (Math.round(n) / multiplicator).toFixed(2);
+    if( negative ) {    
+        n = (n * -1).toFixed(2);
+    }
+    return n;
 }
 
 configureEvents.registerOnCalcLoadedListener(rollCalcLogic);

@@ -137,6 +137,8 @@ var sfCalcLogic = {
         if (cu.isPjc(product, smallFormatBoardPjc)) {
             $('#paper h3').text('Substrate');
         }
+        //run meta field action
+        metaFieldsActions.onCalcLoaded(product);
     },
     onCalcChanged: function(updates, product) {
         if (cu.isPOD(product)) {
@@ -163,8 +165,10 @@ var sfCalcLogic = {
         if (cu.isPOD(product)) {
          /*re-init on every update*/
             cu.initFields();
-
             var submessage = '';
+
+            //run meta field action
+            metaFieldsActions.onQuoteUpdated(product);
             
             if (cu.isSmallFormat(product)) { 
                 /************** Large Format Board Estimating PJC in small format */

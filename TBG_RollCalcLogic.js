@@ -277,32 +277,34 @@ var rollCalcLogic = {
                 *************************/
             //NEED TIMER SO DOESN'T RUN ASYNC???
             if (printConfig) {
-                //Paste difference from total_roll_cost - printed_roll_cost
-                printConfig['roll_wastage'] = roundTo(printConfig.total_roll_cost - quote.aPrintSubstratePrice,2);
-                if (fields.operation135_answer) {
-                    if (cu.getValue(fields.operation135_answer) != printConfig.roll_wastage) {
-                        $('#optimum-substrate input').val(printConfig.substrate);
-                        $('#optimum-substrate-id input').val(printConfig.substrate_pace_id);
-                        cu.changeField(fields.operation135_answer,printConfig.roll_wastage,true);
+                if (printConfig.valid) {
+                    //Paste difference from total_roll_cost - printed_roll_cost
+                    printConfig['roll_wastage'] = roundTo(printConfig.total_roll_cost - quote.aPrintSubstratePrice,2);
+                    if (fields.operation135_answer) {
+                        if (cu.getValue(fields.operation135_answer) != printConfig.roll_wastage) {
+                            $('#optimum-substrate input').val(printConfig.substrate);
+                            $('#optimum-substrate-id input').val(printConfig.substrate_pace_id);
+                            cu.changeField(fields.operation135_answer,printConfig.roll_wastage,true);
+                        }
                     }
-                }
-                var rollChangeOp = fields.operation138;
-                var rollChangeOpAnswer = fields.operation138_answer;
-                if (rollChangeOp) {
-                    if (printConfig.roll_change_cost > 0) {
-                        if (!cu.hasValue(rollChangeOp)) {
-                            cu.changeField(rollChangeOp, 682, true);
-                            return
-                        }
-                        var rollChangeFactor = parseInt(printConfig.roll_change_cost * 100000 / pieceQty);
-                        if (cu.getValue(rollChangeOpAnswer) != rollChangeFactor) {
-                            cu.changeField(rollChangeOpAnswer, rollChangeFactor, true);
-                            return
-                        }
-                    } else {
-                        if (cu.hasValue(rollChangeOp)) {
-                            cu.changeField(rollChangeOp, '', true);
-                            return
+                    var rollChangeOp = fields.operation138;
+                    var rollChangeOpAnswer = fields.operation138_answer;
+                    if (rollChangeOp) {
+                        if (printConfig.roll_change_cost > 0) {
+                            if (!cu.hasValue(rollChangeOp)) {
+                                cu.changeField(rollChangeOp, 682, true);
+                                return
+                            }
+                            var rollChangeFactor = parseInt(printConfig.roll_change_cost * 100000 / pieceQty);
+                            if (cu.getValue(rollChangeOpAnswer) != rollChangeFactor) {
+                                cu.changeField(rollChangeOpAnswer, rollChangeFactor, true);
+                                return
+                            }
+                        } else {
+                            if (cu.hasValue(rollChangeOp)) {
+                                cu.changeField(rollChangeOp, '', true);
+                                return
+                            }
                         }
                     }
                 }

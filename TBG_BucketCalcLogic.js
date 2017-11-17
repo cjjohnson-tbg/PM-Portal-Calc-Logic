@@ -1,5 +1,6 @@
 var planningOnlyOps = [
-    55   //
+    55,   //
+    125   //LF Bucket Job
 ]
 var sfPlanningOnlyOperations = [
     150,    //LF Cutting
@@ -11,7 +12,8 @@ var sfPlanningOnlyOperations = [
     166,    //LF Pre-Cut
     168,    //LF No Cutting
     // 170,     //LF Hub Cutting
-    174     //LF TBG-Fab Cut
+    174,     //LF TBG-Fab Cut
+    193     //LF Bucket Job
 ]
 
 var opsWithSubIds = [
@@ -25,7 +27,12 @@ var opsWithSubIds = [
     124,     //LF Tape, Mag, Velcro - Top & Bottom
     133      //LF Premask
 ]
-
+var lfOpsToTrimWithUnderscore = [
+    67,  //Pre-Printing Front Laminate
+    84,  //Pre-Printing Back Laminate
+    58,   //TBG Tape, Mag, Velcro
+    78  //LF Premask
+]
 var zundOpItemMapLoading = {
     1  : 202,    //Speed Factor 1
     2  : 203,    //Speed Factor 2
@@ -157,50 +164,22 @@ var bucketCalcLogic = {
     onCalcLoaded: function(product) {
         //Add planning class to operations
         addClassToOperation(planningOnlyOps,'planning');
-
-        // apply datepicker to meta fields with Pace in label
-        $('#additionalProductFields .additionalInformation div label:contains("Date")').parent().addClass('date');
-        $('#additionalProductFields .additionalInformation div label:contains("Shipping Due Date")').parent().addClass('ship-date');
-        $('.ship-date').removeClass('date');
-        var dateInput = $('.date input');
-        dateInput.datepicker({
-            showAnim: "fold"
-        });
-        var shipDateInput = $('.ship-date input');
-        shipDateInput.datepicker({
-            showAnim: "fold",
-            beforeShowDay: $.datepicker.noWeekends,  // disable weekends
-            minDate: isNowBeforeCSTCutoffTime(13,15) ? 1 : 2 // if before 1:15, 1, if after 1:15 then 2
-        });
-        //Add ID for due date on SF field
-        $('#additionalProductFields .additionalInformation div label:contains("Due Date")').parent().attr('id','dueDate');
-        //Hide Actual Pace Inventory ID and Qty
-        $('#additionalProductFields .additionalInformation div label:contains("Actual")').parent().hide();
-
-        $('#additionalProductFields .additionalInformation div label:contains("Actual Pace Inventory ID")').parent().addClass('actualId');
-        $('#additionalProductFields .additionalInformation div label:contains("Buy-out")').parent().addClass('buyout').hide()
-
-        $('#additionalProductFields .additionalInformation div label:contains("Date Due to Fab")').parent().addClass('fabDate');
-        $('#additionalProductFields .additionalInformation div label:contains("Date Due in Kitting")').parent().addClass('kitDate');
-        $('#additionalProductFields .additionalInformation div label:contains("Kitting Code")').parent().addClass('kitCode');
-        $('#additionalProductFields .additionalInformation div label:contains("Soft Proof Date")').parent().addClass('softProofDate');
-        $('#additionalProductFields .additionalInformation div label:contains("Sub-out Date")').parent().addClass('subOutDate');
-        $('#additionalProductFields .additionalInformation div label:contains("SKU, if Sending to Fulfillment")').parent().addClass('sku');
-        $('#additionalProductFields .additionalInformation div label:contains("Pace Estimate #")').parent().addClass('paceEstimate');
+        trimOperationItemName(lfOpsToTrimWithUnderscore, '_');
+        //run meta field action
+        metaFieldsActions.onCalcLoaded(product);
     },
     onCalcChanged: function(updates, product) {
     },
     onQuoteUpdated: function(updates, validation, product) {
         /*re-init on every update*/
         cu.initFields();
+        var message = '';
+        var submessage = '';
 
         if (cu.isSmallFormat(product)) {
             /************** ADD STYLE TO CERTAIN ELEMENTS */
             addClassToOperation(sfPlanningOnlyOperations,'planning');
-            var magGlossOp = fields.operation187;
-            if (magGlossOp) {
-                magGlossOp.css('color', 'red');
-            }
+
             trimOperationItemName(opsWithSubIds,'_');
             //Change Labels for Paper Type, Weight, Color
             cu.setLabel(fields.paperType,'Substrate');
@@ -347,10 +326,10 @@ var bucketCalcLogic = {
             }
         } //END SMALL FORMAT
         else {
-            var message = '';
-            var submessage = '';
 
             addClassToOperation(planningOnlyOps,'planning');
+            trimOperationItemName(lfOpsToTrimWithUnderscore, '_');
+            
             /************************ SET ZUND LOADING, CUTTING, AND UNLOADING BASED ON SUBSTRATE */
             //determine cut method
             var cutMethod = 'zund';
@@ -386,26 +365,27 @@ var bucketCalcLogic = {
                 	}
                 }
             } 
-            /************************ BOARD BUCKET LIMITATIONS */
-            //limit to 200 sq ft
-            var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
-            var message = '';
-            if (totalSquareFeet > 200 ) {
-                bucketSizeMessage = '<p>The Board Bucket product is limited to jobs less than 200 sq ft.  For jobs greater than this please use the Board Printing Product.</p>';
-                message += bucketSizeMessage;
-                disableCheckoutButton(bucketSizeMessage);
-            } else {
-                enableCheckoutButton();
-            }
-
-            /********************************************* ALERTS */
-            // show an alert when necessary
-            if (message != '' || submessage != '') {
-                message += submessage;
-                cu.alert(message);
-            }
-
 	    } //END LARGE FORMAT
+
+        /************************ BOARD BUCKET LIMITATIONS */
+        //limit to 200 sq ft
+        var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
+        var message = '';
+        if (totalSquareFeet > 200 ) {
+            bucketSizeMessage = '<p>The Bucket product is limited to jobs less than 200 sq ft.  For jobs greater than this please use the Board Printing Product.</p>';
+            message += bucketSizeMessage;
+            disableCheckoutButton(bucketSizeMessage);
+        } else {
+            enableCheckoutButton();
+        }
+
+        /********************************************* ALERTS */
+        // show an alert when necessary
+        if (message != '' || submessage != '') {
+            message += submessage;
+            cu.alert(message);
+        }
+
     }
 }
 

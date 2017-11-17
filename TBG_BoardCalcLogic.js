@@ -25,6 +25,7 @@ var side1InkMap = {
     101 : 904,    //Vutek HS100 - W + W + CMYK (Flood / First Surface) - 1000 DPI_HS
     102 : 904,    //Vutek HS100 - W + W + CMYK (Spot / First Surface) - 1000 DPI_HS
     74  : 837,    //Inca X2 CMYK
+    141 : 837,    //Inca X2 CMYK
     81  : 834,    //Inca Q40 Backlit
     89  : 890,    //Inca Q40 - CMYK + W + W (Flood / Second Surface)
     94  : 890,    //Inca Q40 - CMYK + W + W (Spot / Second Surface)
@@ -33,7 +34,30 @@ var side1InkMap = {
     117 : 834,    //Inca Q40 - CMYK (Second Surface)
     126 : 1038,  //Vutek HS100 - W + W Only (Spot / Second Surface) - 1000 DPI_HS
     96  : 1038,    //Vutek HS100 - W + W Only (Spot / First Surface) - 1000 DPI_HS
-    125 : 749   //Vutek HS100 - White Only (Spot / Second Surface) - 1000 DPI_HS
+    125 : 749,   //Vutek HS100 - White Only (Spot / Second Surface) - 1000 DPI_HS
+    133 : 1038,   //Vutek HS125 - W + W Only (Flood / First Surface) - 1000 GS-LS
+
+    136 : 1038,   //Vutek HS125 - W + W Only (Flood / First Surface) - 600 DPI-HS
+    138  : 749,    //Vutek HS125 - White Only - 600 DPI-HS
+    111 : 904,    //Vutek HS125 - CMYK + W + W (Flood / Second Surface) - 600 DPI-HS
+    137 : 1038,  //Vutek HS125 - W + W Only (Spot / Second Surface) - 600 DPI-HS
+    136  : 890,    //Inca Q40 - W + W + CMYK (Flood / First Surface)
+    135 : 904,    //Vutek HS125 - W + W + CMYK (Spot / First Surface) - 600 DPI-HS
+    134 : 615,    //Vutek HS125 - CMYK (Second Surface) - 600 DPI-HS
+    104 : 587,  //Vutek HS125 - CMYK (First Surface) - 600 DPI-HS
+    115 : 614,  //Vutek HS125 - CMYK + W + CMYK (Flood / Second Surface) - 600 DPI-HS
+    114 : 614,  //Vutek HS125 - CMYK + W + CMYK (Spot / Second Surface) - 600 DPI-HS
+    121 : 614,  //Vutek HS125 - CMYK + W + CMYK (Flood / First Surface) - 600 DPI-HS
+    123 : 614,  //Vutek HS125 - CMYK + W + CMYK (Spot / First Surface) - 600 DPI-HS
+    105 : 691,  //Vutek HS125 - Backlit - 600 DPI-HS
+    107 : 612,  //Vutek HS125 - CMYK + W (Flood / Second Surface) - 600 DPI-HS
+    106 : 612,  //Vutek HS125 - CMYK + W (Spot / Second Surface) - 600 DPI-HS
+    109 : 612,  //Vutek HS125 - W + CMYK (Flood / First Surface) - 600 DPI-HS
+    108 : 612,  //Vutek HS125 - W + CMYK (Spot / First Surface) - 600 DPI-HS
+    110 : 904,  //Vutek HS125 - CMYK + W + W (Spot / Second Surface) - 600 DPI-HS
+    113 : 904,  //Vutek HS125 - W + W + CMYK (Flood / First Surface) - 600 DPI-HS
+    112 : 904   //Vutek HS125 - W + W + CMYK (Spot / First Surface) - 600 DPI-HS
+
 }
 var side2InkMap = {
     56  : 590,    //Vutek HS 1000 CMYK
@@ -57,6 +81,10 @@ var side2InkMap = {
     91 : 891,    //Inca Q40 - W + W
     88 : 891,    //Inca Q40 - W + W + CMYK (Flood / First Surface)
     93 : 891,    //Inca Q40 - W + W + CMYK (Spot / First Surface)
+    
+    109  : 613,    //Vutek HS100 Q40 W + CMYK (First Surface)
+    133 : 1039,   //Vutek HS125 - W + W Only (Flood / First Surface) - 1000 GS-LS
+    136 : 1039,  //Vutek HS125 - W + W Only (Flood / First Surface) - 600 DPI-HS
     120 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Flood / First Surface) - 1000 DPI_HS
     58 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Flood / Second Surface) - 1000 DPI_HS
     122 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Spot / First Surface) - 1000 DPI_HS
@@ -67,7 +95,24 @@ var side2InkMap = {
     98 : 613,    //Vutek HS100 - W + CMYK (Spot / First Surface) - 1000 DPI_HS
     101 : 1040,    //Vutek HS100 - W + W + CMYK (Flood / First Surface) - 1000 DPI_HS
     102 : 1040,    //Vutek HS100 - W + W + CMYK (Spot / First Surface) - 1000 DPI_HS
-    96 : 1039    //Vutek HS100 - W + W Only (Spot / First Surface) - 1000 DPI_HS
+    96 : 1039,    //Vutek HS100 - W + W Only (Spot / First Surface) - 1000 DPI_HS
+    138  : 750,    //Vutek HS125 - White Only (Spot / First Surface) - 600 DPI-HS
+    137 : 1040,    //Vutek HS125 - W + W Only (Spot / Second Surface) - 600 DPI-HS
+    135 : 1039,    //Vutek HS100 - W + W Only (Spot / First Surface) - 1000 DPI_HS
+    136 : 1040,    //Vutek HS100 - W + W + CMYK (Flood / First Surface) - 1000 DPI_HS
+    134  : 613,    //Vutek HS100 CMYK + W (Second Surface)
+    104  : 590,    //Vutek HS125 - CMYK (First Surface) - 600 DPI-HS
+    107  : 613,    //Vutek HS125 - CMYK + W (Flood / Second Surface) - 600 DPI-HS
+    121 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Flood / First Surface) - 600 DPI_HS
+    115 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Flood / Second Surface) - 600 DPI_HS
+    123 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Spot / First Surface) - 600 DPI_HS
+    114 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Spot / Second Surface) - 600 DPI_HS
+    106 : 613,    //Vutek HS100 - CMYK + W (Spot / Second Surface) - 600 DPI_HS
+    111 : 1040,    //Vutek HS100 - CMYK + W + W (Flood / Second Surface) - 600 DPI_HS\
+    110 : 1040,    //Vutek HS100 - CMYK + W + W (Spot / Second Surface) - 600 DPI_HS
+    108 : 613,    //Vutek HS100 - W + CMYK (Spot / First Surface) - 600 DPI_HS
+    113 : 1040,    //Vutek HS100 - W + W + CMYK (Flood / First Surface) - 600 DPI_HS
+    112 : 1040,    //Vutek HS100 - W + W + CMYK (Spot / First Surface) - 600 DPI_HS
 }
 
 var zundLoadingSelections = {
@@ -149,7 +194,16 @@ var planningOnlyOperations = [
     168,    //LF No Cutting
     // 170,     //LF Hub Cutting
     174,     //LF TBG-Fab Cut
-    193     //LF Bucket Job
+    193,     //LF Bucket Job
+    187,    //LF Gloss Mode
+    202,     //LF MCT Cutting
+    215     //LF Gutter
+]
+var estimstingOnlyOperations = [
+    218    //TBG Team Factor (temporary)
+]
+var trainingOps = [
+
 ]
 var opsWithOther = [
     129,
@@ -170,6 +224,10 @@ var boardTypesThatCanHeatBend = [
     '197',   // Sintra Expanded PVC - black
     '231',   // Komatex Expanded PVC - White
     '232',   // Komatex Expanded PVC - Black
+    '301',    //EPVC Komatex - White
+    '302',    //EPVC Komatex - Black
+    '303',    //EPVC Sintra - Black
+    '304',    //EPVC Sintra - White
     '138',   // Acrylic - non TBG*
     '185',   // Optix DA Digital Acrylic
     '253',   // Acrylic P95 Frosted 1 Side
@@ -207,6 +265,17 @@ var cutMethodId = {
     1084: 'guillotineCut' , //Guillotine Cut
     1156: 'fabCut'  //Fab to Cut
 }
+var getCriticalDeviceId = {
+    1466 : 6,  //Vutek HS101
+    1467 : 6,  //Vutek HS102
+    1468 : 6,   //Vutek HS103
+    1469 : 6,  //Vutek HS104
+    1470 : 15,  //Inca X2-A
+    1471 : 15,  //Inca X2-B
+    1472 : 7,  //Inca Q40
+    1468 : 22,  //Vutek HS125
+    1469 : 22  //Vutek HS125
+}
 
 var pmPortal = (location.hostname.indexOf("tbghub.com") != -1);
 var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") != -1);
@@ -216,6 +285,9 @@ var hardProofMessageCount = 0;
 var mountingEstimateMessageCount = 0;
 var allowHeatBend = true;
 
+// Operation Item Keys object - in window for testing
+var operationItemKeys = new Object();  
+
 var cu = calcUtil;
 
 var cutMethod;
@@ -224,15 +296,20 @@ getZundData();
 
 var boardCalcLogic = {
     onCalcLoaded: function(product) {
+        //run meta field action
+        metaFieldsActions.onCalcLoaded(product);
         //Change Paper headline
         $('#paper h3').text('Substrate');
         $('#additionalProductFields .additionalInformation div label:contains("Override")').parent().addClass('overrideDevice');
         $('.overrideDevice').hide();
         trimOperationItemName(opsWithSubIds,'_');
         addClassToOperation(planningOnlyOperations,'planning');
+        addClassToOperation(estimstingOnlyOperations,'estimating');
         removeClassFromOp(170,'costingOnly');
+        removeClassFromOp(205,'costingOnly');
         addOtherOpClass(opsWithOther);
         removeOperationItemsWithString(156,'Print');
+        removeOperationItemsWithString(133,'Other');
     },
     onCalcChanged: function(updates, product) {
         if (cu.isPOD(product)) {
@@ -256,11 +333,21 @@ var boardCalcLogic = {
         if (cu.isPOD(product)) {
          /*re-init on every update*/
             cu.initFields();
+            //TEMP ADD IN FIELDS.CHOICE UNTIL CREATED IN CALCULATORUTILIES.JS
+            addOperationChoiceProperties();
+
             var submessage = ''; 
+
+            //run meta field action
+            metaFieldsActions.onQuoteUpdated(product);
+            
             if (cu.isSmallFormat(product)) { 
                 addClassToOperation(planningOnlyOperations,'planning');
+                addClassToOperation(estimstingOnlyOperations,'estimating');
+                addClassToOperation(trainingOps,'training');
                 addOtherOpClass(opsWithOther);
                 removeClassFromOp(170,'costingOnly');
+                removeClassFromOp(205,'costingOnly');
 
                 //Change Labels for Paper Type, Weight, Color
                 cu.setLabel(fields.paperType,'Substrate');
@@ -270,7 +357,78 @@ var boardCalcLogic = {
                 //CHange label of pages for Setrs
                 cu.setLabel(fields.paperWeight,'Thickness');
 
+                /**************** OPERATION ITEM KEYS */
+                //Create object from key value pairs inserted into operation Item Description surrounded by double brackets "{{ }}"
+                //var operationItemKeys = new Object();  
+                for (const prop of Object.keys(operationItemKeys)) {
+                  delete operationItemKeys[prop];
+                }
+                var quote = configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote ? configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote : null;
+                if (quote) {
+                    var ops = quote.operationQuotes;
+                    var descriptions = [];
+                    ops.forEach(function(operationQuote) {
+                        var opItemDescription = operationQuote.data.choice.description;
+                        descriptions.push(opItemDescription);
+                        //var opItemKeyText = opItemDescription.replace(/(^.*{{|}}.*$)/g, '' );
+                        var opItemKeyText = /\[(.*?)\]/.exec(opItemDescription);
+                        if (opItemKeyText) {
+                            var opItemObj = JSON.parse(opItemKeyText[1]);
+                            //push to calc object
+                            Object.keys(opItemObj).forEach(function(key) {
+                                operationItemKeys[key] = opItemObj[key];
+                            });
+                        }
+                    });
+                }
+
+                /********* Color Critical Check */
+                var colorCriticalOp = fields.operation205;
+                var colorCriticalDevice = fields.operation206;
+                if (colorCriticalOp && colorCriticalDevice) {
+                    var hasQtyError = false;
+                    if (cu.hasValue(colorCriticalOp)) {
+                        //Show special message if quantity of device not hit
+                        if (calcValidation.hasErrorForField(validation, fields.quantity)) {
+                            hasQtyError = true;
+                        }
+                        cu.showField(colorCriticalDevice);
+                        cu.setLabel(colorCriticalOp,"Color Critical - please indicate job # below");
+                        if (cu.hasValue(colorCriticalDevice)) {
+                            if (configureglobals.cdevicemgr.autoDeviceSwitch) {
+                                toggleAutoDeviceTypeButton();
+                                $('select[name="DEVICEDD"]').trigger('focus').trigger('change');
+                                return
+                            }
+                            var criticalDeviceId = getCriticalDeviceId[cu.getValue(colorCriticalDevice)] ? getCriticalDeviceId[cu.getValue(colorCriticalDevice)] : null;
+                            if (criticalDeviceId && !hasQtyError) {
+                                if (cu.getDeviceType() != criticalDeviceId) {
+                                    setDevice(criticalDeviceId);
+                                    return
+                                }
+                            }
+                        }
+                        if (hasQtyError) {
+                            cu.alert('<p>The default settings for this device cannot run with these specifications. Resubmit the specs with your Color Critical requirements, but do not select a device. Instead, enter a press note with the device required</p>');
+                        }
+
+                    } else {
+                        if (cu.hasValue(colorCriticalDevice)) {
+                            cu.changeField(colorCriticalDevice,'',true);
+                        }
+                        cu.hideField(colorCriticalDevice);
+                        cu.setSelectedOptionText(colorCriticalOp,'No');
+                         {
+                            if (!configureglobals.cdevicemgr.autoDeviceSwitch) {
+                                toggleAutoDeviceTypeButton();
+                            }
+                        }
+                    }
+                }
+
+
                 //STOP IF QALCULATOR NOT RETURNING QUOTE
+                if (!configureglobals.cquote) { return; }
                 if (!configureglobals.cquote.success) { return; }
 
                 /********* Convert pieces for Operation Costing */
@@ -286,38 +444,47 @@ var boardCalcLogic = {
                 var topInchDecreaserAnswer = fields.operation123_answer;
 
                 //Increase Operation Pieces to square inch with bleed
-                var pieceSqInch = (parseFloat(pieceWidth) + .5) * (parseFloat(pieceHeight) + .5);
-                pieceSqInch = parseInt(pieceSqInch);
-                if (cu.getValue(SqInchIncreaserAnswer) != pieceSqInch) {
-                    cu.changeField(SqInchIncreaserAnswer, pieceSqInch, true);
-                    return
+                if (SqInchIncreaserAnswer && SqInchDecreaserAnswer) {
+                    var pieceSqInch = (parseFloat(pieceWidth) + .5) * (parseFloat(pieceHeight) + .5);
+                    pieceSqInch = parseInt(pieceSqInch);
+                    if (cu.getValue(SqInchIncreaserAnswer) != pieceSqInch) {
+                        cu.changeField(SqInchIncreaserAnswer, pieceSqInch, true);
+                        return
+                    }
+                    if (cu.getValue(SqInchDecreaserAnswer) != pieceSqInch) {
+                        cu.changeField(SqInchDecreaserAnswer, pieceSqInch, true);
+                        return
+                    }
                 }
-                if (cu.getValue(SqInchDecreaserAnswer) != pieceSqInch) {
-                    cu.changeField(SqInchDecreaserAnswer, pieceSqInch, true);
-                    return
-                }
+                    
                 //Increase Operation Pieces to linear inch
-                var pieceLinInch = (2 * (pieceWidth) + 2 * (pieceHeight));
-                pieceLinInch = parseInt(pieceLinInch);
-                if (cu.getValue(LinInchIncreaserAnswer) != pieceLinInch) {
-                    cu.changeField(LinInchIncreaserAnswer, pieceLinInch, true);
-                    return
+                if (LinInchIncreaserAnswer && LinInchDecreaserAnswer) {
+                    var pieceLinInch = (2 * (pieceWidth) + 2 * (pieceHeight));
+                    pieceLinInch = parseInt(pieceLinInch);
+                    if (cu.getValue(LinInchIncreaserAnswer) != pieceLinInch) {
+                        cu.changeField(LinInchIncreaserAnswer, pieceLinInch, true);
+                        return
+                    }
+                    if (cu.getValue(LinInchDecreaserAnswer) != pieceLinInch) {
+                        cu.changeField(LinInchDecreaserAnswer, pieceLinInch, true);
+                        return
+                    }
                 }
-                if (cu.getValue(LinInchDecreaserAnswer) != pieceLinInch) {
-                    cu.changeField(LinInchDecreaserAnswer, pieceLinInch, true);
-                    return
-                }
+                    
                 //Increase Operation Pieces to Top Side Linear Inch
                 var topLinInch = pieceWidth;
                 topLinInch = parseInt(topLinInch);
-                if (cu.getValue(topInchIncreaserAnswer) != topLinInch) {
-                    cu.changeField(topInchIncreaserAnswer, topLinInch, true);
-                    return
-                }
-                if (cu.getValue(topInchDecreaserAnswer) != topLinInch) {
-                    cu.changeField(topInchDecreaserAnswer, topLinInch, true);
-                    return
-                }
+                if (topInchIncreaserAnswer && topInchDecreaserAnswer) {
+                    if (cu.getValue(topInchIncreaserAnswer) != topLinInch) {
+                        cu.changeField(topInchIncreaserAnswer, topLinInch, true);
+                        return
+                    }
+                    if (cu.getValue(topInchDecreaserAnswer) != topLinInch) {
+                        cu.changeField(topInchDecreaserAnswer, topLinInch, true);
+                        return
+                    }
+                } 
+                    
                 /********* Align Ink to Color in Operations */
                 var sideOneInk = cu.getValue(fields.printingS1);
                 var sideTwoInk = cu.getValue(fields.printingS2);
@@ -346,17 +513,27 @@ var boardCalcLogic = {
                 }
                 //NEW
                 if (sideOneInkId) {
-                    var sideOneInkOpId = side1InkMap[sideOneInkId];
-                    if (cu.getValue(sideOneInkOp) != sideOneInkOpId) {
-                        cu.changeField(sideOneInkOp, sideOneInkOpId, true);
-                        return
+                    var sideOneInkOpId = side1InkMap[sideOneInkId] ? side1InkMap[sideOneInkId] : null;
+                    if (sideOneInkOpId) {
+                        if (cu.getValue(sideOneInkOp) != sideOneInkOpId) {
+                            cu.changeField(sideOneInkOp, sideOneInkOpId, true);
+                            return
+                        }
+                    } else {
+                        console.log('Side 1 ink operation not mapping for ink ' + sideOneInkId);
                     }
                 }
                 if (sideTwoInkOp) {
                     if (sideTwoInkId) {
-                        var sideTwoInkOpId = side2InkMap[sideTwoInkId];
-                        if (cu.getValue(sideTwoInkOp) != sideTwoInkOpId) {
-                            cu.changeField(sideTwoInkOp, sideTwoInkOpId, true);
+                        var sideTwoInkOpId = side2InkMap[sideTwoInkId] ? side2InkMap[sideTwoInkId] : null;
+                        if (sideTwoInkOpId) {
+                            if (cu.getValue(sideTwoInkOp) != sideTwoInkOpId) {
+                                cu.changeField(sideTwoInkOp, sideTwoInkOpId, true);
+                            }
+                        } else {
+                            if (cu.hasValue(sideTwoInkOp)) {
+                                cu.changeField(sideTwoInkOp,'', true);
+                            }
                         }
                     } else {
                         if (cu.hasValue(sideTwoInkOp)) {
@@ -405,6 +582,13 @@ var boardCalcLogic = {
                 if (cutMethod == 'fabCut') {
                     if (!cu.hasValue(fabCutOp)) {cu.changeField(fabCutOp, 1108, true); return}
                     removeClassFromOp(174, 'planning');
+                    //if Fab Laser Cut is chosen, force Pre-mask 2 sides=
+                    if (cu.getValue(fabCutOp) == 1162) {
+                        if (cu.getValue(fields.operation133) != 761) {
+                            cu.changeField(fields.operation133, 761, true);
+                            onQuoteUpdatedMessages += '<p>Fab Laser Cut requires Premask on both sides.  This has been chosen on your behalf.</p>';
+                        }
+                    }
                 } else {
                     if (cu.hasValue(fabCutOp)) {cu.changeField(fabCutOp, '', true); return}
                 }
@@ -457,18 +641,30 @@ var boardCalcLogic = {
                         }
                     }
                 }
-                /************************* ADD LAMINATING SETUP FEE WHEN FRONT AND/OR BACK LAM CHOSEN */
-                var sfLaminating = cu.findOperationFromSet(smLaminatingOps);
-                if (cu.hasValue(sfLaminating)) {
-                    if (!cu.hasValue(fields.operation135)) {
-                        cu.changeField(fields.operation135, 777, true);
-                        return
-                    }
-                } else {
-                    if (cu.hasValue(fields.operation135)) {
-                        cu.changeField(fields.operation135, '', true);
-                        return
-                    }
+                /************************* ADD LAMINATING RUN 1 AND 2 FOR LAMINATING, MOUNTING, AND PREMASK */
+                var frontLamOp = fields.operation131;
+                var backLamOp = fields.operation130;
+                var mountOp = fields.operation139;
+                var premaskOp = fields.operation133;
+                var hasFrontLam = cu.hasValue(frontLamOp);
+                var hasBackLam = cu.hasValue(backLamOp);
+                var hasMount = cu.hasValue(mountOp);
+                var hasPremask = cu.hasValue(premaskOp);
+
+                if (frontLamOp) {
+                    var hasColdFront = fields.operation131.choice ? fields.operation131.choice.frontLamType == 'Cold' : false;
+                    var hasHotFront = fields.operation131.choice ? fields.operation131.choice.frontLamType == 'Hot' : false;
+                    var hasAdhesiveFront = fields.operation131.choice ? fields.operation131.choice.frontLamType == 'Adhesive' : false;
+                }
+                if (backLamOp) {
+                    var hasColdBack = fields.operation130.choice ? fields.operation130.choice.backLamType == 'Cold' : false;
+                    var hasHotBack = fields.operation130.choice ? fields.operation130.choice.backLamType == 'Hot' : false;
+                    var hasAdhesiveBack = fields.operation130.choice ? fields.operation130.choice.backLamType == 'Adhesive' : false;
+                }
+                var laminatingRun = fields.operation135;
+                var laminatingRun2 = fields.operation221;
+                if (laminatingRun && laminatingRun2) {
+                    setLamRunOperations();
                 }
                 /************************* ADD PRE- PRINTING LAMINATING SETUP FEE AND RUN WHEN FRONT AND/OR BACK LAM CHOSEN */
                 var sfPreLaminating = cu.findOperationFromSet(sfPrePrintLamOps);
@@ -483,37 +679,20 @@ var boardCalcLogic = {
                         return
                     }
                 }
-                /************************* ADD MOUNTING SETUP FEE WHEN MOUNT CHOSEN */
-                var mountingOp = fields.operation139;
-                if (mountingOp) {
-                    var mountingSetup = fields.operation140;
-                    if (cu.hasValue(mountingOp)) {
-                        //display pricing warning with 
-                        if (mountingEstimateMessageCount == 0) {
-                            onQuoteUpdatedMessages += '<p>Mounting costs in this tool are brought in per square inch.  It is highly recommended to obtain an estimate from the Estimating Team for pricing.</p>';
-                            mountingEstimateMessageCount = 1;
-                        }
-                        if (cu.isValueInSet(mountingOp,mountsWithClearAdhesive) || cu.isValueInSet(fields.paperType, subsratesTypesWithClearAdhesive)) {
-                            if (cu.getValue(mountingSetup) != 1030) {
-                                cu.changeField(mountingSetup, 1030, true);
-                            }
-                        } else if (cu.getValue(mountingSetup) != 797) {
-                            cu.changeField(mountingSetup, 797, true);
-                        }
-                    } else if (cu.hasValue(mountingSetup)) {
-                        cu.changeField(mountingSetup, '', true);
-                    }
+                /************************* HIDE OPERATION QUESTION */
+                if (cu.hasValue(fields.operation133)) {
+                    hideOperationQuestion('133');
                 }
+
                 /************************* SHOW HARD PROOF MESSAGE ON THROUGHPUT THRESHOLDS */
                 if (pmPortal) {
                     var boardThroughput = cu.getTotalPressSheets();
                     var proofOp = fields.proof;
                     var proofSelection = cu.getValue(proofOp);
-                    if (boardThroughput >= 10) {
-                        console.log('over 10');
+                    if (boardThroughput >= 20) {
                         if (hardProofMessageCount == 0) {
                             if (proofSelection != 40 && proofSelection != 43) {
-                                onQuoteUpdatedMessages += '<p>Jobs with a throughput of 10 boards require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
+                                onQuoteUpdatedMessages += '<p>Jobs with a throughput of 20 boards require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
                                 hardProofMessageCount = 1;
                                 cu.changeField(proofOp, 40, true);
                                 return
@@ -604,6 +783,21 @@ var boardCalcLogic = {
                     }
                     return 
                 }
+                /********* ADD SIDE 2 SETUP COST WHEN 2 SIDED CHOSEN */
+                var sideTwoSetupOp = fields.operation210;
+                if (sideTwoSetupOp) {
+                    if (cu.hasValue(fields.printingS2)) {
+                        if (!cu.hasValue(sideTwoSetupOp)) {
+                            cu.changeField(sideTwoSetupOp, 1498, true);
+                            return
+                        }
+                    } else {
+                        if (cu.hasValue(sideTwoSetupOp)) {
+                            cu.changeField(sideTwoSetupOp, '', true);
+                            return
+                        }
+                    }
+                }
 
                 /********* Display Run Time information on Estimating Site for LF Board Estimating */
                 $('#runTime span').text(cu.getTotalRuntime());
@@ -625,12 +819,141 @@ var boardCalcLogic = {
 
                 trimOperationItemName(opsWithSubIds,'_');
                 removeOperationItemsWithString(156,'Print');
-                // renderExtendedCostBreakdown();
+                removeOperationItemsWithString(133,'Other');
+
+                /******************* TEAM MARKUP OPERATIONS */
+                var teamMarkupOp = fields.operation218;
+                var teamMarkupOp_answer = fields.operation218_answer;
+                if (teamMarkupOp && teamMarkupOp_answer) {
+                    var markup = quote.markupPercent;
+                    var teamCost = getTeamPrice();
+                    var costMinusTeam = parseInt((quote.jobCostPrice + quote.operationsPrice - teamCost));
+                    if (cu.hasValue(teamMarkupOp)) {
+                        if (cu.getValue(teamMarkupOp_answer) != costMinusTeam) {
+                            cu.changeField(teamMarkupOp_answer, costMinusTeam, true);
+                            return
+                        }
+                    }
+                } 
+
+                function getTeamPrice() {
+                    var operationQuotes = quote.operationQuotes;
+                    for (var i = 0; i < operationQuotes.length; i++) {
+                        if (operationQuotes[i].data.heading == "TBG Team") {
+                            return operationQuotes[i].price
+                        }
+                    }
+                }
+
+                renderExtendedCostBreakdown();
+
                 showMessages();
             }  // END SMALL FORMAT      
         }
-        
-        /********************************************* ALERTS */
+        /**********************
+            functions called in onQuoteUpdated
+        ****************/
+        function setLamRunOperations() {
+            if (hasMount || hasFrontLam || hasBackLam || hasPremask) {
+                if (hasMount) {
+                    if (hasPremask) {
+                        if (!hasFrontLam && !hasBackLam) { // 1. Premask / Adhesive  2. Mount
+                            validateValue(laminatingRun, 1600);
+                            validateValue(laminatingRun2, 1604);
+                        } else if (hasHotFront) { //  1. Hot / Adhesive  2. Mount + Premask
+                            validateValue(laminatingRun, 1598);
+                            validateValue(laminatingRun2, 1605);
+                        } else if (hasColdFront) { //  1. Cold / Adhesive  2. Mount + Premask
+                            validateValue(laminatingRun, 1597);
+                            validateValue(laminatingRun2, 1605);
+                        } else { // 1. Premask / Adhesive  2. Mount  --CATCH ALL UNFORESEEN
+                            validateValue(laminatingRun, 1600);
+                            validateValue(laminatingRun2, 1604);
+                        } 
+                    } else {  //mounted but no premask
+                       if (!hasFrontLam && !hasBackLam) { // 1. Adhesive  2. Mount
+                            validateValue(laminatingRun, 1595);
+                            validateValue(laminatingRun2, 1604);
+                        } else if (hasHotFront) { //  1. Hot / Adhesive  2. Mount
+                            validateValue(laminatingRun, 1598);
+                            validateValue(laminatingRun2, 1604);
+                        } else if (hasColdFront) { //  1. Cold / Adhesive  2. Mount
+                            validateValue(laminatingRun, 1597);
+                            validateValue(laminatingRun2, 1604);
+                        } else if (hasAdhesiveFront || hasAdhesiveFront) { // 1. Adhesive  2. Mount
+                            validateValue(laminatingRun, 1597);
+                            validateValue(laminatingRun2, 1604);
+                        } else { // 1. Adhesive  2. Mount  --CATCH ALL UNFORESEEN
+                            validateValue(laminatingRun, 1595);
+                            validateValue(laminatingRun2, 1604);
+                        }
+                    }
+                } else {  //everything not mounted
+                    if (hasPremask) {
+                        if (hasHotFront) {
+                            if (hasAdhesiveBack) { // 1. Hot / Adhesive 2. Premask
+                                validateValue(laminatingRun, 1598);
+                                validateValue(laminatingRun2,1606);
+                            } else if (hasHotBack) { // 1. Hot / Hot 2. Premask
+                                validateValue(laminatingRun, 1529);
+                                validateValue(laminatingRun2,1606);
+                            } else { // 1. Hot / Hot 2. Premask
+                                validateValue(laminatingRun, 1529);
+                                validateValue(laminatingRun2,1606);
+                            }
+                        } else if (hasColdFront) {
+                            if (hasColdBack) {  // 1. Cold  2. Premask
+                                validateValue(laminatingRun, 777);
+                                validateValue(laminatingRun2,1606);
+                            } else if (hasAdhesiveBack) { // 1. Cold / Adhesive 2. Premask
+                                validateValue(laminatingRun, 1597);
+                                validateValue(laminatingRun2,1606);
+                            } else { // 1. Cold  2. Pre-mask
+                                validateValue(laminatingRun, 777);
+                                validateValue(laminatingRun2,1606);
+                            }
+                        } else if (hasAdhesiveBack || hasAdhesiveFront) { // 1. Adhesive  2. Premask
+                            validateValue(laminatingRun, 1595);
+                            validateValue(laminatingRun2,1606);
+                        } else { // 1. Premask
+                            validateValue(laminatingRun, 1601);
+                            validateValue(laminatingRun2,'');
+                        }
+                    } else {  // no mount, no premask
+                        if (hasHotFront) {
+                            if (hasHotBack) { // 1. Hot / Hot
+                                validateValue(laminatingRun, 1529);
+                                validateValue(laminatingRun2,'');
+                            } else if (hasAdhesiveBack) {  // 1. Hot / Adhesive
+                                validateValue(laminatingRun, 1598);
+                                validateValue(laminatingRun2,'');
+                            } else { // WARNING
+                                validateValue(laminatingRun, '');
+                                validateValue(laminatingRun2,'');
+                                message += '<p> Must have a Hot Lam, Adhesive, or Mount on back side</p>';
+                            }
+                        } else if (hasColdFront) {
+                            if (hasColdBack) {  // 1. Cold  2. Cold
+                                validateValue(laminatingRun, 777);
+                                validateValue(laminatingRun2, 1602); 
+                            } else if (hasAdhesiveBack) { // 1. Adhesive
+                                validateValue(laminatingRun, 1595);
+                                validateValue(laminatingRun2,'');
+                            } else {  // 1. Cold
+                                validateValue(laminatingRun, 777);
+                                validateValue(laminatingRun2, ''); 
+                            }
+                        } else if (hasAdhesiveBack || hasAdhesiveFront) { // 1. Adhesive
+                            validateValue(laminatingRun, 1595);
+                            validateValue(laminatingRun2,'');
+                        }
+                    }
+                }
+            } else {
+                validateValue(laminatingRun,'');
+                validateValue(laminatingRun2,'');
+            }
+        }
         function  showMessages () {
             // show an alert when necessary
             if (onQuoteUpdatedMessages != '' || submessage != '') {
@@ -693,7 +1016,114 @@ function removeOperationItemsWithString(op, string) {
         }
     });
 }
+function hideOperationQuestion(operation) {
+    var op = operation.toString();
+    var opQuestion = $('#operation' + op + ' div.op');
+    if (opQuestion) {
+        opQuestion.hide()
+    } else {
+        console.log('operation question does not exist for ' + operation);
+    }
+    return
+}
+function toggleAutoDeviceTypeButton() {
+    $autoDeviceSelector = $('#device a.togglePreset');
+    $autoDeviceButton = $autoDeviceSelector.length == 1 ? $autoDeviceSelector[0] : null;
+    if ($autoDeviceButton) {
+        // toggle the calculator device type mode
+        // "click" the "Let me choose"/"Use best price" button by running it's href javascript
+        eval($autoDeviceButton.href);
+    }
+}
+function setDevice(deviceId) {
+    var $deviceSelect = $('select[name="DEVICEDD"]');
+    var availableValues = $.map($deviceSelect.children('option'), function(e) { return e.value; });
+    if ($.inArray(deviceId.toString(), availableValues) != -1) {
+        $deviceSelect.val(deviceId);
+        $deviceSelect.trigger('focus').trigger('change');
+    } else {
+        console.log('device not available');
+    }
+    
+}
+function getOperationsSet(ops) {
+    if (ops) {
+        var set = [];
+        for (var i = 0; i < ops.length; i++) {
+            var op = 'operation' + ops[i];
+            set.push(fields[op]);
+        }
+        return set
+    } else {
+        console.log('no ops defined in set');
+        return false
+    }
+}
+function operationInSetHasValue(operationSet) {
+    if (operationSet) {
+        for (var i = 0; i < operationSet.length; i++) {
+            if (hasValue(operationSet[i].val())) {
+                return true
+            }
+        }
+        //if make it through return false 
+        return false;
+     } else {
+        console.log('OperationSet is not defined. Returning false for operationInSetHasValue.');
+        return false;
+    }
+}
+//simplifies changing values of operation items
+function validateValue(field, value) {
+    if (field) {
+        if (cu.getValue(field) != value) {
+            cu.changeField(field, value, true);
+        }
+    }
+}
 
+//TEMP UNTIL BUILT INTO CALCULATOR UTILITIES
+function addOperationChoiceProperties() {
+    /*  loop through all items in Fields, 
+        check for a Operation field
+        If selection made pull out any json in description or notes
+    */
+    if (fields) {
+        var opsList = configureglobals.coperationsmgr.operations; //both calculators?
+        for (prop in fields) {
+            if (prop.indexOf('operation') != 1) {
+                if (prop.value != "") {
+                    fields[prop]['choice'] = {};
+                    var opId = prop.replace(/(operation)/,'');
+                    //loop through operations in configure global operations manager
+                    for (var j = 0; j < opsList.length; j++) {
+                        if (opsList[j].pjcOperation.operation.id == opId) {
+                            var desc = opsList[j].choice ? opsList[j].choice.description : null;
+                            //Json properties must be wrapped in "[{ }]"
+                            var jsonBlock = /\{(.*?)\}/.exec(desc);
+                            if (jsonBlock) {
+                                var jsonStr = this.getJsonFromString(jsonBlock[0]);
+                                for (property in jsonStr) {
+                                    fields[prop].choice[property] = jsonStr[property];
+                                }
+                            }
+                            break
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        console.log('field not defined')
+    }
+}
+function getJsonFromString (str) {
+    try {
+        return JSON.parse(str);
+    } catch (e) {
+        return false;
+    }
+}
 
 configureEvents.registerOnCalcLoadedListener(boardCalcLogic);
 configureEvents.registerOnCalcChangedListener(boardCalcLogic);

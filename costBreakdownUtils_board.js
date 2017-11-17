@@ -37,7 +37,7 @@ function renderExtendedCostBreakdown () {
     var estimateDetailsData = [
         {
             cost: quote.versionsPrice,
-            name: "Version",
+            name: "Desktop",
             item: '',
             cost_basis: '',
             description: '',
@@ -45,140 +45,22 @@ function renderExtendedCostBreakdown () {
             costingOnly: true
         },
         {
-            cost: quote.devicePrice,
-            name: isSmallFormatCalc && isLargeFormatFulfillment ? "Device setup" : "Device",
+            cost: quote.pressSheetQuote ? quote.pressSheetPrice : null,
+            name: "Substrate",
+            item: quote.pressSheetQuote ? quote.pressSheetQuote.pressSheet.name : null,
+            cost_basis: quote.pressSheetQuote ? quote.pressSheetQuote.pressSheetCount + ' boards' : '',
+            description: quote.pressSheetQuote ? quote.pressSheetQuote.piecesOnSheet + ' pieces per board' : '',
+            shouldDisplay: quote.pressSheetQuote ? true : false,
+            costingOnly: false
+        },
+        {
+            cost: quote.devicePrice + (quote.side1Ink ? quote.side1InkPrice : 0) + (quote.side2Ink ? quote.side2InkPrice : null),
+            name: "Total Device Cost",
             item: quote.device.name,
             cost_basis: '',
-            description: isSmallFormatCalc && isLargeFormatFulfillment ? '' : 'run time with setup is '+ quote.runtime,
-            shouldDisplay: true,
-            costingOnly: false
-        },
-        /* {
-            cost: quote.pressSheetQuote ? quote.pressSheetPrice : null,
-            name: "# up on Sheet",
-            item: quote.pressSheetQuote ? quote.pressSheetQuote.piecesOnSheet : null,
-            cost_basis: '',
-            description: '',
-            shouldDisplay: quote.pressSheetQuote ? true : false,
-            costingOnly: false
-        }, */
-        {
-            cost: quote.pressSheetQuote ? quote.pressSheetPrice : null,
-            name: "Press Sheet",
-            item: quote.pressSheetQuote ? quote.pressSheetQuote.pressSheet.name : null,
-            cost_basis: quote.pressSheetQuote ? quote.pressSheetsThroughDevice + ' sheets' : '',
-            description: quote.pressSheetQuote ? quote.pressSheetQuote.piecesOnSheet + ' pieces per board ' + quote.pressSheetQuote.pressSheet.description : null,
-            shouldDisplay: quote.pressSheetQuote ? true : false,
-            costingOnly: false
-        }, 
-        {
-            cost: quote.side1Ink ? quote.side1InkPrice : null,
-            name: isSmallFormatCalc && isLargeFormatFulfillment ? "Side 1 Device Run" : "Side 1 Ink",
-            item: quote.side1Ink ? quote.side1Ink.name : null,
-            cost_basis: '',
-            description: quote.side1Ink ? quote.side1Ink.description : null,
-            shouldDisplay: quote.side1Ink ? true : false,
-            costingOnly: false
-        },
-        {
-            cost: quote.side2Ink ? quote.side2InkPrice : null,
-            name: isSmallFormatCalc && isLargeFormatFulfillment ? "Side 2 Device Run" : "Side 2 Ink",
-            item: quote.side2Ink ? quote.side2Ink.name : null,
-            cost_basis: '',
-            description: quote.side2Ink ? quote.side2Ink.description : null,
-            shouldDisplay: quote.side2Ink ? true : false,
-            costingOnly: false
-        },
-        {
-            cost: quote.coverPressSheetQuote ? quote.coverPressSheetPrice : null,
-            name: "Cover Sheet",
-            item: quote.coverPressSheetQuote ? quote.coverPressSheetQuote.pressSheet.name : null,
-            cost_basis: '',
-            description: quote.coverPressSheetQuote ? quote.coverPressSheetQuote.pressSheet.description : null,
-            shouldDisplay: quote.coverPressSheetQuote ? true : false,
-            costingOnly: false
-        },
-        {
-            cost: quote.coverSide1Ink ? quote.coverSide1InkPrice : null,
-            name: "Cover Side 1 Ink",
-            item: quote.coverSide1Ink ? quote.coverSide1Ink.name : null,
-            cost_basis: '',
-            description: quote.coverSide1Ink ? quote.coverSide1Ink.description : null,
-            shouldDisplay: quote.coverSide1Ink ? true : false,
-            costingOnly: false
-        },
-        {
-            cost: quote.coverSide2Ink ? quote.coverSide2InkPrice : null,
-            name: "Cover Side 2 Ink",
-            item: quote.coverSide2Ink ? quote.coverSide2Ink.name : null,
-            cost_basis: '',
-            description: quote.coverSide2Ink ? quote.coverSide2Ink.description : null,
-            shouldDisplay: quote.coverSide2Ink ? true : false,
-            costingOnly: false
-        },
-        //Largeformat objects
-        {
-            cost: quote.frontLaminatePrice,
-            name: "Front Laminate",
-            item: quote.piece.frontLaminate ? quote.piece.frontLaminate.productionName : null,
-            cost_basis: '',
-            description: quote.piece.frontLaminate ? quote.piece.frontLaminate.referenceId : null,
-            shouldDisplay: quote.piece.frontLaminate ? true : false,
-            costingOnly: false
-        },
-        {
-            cost: quote.aPrintSubstratePrice,
-            name: "Print Substrate",
-            item: quote.piece.aPrintSubstrate ? quote.piece.aPrintSubstrate.productionName : null,
-            cost_basis: '',
-            description: quote.piece.aPrintSubstrate ? quote.piece.aPrintSubstrate.referenceId : null,
-            shouldDisplay: quote.piece.aPrintSubstrate ? true : false,
-            costingOnly: false
-        },
-        {
-            cost: quote.aAdhesiveLaminatePrice,
-            name: "Adhesive Laminate",
-            item: quote.piece.aAdhesiveLaminate ? quote.piece.aAdhesiveLaminate.productionName : null,
-            cost_basis: '',
-            description: quote.piece.aAdhesiveLaminate ? quote.piece.aAdhesiveLaminate.referenceId : null,
-            shouldDisplay: quote.piece.aAdhesiveLaminate ? true : false,
-            costingOnly: false
-        },
-        {
-            cost: quote.mountSubstratePrice,
-            name: "Mount Substrate",
-            item: quote.piece.mountSubstrate ? quote.piece.mountSubstrate.productionName : null,
-            cost_basis: '',
-            description: quote.piece.mountSubstrate ? quote.piece.mountSubstrate.referenceId : null,
-            shouldDisplay: quote.piece.mountSubstrate ? true : false,
-            costingOnly: false
-        },
-        {
-            cost: quote.bAdhesiveLaminatePrice,
-            name: "Back Adhesive Laminate",
-            item: quote.piece.bAdhesiveLaminate ? quote.piece.bAdhesiveLaminate.productionName : null,
-            cost_basis: '',
-            description: quote.piece.bAdhesiveLaminate ? quote.piece.bAdhesiveLaminate.referenceId : null,
-            shouldDiplay: quote.piece.bAdhesiveLaminate ? true : false,
-            costingOnly: false
-        },
-        {
-            cost: quote.bPrintSubstratePrice,
-            name: "Print Substrate",
-            item: quote.piece.bPrintSubstrate ? quote.piece.bPrintSubstrate.productionName : null,
-            cost_basis: '',
-            description: quote.piece.bPrintSubstrate ? quote.piece.bPrintSubstrate.referenceId : null,
-            shouldDisplay: quote.piece.bPrintSubstrate ? true : false,
-            costingOnly: false
-        },
-        {
-            cost: quote.backLaminatePrice,
-            name: "Back Laminate",
-            item: quote.piece.backLaminate ? quote.piece.backLaminate.productionName : null,
-            cost_basis: '',
-            description: quote.piece.backLaminate ? quote.piece.backLaminate.referenceId : null,
-            shouldDisplay: quote.piece.backLaminate ? true : false,
-            costingOnly: false
+            description: (quote.side1Ink ? quote.side1Ink.name : '') + (quote.side2Ink ? ' / ' + quote.side2Ink.name : ''),
+            shouldDisplay : true,
+            costingOnly : false
         }
     ];
 
@@ -206,9 +88,19 @@ function renderExtendedCostBreakdown () {
             var selectedOperations = $.map(getLargeOrSmallFormatOperationChoices(), function(w) { if (w.choice) {return w;} });
             
             if (quote.operationQuotes) {
-                for (var i = 0; i < quote.operationQuotes.length; i++) {
-                    
-                    if (selectedOperations[i]) {
+                for (var i = 0; i < selectedOperations.length; i++) {
+                    //if pre-press operation push to desktop with version change
+                    if (selectedOperations[i].pjcOperation.operation.id == 95) {
+                        for (var j = 0; j < estimateDetailsData.length; j++) {
+                            if (estimateDetailsData[j].name == 'Desktop') {
+                                estimateDetailsData[j].cost += (quote.operationQuotes[i].price ? quote.operationQuotes[i].price : 0);
+                                break
+                            }
+                        }
+                        continue
+                    }
+                    //else push new line
+                    if (!selectedOperations[i]) {
                         console.log("error on selectedOperations for " + quote.operationQuotes[i])
                     } else {
                         estimateDetailsData.push({
@@ -220,6 +112,7 @@ function renderExtendedCostBreakdown () {
                             shouldDisplay: true,
                             costingOnly: selectedOperations[i].pjcOperation ? selectedOperations[i].pjcOperation.operation.costingOnly : quote.operationQuotes[i].operation.costingOnly
                         });
+
                     }
                 }
             }

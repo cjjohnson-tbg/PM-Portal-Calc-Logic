@@ -1,47 +1,32 @@
-var operationsWithBuyout = [
-    '129',  //Pre-Printing Front Laminate
-    '144',   //Pre-Printing Back Laminate
-    '131',   //Front Laminating
-    '130'   //Back Laminating
-]
-var buyoutOperationItems = [
-    '845',
-    '846',
-    '864',
-    '865'
-]
 
-var metaMessage = '';
-var disableCheckoutText = '';
-var outsourcePriceMessageCount = 0;
-var outsourcePriceMessage = '<p>All outsourcing costing needs to be added to configured price.</p>';
-
-var cu = calcUtil;
 var metaFieldsActions = {
     onCalcLoaded: function() {
+
+        //ADD classes to metaFields
+        var metaFieldClass = [
+            ['Date', 'date'],
+            ['Actual Pace Inventory ID', 'actualId'],
+            ['Buy-out', 'buyout'],
+            ['Date Due to Fab', 'fabDate'],
+            ['Date Due in Kitting', 'kitDate'],
+            ['Soft Proof Date', 'softProofDate'],
+            ['Sub-out Date', 'subOutDate'],
+            ['SKU', 'sku'],
+            ['Pace Estimate','paceEstimate'],
+            ['Color Critical', 'colorCritical'],
+            ['Hard Proof', 'hardProof'],
+            ['Kitting Code','kittingCode']
+        ]
+        $.each(metaFieldClass , function (i, val) {
+            $('#additionalProductFields .additionalInformation div label:contains("' + val[0] + '")').parent().addClass(val[1]);
+        });
+
         // apply datepicker to meta fields with Pace in label
-        $('#additionalProductFields .additionalInformation div label:contains("Date")').parent().addClass('date');
         var dateInput = $('.date input');
         dateInput.datepicker({
             showAnim: "fold"
         });
-        //Add ID for due date on SF field
-        $('#additionalProductFields .additionalInformation div label:contains("Due Date")').parent().attr('id','dueDate');
-        //Hide Actual Pace Inventory ID and Qty
-        $('#additionalProductFields .additionalInformation div label:contains("Actual")').parent().hide();
 
-        $('#additionalProductFields .additionalInformation div label:contains("Actual Pace Inventory ID")').parent().addClass('actualId');
-        $('#additionalProductFields .additionalInformation div label:contains("Buy-out")').parent().addClass('buyout').hide()
-
-        $('#additionalProductFields .additionalInformation div label:contains("Date Due to Fab")').parent().addClass('fabDate');
-        $('#additionalProductFields .additionalInformation div label:contains("Date Due in Kitting")').parent().addClass('kitDate');
-        $('#additionalProductFields .additionalInformation div label:contains("Soft Proof Date")').parent().addClass('softProofDate');
-        $('#additionalProductFields .additionalInformation div label:contains("Sub-out Date")').parent().addClass('subOutDate');
-        $('#additionalProductFields .additionalInformation div label:contains("SKU, if Sending to Fulfillment")').parent().addClass('sku');
-        $('#additionalProductFields .additionalInformation div label:contains("Pace Estimate #")').parent().addClass('paceEstimate');
-
-        //Buyout Description Max 50 characters
-        $('#additionalProductFields .additionalInformation div label:contains("Hard Proof")').parent().addClass('hardProof').hide();
         $('.buyout label:contains("Description")').parent().attr('id','buyoutDescription');
         $('.buyoutDescription').append('<div><span class="buyoutCharWarning" style="color:blue"></span></div>');
         $('.buyoutDescription input').attr('maxlength', '50');
@@ -53,7 +38,6 @@ var metaFieldsActions = {
             }
         });
         //Kitting Code Max 5 characters
-        $('#additionalProductFields .additionalInformation div label:contains("Kitting Code")').parent().addClass('kittingCode');
         $('.kittingCode').append('<div><span class="kittingCodeCharWarning" style="color:blue"></span></div>');
         $('.kittingCode input').attr('maxlength', '5');
         $('.kittingCode input').keypress(function() {
@@ -73,12 +57,13 @@ var metaFieldsActions = {
         }
     },
     onQuoteUpdated: function(updates, validation, product) {
+        var disableCheckoutCount = 0;
+        var metaMessage = '';
         /*  SHOW AND REQUIRE HARD PROOF META FIELDS WHEN HARD PROOF SELECTED */
         //set variable to disable click action on checkout
-        
-        
-        var disableCheckoutCount = 0;
         var checkoutButton = $('button.continueButton');
+
+        var disableCheckoutText = '';
 
         var hardProofInput = $('.hardProof input');
         if (cu.getValue(fields.proof) == 40 || cu.getValue(fields.proof) == 43) {
@@ -105,6 +90,18 @@ var metaFieldsActions = {
         //Disallow contintue button with Buyout as substrate
         var hasBuyout = false;
         var buyoutDescInput = $('#buyoutDescription input');
+        var operationsWithBuyout = [
+            '129',  //Pre-Printing Front Laminate
+            '144',   //Pre-Printing Back Laminate
+            '131',   //Front Laminating
+            '130'   //Back Laminating
+        ]
+        var buyoutOperationItems = [
+            '845',
+            '846',
+            '864',
+            '865'
+        ]
         if (cu.isSmallFormat(product)) {
             var paperType = fields.paperType;
             if (cu.getValue(fields.paperType) == 247) {
@@ -117,7 +114,6 @@ var metaFieldsActions = {
         } else {  //LF calculator
             console.log("LF calc");
             if (cu.getValue(fields.printSubstrate) == 207) {
-                console.log("has buyout");
                 hasBuyout = true;
                 cu.setLabel(fields.printSubstrate,'Substrate (Enter Desc and Size below)');
             } if (cu.getValue(fields.frontLaminate) == 34 || cu.getValue(fields.frontLaminate) == 35) {
@@ -158,6 +154,8 @@ var metaFieldsActions = {
             $('.actualId').hide();
         }
         ///Only show Fab Date if Fabrication operation selects OR Cut at Fab is selected for Cutting Operation AND sub out if Outsourced selects
+        var outsourcePriceMessageCount = 0;
+        var outsourcePriceMessage = '<p>All outsourcing costing needs to be added to configured price.</p>';
         if (!cu.isSmallFormat(product)) {
             var cuttingOp = fields.operation111;
             var fabLfOp = fields.operation113;
@@ -176,6 +174,7 @@ var metaFieldsActions = {
                     $('.fabDate input').val('');
                 }
             }
+            
             var outsourceLfOp = fields.operation104;
             if (outsourceLfOp) {
                 if (cu.hasValue(outsourceLfOp)) {
@@ -220,37 +219,83 @@ var metaFieldsActions = {
                 }
             }
         }
+        //Only show Color Critial field when Color Critical Operations is selected
+        if (cu.isSmallFormat(product)) {
+            if (fields.operation205) {
+                $('.colorCritical label:contains("Color Critical")').parent().attr('id','colorCriticalJobMeta');
+                var colorCriticalJobInput = $('#colorCriticalJobMeta input');
+                if (cu.hasValue(fields.operation205)) {
+                    $('.colorCritical').show();
+                    $('.colorCritical').css('color', 'red');
+                    if (colorCriticalJobInput.val() == '') {
+                        disableCheckoutCount++;
+                        disableCheckoutText += '<p>You have selected a Color Critical Device.  Please declare a job Number below.</p>';
+                        colorCriticalJobInput.bind('blur', function(event) {
+                            if (colorCriticalJobInput.val() !='') {
+                                disableCheckoutCount--;
+                                if (disableCheckoutCount < 1) {
+                                    //set timeout for 
+                                    enableCheckoutButton();
+                                }
+                            }
+                        });
+                    }
+                } else {
+                    $('.colorCritical').hide();
+                }
+            }
+        } else {  //large format products
+            if (fields.operation130) {
+                $('.colorCritical label:contains("Color Critical")').parent().attr('id','colorCriticalJobMeta');
+                var colorCriticalJobInput = $('#colorCriticalJobMeta input');
+                if (cu.hasValue(fields.operation130)) {
+                    $('.colorCritical').show();
+                    if (colorCriticalJobInput.val() == '') {
+                        disableCheckoutCount++;
+                        disableCheckoutText += '<p>You have selected a Color Critical Device.  Please declare a job Number below.</p>';
+                        colorCriticalJobInput.bind('blur', function(event) {
+                            if (colorCriticalJobInput.val() !='') {
+                                disableCheckoutCount--;
+                                if (disableCheckoutCount < 1) {
+                                    //set timeout for 
+                                    enableCheckoutButton();
+                                }
+                            }
+                        });
+                    }
+                } else {
+                    $('.colorCritical').hide();
+                }
+            }
+        }
         if (cu.getPjcId(product) != 458) { //Temp remove for bucket
+            console.log(disableCheckoutText);
             if (disableCheckoutCount > 0) {
                 disableCheckoutButton(disableCheckoutText);
             } else {
                 enableCheckoutButton();
             }
         }   
-        showMetaMessages();
-    }
-}
-
-function showMetaMessages() {
-    if (metaMessage != '') {
-        cu.alert(metaMessage);
-        metaMessage = '';
-    }
-}   
-
-function disableCheckoutButton(disableCheckoutText) {
-    $('button.continueButton').removeAttr('onclick');
-    $('button.continueButton').bind('click', function(event) {
-        if (disableCheckoutText != '') {
-            cu.alert('<h3>These issues must be resolved before continuing</h3>' + disableCheckoutText);
+        
+        //Show message, if populated
+        if (metaMessage != '') {
+            cu.alert(metaMessage);
+            metaMessage = '';
         }
-    });
-}
-function enableCheckoutButton() {
-    $('button.continueButton').unbind('click');
-    $('button.continueButton').attr('onclick', 'common.continueClicked();');
+
+        function disableCheckoutButton(disableCheckoutText) {
+            $('button.continueButton').removeAttr('onclick');
+            $('button.continueButton').bind('click', function(event) {
+                if (disableCheckoutText != '') {
+                    cu.alert('<h3>These issues must be resolved before continuing</h3>' + disableCheckoutText);
+                }
+            });
+        }
+        function enableCheckoutButton() {
+            $('button.continueButton').unbind('click');
+            $('button.continueButton').attr('onclick', 'common.continueClicked();');
+        }
+    }
 }
 
-configureEvents.registerOnCalcLoadedListener(metaFieldsActions);
-configureEvents.registerOnQuoteUpdatedListener(metaFieldsActions);
 

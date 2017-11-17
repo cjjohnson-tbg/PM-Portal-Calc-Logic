@@ -37,7 +37,7 @@ function renderExtendedCostBreakdown () {
     var estimateDetailsData = [
         {
             cost: quote.versionsPrice,
-            name: "Version",
+            name: "Desktop",
             item: '',
             cost_basis: '',
             description: '',
@@ -46,74 +46,11 @@ function renderExtendedCostBreakdown () {
         },
         {
             cost: quote.devicePrice,
-            name: isSmallFormatCalc && isLargeFormatFulfillment ? "Device setup" : "Device",
+            name: "Device Setup",
             item: quote.device.name,
             cost_basis: '',
-            description: isSmallFormatCalc && isLargeFormatFulfillment ? '' : 'run time with setup is '+ quote.runtime,
-            shouldDisplay: true,
-            costingOnly: false
-        },
-        /* {
-            cost: quote.pressSheetQuote ? quote.pressSheetPrice : null,
-            name: "# up on Sheet",
-            item: quote.pressSheetQuote ? quote.pressSheetQuote.piecesOnSheet : null,
-            cost_basis: '',
             description: '',
-            shouldDisplay: quote.pressSheetQuote ? true : false,
-            costingOnly: false
-        }, */
-        {
-            cost: quote.pressSheetQuote ? quote.pressSheetPrice : null,
-            name: "Press Sheet",
-            item: quote.pressSheetQuote ? quote.pressSheetQuote.pressSheet.name : null,
-            cost_basis: quote.pressSheetQuote ? quote.pressSheetsThroughDevice + ' sheets' : '',
-            description: quote.pressSheetQuote ? quote.pressSheetQuote.piecesOnSheet + ' pieces per board ' + quote.pressSheetQuote.pressSheet.description : null,
-            shouldDisplay: quote.pressSheetQuote ? true : false,
-            costingOnly: false
-        }, 
-        {
-            cost: quote.side1Ink ? quote.side1InkPrice : null,
-            name: isSmallFormatCalc && isLargeFormatFulfillment ? "Side 1 Device Run" : "Side 1 Ink",
-            item: quote.side1Ink ? quote.side1Ink.name : null,
-            cost_basis: '',
-            description: quote.side1Ink ? quote.side1Ink.description : null,
-            shouldDisplay: quote.side1Ink ? true : false,
-            costingOnly: false
-        },
-        {
-            cost: quote.side2Ink ? quote.side2InkPrice : null,
-            name: isSmallFormatCalc && isLargeFormatFulfillment ? "Side 2 Device Run" : "Side 2 Ink",
-            item: quote.side2Ink ? quote.side2Ink.name : null,
-            cost_basis: '',
-            description: quote.side2Ink ? quote.side2Ink.description : null,
-            shouldDisplay: quote.side2Ink ? true : false,
-            costingOnly: false
-        },
-        {
-            cost: quote.coverPressSheetQuote ? quote.coverPressSheetPrice : null,
-            name: "Cover Sheet",
-            item: quote.coverPressSheetQuote ? quote.coverPressSheetQuote.pressSheet.name : null,
-            cost_basis: '',
-            description: quote.coverPressSheetQuote ? quote.coverPressSheetQuote.pressSheet.description : null,
-            shouldDisplay: quote.coverPressSheetQuote ? true : false,
-            costingOnly: false
-        },
-        {
-            cost: quote.coverSide1Ink ? quote.coverSide1InkPrice : null,
-            name: "Cover Side 1 Ink",
-            item: quote.coverSide1Ink ? quote.coverSide1Ink.name : null,
-            cost_basis: '',
-            description: quote.coverSide1Ink ? quote.coverSide1Ink.description : null,
-            shouldDisplay: quote.coverSide1Ink ? true : false,
-            costingOnly: false
-        },
-        {
-            cost: quote.coverSide2Ink ? quote.coverSide2InkPrice : null,
-            name: "Cover Side 2 Ink",
-            item: quote.coverSide2Ink ? quote.coverSide2Ink.name : null,
-            cost_basis: '',
-            description: quote.coverSide2Ink ? quote.coverSide2Ink.description : null,
-            shouldDisplay: quote.coverSide2Ink ? true : false,
+            shouldDisplay: true,
             costingOnly: false
         },
         //Largeformat objects
@@ -129,9 +66,10 @@ function renderExtendedCostBreakdown () {
         {
             cost: quote.aPrintSubstratePrice,
             name: "Print Substrate",
+            item: quote.piece.aPrintSubstrate.productionName ? quote.piece.aPrintSubstrate.productionName : null,
             item: quote.piece.aPrintSubstrate ? quote.piece.aPrintSubstrate.productionName : null,
             cost_basis: '',
-            description: quote.piece.aPrintSubstrate ? quote.piece.aPrintSubstrate.referenceId : null,
+            description: printConfig ? 'OPTIMUM ROLL ' + printConfig.substrate : quote.piece.aPrintSubstrate.referenceId ? quote.piece.aPrintSubstrate.referenceId : null,
             shouldDisplay: quote.piece.aPrintSubstrate ? true : false,
             costingOnly: false
         },
@@ -206,21 +144,34 @@ function renderExtendedCostBreakdown () {
             var selectedOperations = $.map(getLargeOrSmallFormatOperationChoices(), function(w) { if (w.choice) {return w;} });
             
             if (quote.operationQuotes) {
+                //if pre-press, Add to Desktop estimate details
                 for (var i = 0; i < quote.operationQuotes.length; i++) {
-                    
+                    //if pre-press operation push to desktop with version change
                     if (selectedOperations[i]) {
+                        if (selectedOperations[i].lpjcOperation.operation.id == 69) {
+                            for (var j = 0; j < estimateDetailsData.length; j++) {
+                                if (estimateDetailsData[j].name == 'Desktop') {
+                                    estimateDetailsData[j].cost += (quote.operationQuotes[i].price ? quote.operationQuotes[i].price : 0);
+                                    break
+                                }
+                            }
+                            continue
+                        }
+                    }
+                    if (!selectedOperations[i]) {
                         console.log("error on selectedOperations for " + quote.operationQuotes[i])
                     } else {
                         estimateDetailsData.push({
                             cost: quote.operationQuotes[i].price ? quote.operationQuotes[i].price : 0,
-                            name: quote.operationQuotes[i].data.heading || quote.operationQuotes[i].operation.heading,
-                            item: selectedOperations[i].choice.name,
+                            name: quote.operationQuotes[i].operation.id == 52 ? 'Device Run ' : quote.operationQuotes[i].operation.heading,
+                            item: selectedOperations[i].choice.name ? selectedOperations[i].choice.name : null,
                             cost_basis: quote.operationQuotes[i].pieces || quote.operationQuotes[i].data.quantity,
                             description: selectedOperations[i].choice.description,
                             shouldDisplay: true,
                             costingOnly: selectedOperations[i].pjcOperation ? selectedOperations[i].pjcOperation.operation.costingOnly : quote.operationQuotes[i].operation.costingOnly
                         });
                     }
+                    
                 }
             }
         }

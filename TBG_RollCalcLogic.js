@@ -1,23 +1,23 @@
 var planningOnlyOps = [
-    'div#operation99',   //TBG Cutting
-    'div#operation55',   //TBG Zund Cutting
-    'div#operation102',   //TBG Guillotine Cutting
-    'div#operation103',   //TBG Fotoba Cutting
-    'div#operation88',   //Dye Sub Transfer Paper
-    'div#operation100',   //TBG Mounting Run
-    'div#operation112',   //TBG Internal Cuts
-    'div#operation110',   //TBG No Cutting
-    'div#operation115',   //TBG Pre-cut
-    'div#operation109',  //TBG Pre-Sheet
-    'div#operation108',   //TBG Pre-Slit
-    'div#operation116',    //TBG TBG-Fab Cut
-    'div#operation125'      //TBG Bucket Job
+    99,  //TBGCutting
+    55,  //TBGZundCutting
+    102,  //TBGGuillotineCutting
+    103,  //TBGFotobaCutting
+    88,  //DyeSubTransferPaper
+    100,  //TBGMountingRun
+    112,  //TBGInternalCuts
+    110,  //TBGNoCutting
+    115,  //TBGPre-cut
+    109,  //TBGPre-Sheet
+    108,  //TBGPre-Slit
+    116,  //TBGTBG-FabCut
+    125,  //TBGBucketJob
+    127,  //TBGMCTCutting
+    134    //TBG Gutter
 ]
-var planningOpsStyleBlock = createStyleBlock(planningOnlyOps, 'display: none;');
-$(function() {
-    $('head').append(planningOpsStyleBlock);
-});
-
+var estimatingOnlyOps = [
+    139     //TBG Team Factor
+]
 var zundOpItemMapLoading = {
 1  : 202,    //Speed Factor 1
 2  : 203,    //Speed Factor 2
@@ -144,6 +144,25 @@ var fabrivuDirectMaterials = [
     '398'   //Berger Flag Fabric White 4oz
 ]
 
+var lfDeviceInk = {
+    45 : {
+        'inkMaterialOpId' : 132,
+        'inkMaterialOpIdSide2' : 136,
+        'inkConfigOpSide2' : 137,
+        'defaultOpItem' : 608, //TBG Vutek HS125
+        'defaultInkConfigSide2OpItem' : 641 //TBG Vutek HS125
+    },
+    46 : {
+        'inkMaterialOpId' : 133,
+        'defaultOpItem' : 622 //CMYK
+    },
+    54 : {
+        'inkMaterialOpId' : 143,
+        'defaultOpItem' : 720 //CMYK
+    }
+}
+
+
 
 var pmPortal = ((location.hostname.indexOf("tbg-pm.collaterate.com") != -1) || (location.hostname.indexOf("tbghub.com") != -1));
 var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") != -1);
@@ -151,6 +170,13 @@ var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") !=
 // Message Counts
 var hardProofMessageCount = 0;
 var sameSideMessage = '';
+
+// Operation Item Keys object - in window for testing
+var operationItemKeys = new Object();  
+
+// Object for Lam and Mount choices
+var printConfig = {};
+var lc = new Object();
 
 var cu = calcUtil;
 
@@ -168,36 +194,120 @@ var rollCalcLogic = {
             removeOperationItemsWithString(104,'Print');
         }
         removeClassFromOp(111,'costingOnly');
-        addClassToList(planningOnlyOps,'planning');
-        //show error message if zund object does not load
-        if (zundSubstrateSpeeds.length == 0) {
-            cu.alert('Collaterate Zund Speed Factors list did not load propertly.  Please contact Support to ensure accurate costing.');
-        }
+        addClassToOperation(planningOnlyOps,'planning');
+        addClassToOperation(estimatingOnlyOps,'estimating');
+        //run meta field action
+        metaFieldsActions.onCalcLoaded();
     },
     onCalcChanged: function(updates, product) {
 
     },
     onQuoteUpdated: function(updates, validation, product) {
         if (!cu.isSmallFormat(product)) {
+            
+            //search commet object for custom properties inserted into notes or descriptions//set custom properties
+            if (!configureglobals.cquote) {return}
+            var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
+            if (!quote) {return}
+            setCustomProperties(quote.device,"description","customProperties");
+            var jobMaterials = quote.piece;
+            for (prop in jobMaterials) {
+                if (jobMaterials.hasOwnProperty(prop)) {
+                    setCustomProperties(jobMaterials[prop], "notes","customProperties")
+                }
+            }
+
             /*re-init on every update*/
             cu.initFields();
-            var operationDetails = getOperationDetails();
             var message = '';
             var submessage = '';
 
+            var operationDetails = getOperationDetails();
+            
+            //run meta field action
+            metaFieldsActions.onQuoteUpdated(product);
+
             removeClassFromOp(111,'costingOnly');
-            addClassToList(planningOnlyOps, 'planning');
+            addClassToOperation(planningOnlyOps, 'planning');
+            addClassToOperation(estimatingOnlyOps,'estimating');
 
             /***************** GLOBAL VARIABLES */
-            
+            var deviceId = configureglobals.cquotedata.device.id ? configureglobals.cquotedata.device.id : null;
             var substrateId = cu.getValue(fields.printSubstrate);
             var mountId = cu.getValue(fields.mountSubstrate);
             var zundFactor = 1;
+            var totalQuantity = cu.getTotalQuantity();
             var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
-            
-            var hasFrontLam = (cu.hasValue(fields.frontLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.frontLaminate)) == -1));
-            var hasBackLam = (cu.hasValue(fields.backLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.backLaminate)) == -1));
-            
+
+            /**************** OPERATION ITEM KEYS */
+            //Create object from key value pairs inserted into operation Item Description surrounded by double brackets "{{ }}"
+            //var operationItemKeys = new Object();  
+            for (const prop of Object.keys(operationItemKeys)) {
+              delete operationItemKeys[prop];
+            }
+            if (quote) {
+                var ops = quote.operationQuotes;
+                var descriptions = [];
+                if (ops) {
+                    ops.forEach(function(operationQuote) {
+                        var opItemDescription = operationQuote.operationItem.description;
+                        descriptions.push(opItemDescription);
+                        //var opItemKeyText = opItemDescription.replace(/(^.*{{|}}.*$)/g, '' );
+                        var opItemKeyText = /\{(.*?)\}/.exec(opItemDescription);
+                        if (opItemKeyText) {
+                            var opItemJSON = getJsonFromString(opItemKeyText[0]);
+                            if (opItemJSON) {
+                                for (prop in opItemJSON) {
+                                    if (opItemJSON.hasOwnProperty(prop)) {
+                                        operationItemKeys[prop] = opItemJSON[prop];
+                                    }
+                                }
+                            } else {
+                                console.log('invalid json string ' + opItemKeyText);
+                            }
+                        }
+                    });
+                }
+            }
+            // CALL printConfig CREATION SCRIPT
+            calcConfig.getUpdatedConfig(quote);
+
+            /************************ 
+                WASTAGE CALCULATORS 
+                *************************/
+            //NEED TIMER SO DOESN'T RUN ASYNC???
+            if (printConfig) {
+                //Paste difference from total_roll_cost - printed_roll_cost
+                printConfig['roll_wastage'] = roundTo(printConfig.total_roll_cost - quote.aPrintSubstratePrice,2);
+                if (fields.operation135_answer) {
+                    if (cu.getValue(fields.operation135_answer) != printConfig.roll_wastage) {
+                        $('#optimum-substrate input').val(printConfig.substrate);
+                        $('#optimum-substrate-id input').val(printConfig.substrate_pace_id);
+                        cu.changeField(fields.operation135_answer,printConfig.roll_wastage,true);
+                    }
+                }
+                var rollChangeOp = fields.operation138;
+                var rollChangeOpAnswer = fields.operation138_answer;
+                if (rollChangeOp) {
+                    if (printConfig.roll_change_cost > 0) {
+                        if (!cu.hasValue(rollChangeOp)) {
+                            cu.changeField(rollChangeOp, 682, true);
+                            return
+                        }
+                        var rollChangeFactor = parseInt(printConfig.roll_change_cost * 100000 / pieceQty);
+                        if (cu.getValue(rollChangeOpAnswer) != rollChangeFactor) {
+                            cu.changeField(rollChangeOpAnswer, rollChangeFactor, true);
+                            return
+                        }
+                    } else {
+                        if (cu.hasValue(rollChangeOp)) {
+                            cu.changeField(rollChangeOp, '', true);
+                            return
+                        }
+                    }
+                }
+            }
+
             /************************* LATEX ROLL */
             if (cu.getPjcId(product) == 76) {
                 //show message on samba products 
@@ -211,28 +321,44 @@ var rollCalcLogic = {
             //determine cut method
             //if Suma selected set cutting Op to No Cutting
             if (cu.hasValue(fields.operation82)) {
-                if (cu.getValue(fields.operation111) != 450) {
-                    cu.changeField(fields.operation111,450,true);
+                if (cu.isLastChangedField(updates, fields.operation82)) {
+                    console.log('suma is last change ');
+                    if (cu.getValue(fields.operation111) != 450) {
+                        cu.changeField(fields.operation111,450,true);
+                    }
                 }
-            }
-            cutMethod = 'zund';
-            if (cu.hasValue(fields.operation111)) {
-                cutMethod = cutMethodId[cu.getValue(fields.operation111)];
             }
             var zundLoading = fields.operation53;
             var zundCutting = fields.operation55;
             var zundUnloading = fields.operation56;
+            var mctCutting = fields.operation127;
+            var mctLoading = fields.operation128;
+            var mctUnloading = fields.operation129;
             var outsourceCutOp = fields.operation104;
             var noCutOp = fields.operation110;
             var fabCutOp = fields.operation116;
+
+            //SET CUTTING METHOD
+            //if MCT is chosen default to that selection
+            if (cu.hasValue(mctCutting)) {
+                cutMethod = 'mct';  
+            } else if (cu.hasValue(fields.operation111)) {
+                cutMethod = cutMethodId[cu.getValue(fields.operation111)];
+            }
+            //default to zund if nothing not present
+            if (!(cutMethod) || cutMethod.length == 0 ) {
+                cutMethod = 'zund';
+            }
             //no cut
             if (cutMethod == 'noCutting') {
                 if (!cu.hasValue(noCutOp)) {
                     cu.changeField(noCutOp,448, true);
+                    return
                 }
             } else {
                 if (cu.hasValue(noCutOp)) {
                     cu.changeField(noCutOp,'',true);
+                    return
                 }
             }
             //Zund Cut
@@ -249,6 +375,7 @@ var rollCalcLogic = {
                     var zundLoadingItem = !zundOpItemMapLoading[zundFactor] ? 202 : zundOpItemMapLoading[zundFactor];
                     if (cu.getValue(zundLoading) != zundLoadingItem) {
                         cu.changeField(zundLoading, zundLoadingItem, true);
+                        return
                     }
                 }
                 //Align Zund Cutting Speed Factor
@@ -256,6 +383,7 @@ var rollCalcLogic = {
                     var zundCuttingItem = !zundOpItemMapCutting[zundFactor] ? 195 : zundOpItemMapCutting[zundFactor];
                     if (cu.getValue(zundCutting) != zundCuttingItem) {
                         cu.changeField(zundCutting, zundCuttingItem, true);
+                        return
                     }
                 }
                 //Align Zund Unloading Speed Factor
@@ -263,28 +391,41 @@ var rollCalcLogic = {
                     var zundUnloadingItem = !zundOpItemMapUnloading[zundFactor] ? 195 : zundOpItemMapUnloading[zundFactor];
                     if (cu.getValue(zundUnloading) != zundUnloadingItem) {
                         cu.changeField(zundUnloading, zundUnloadingItem, true);
+                        return
                     }
                 }
             } else {
                 if (cu.hasValue(zundLoading)) {
                     cu.changeField(zundLoading, '', true);
+                    return
                 }
                 if (cu.hasValue(zundCutting)) {
                     cu.changeField(zundCutting, '', true);
+                    return
                 }
                 if (cu.hasValue(zundUnloading)) {
                     cu.changeField(zundUnloading, '', true);
+                    return
                 }
             }
             //outourced cut set to default if nothing chosen yet
             if (cutMethod =='outsourcedCut') {
                 if (!cu.hasValue(outsourceCutOp)) {
                     cu.changeField(outsourceCutOp,412,true);
+                    return
                 }
             } else {
                 removeOperationItemsWithString(104,'Cut');
                 if (cu.getSelectedOptionText(outsourceCutOp).indexOf('Cut') != -1) {
                     cu.changeField(outsourceCutOp,'', true);
+                    return
+                }
+            }
+            if (cutMethod == 'mct') {
+            } else {
+                if (cu.hasValue(mctCutting)) {
+                    cu.changeField(mctCutting,'',true);
+                    return
                 }
             }
             //Change Interior cutting options.  Blade cut only speed factors 1-2
@@ -309,6 +450,7 @@ var rollCalcLogic = {
                         for (var key in intCutSetting) {
                             if (intCutSetting[key] == intCutItem) {
                                 cu.changeField(intCutOp, key, true);
+                                return
                             }
                         }
                     }
@@ -317,105 +459,284 @@ var rollCalcLogic = {
                 else {
                     if (intCutItem in intCutSetting) {
                         cu.changeField(intCutOp, intCutSetting[intCutItem], '');
+                        return
                     }
                 }
             } else {
                 if (cu.hasValue(intCutOp)) {
-                    cu.changeField(intCutOp,'',true)
+                    cu.changeField(intCutOp,'',true);
+                    return
                 }
             }
             if (cutMethod == 'fabCut') {
-                if (cu.getValue(fabCutOp) != 478) {
-                    cu.changeField(fabCutOp, 478, true);
+                //show TBG Fab Cut and Turn on Premask when Laser selected
+                if (cu.getPjcId(product) == 389) {
+                    removeClassFromOp(116, 'planning');
+                    if (!cu.hasValue(fabCutOp)) {
+                        message += '<p>Please select a Cutting Option in the TBG-Fab Cut operation.</p>'
+                    }
+                    if (cu.getValue(fabCutOp) == 508) {
+                        if (!cu.hasValue(fields.operation78)) {
+                            message += '<p>Fab Laser Cut requires a Premask.  This has been chosen on your behalf.</p>';
+                            cu.changeField(fields.operation78, 291, true);
+                        }
+                    }
+                } else {  //or default to CNC Cut if not Finishing only
+                    if (cu.getValue(fabCutOp) != 478) {
+                        cu.changeField(fabCutOp, 478, true);
+                        return
+                    }
                 }
             } else if (cu.hasValue(fabCutOp)) {
                 cu.changeField(fabCutOp, '', true);
+                return
             }
-            /************************ LEAD AND TAIL COST THROUGH OPERATION */
-            var leadAndTailOp = fields.operation79;
-            if (leadAndTailOp) {
-                var leadAndTailCost = getLeadAndTailCost();
-                console.log(leadAndTailCost + ' lead and tail cost')
-                if (fields.operation79_answer != leadAndTailCost) {
-                    cu.changeField(fields.operation79_answer, leadAndTailCost, true);
+            /************************ ALIGN INK MATERIAL COSTS WITH DEVICE RUN*/
+            var devRunConfig = lfDeviceInk[deviceId];
+            if (devRunConfig) {
+                var inkMatOp = fields['operation' + devRunConfig.inkMaterialOpId];
+                var defaultInkOpItem = lfDeviceInk[deviceId].defaultOpItem ? lfDeviceInk[deviceId].defaultOpItem : null;
+
+                var inkMatOpSide2 = fields['operation' + devRunConfig.inkMaterialOpIdSide2];
+                var inkConfigOpSide2 = fields['operation' + devRunConfig.inkConfigOpSide2];
+                var defaultInkConfigSide2OpItem = lfDeviceInk[deviceId].defaultInkConfigSide2OpItem ? lfDeviceInk[deviceId].defaultInkConfigSide2OpItem : null;
+                //Grab op item id from operation Item Keys object. If nothing, then use default
+                var inkMatOpItemId = operationItemKeys.inkMatOpItem ? operationItemKeys.inkMatOpItem : defaultInkOpItem;
+                var inkMatOpSide2ItemId = operationItemKeys.inkMatOpItemSide2 ? operationItemKeys.inkMatOpItemSide2 : '';
+                if (cu.getValue(inkMatOp) != inkMatOpItemId) {
+                    cu.changeField(inkMatOp, inkMatOpItemId, true);
+                    return
                 }
-            }
-            /************************ APPLY LAM SETUP FEE WHEN LAM SELECTED */
-            //Note: "none" operation item is id 18 (front) AND 40 (back) for products using this function
-            var laminatingSetup = fields.operation57;
-            //create variable that ignores "None" operation Items
-            var hasLaminatingChosen = (cu.hasValue(fields.frontLaminate) && cu.getValue(fields.frontLaminate) != 18) || (cu.hasValue(fields.backLaminate) && cu.getValue(fields.backLaminate) != 40 && cu.getValue(fields.backLaminate) != 18);
-            if (laminatingSetup) {
-                if (hasLaminatingChosen) {
-                    if (!cu.hasValue(laminatingSetup)) {
-                        cu.changeField(laminatingSetup,213,true);
-                    }
-                }
-                else if (cu.hasValue(laminatingSetup)) {
-                    cu.changeField(laminatingSetup,'',true);
-                }
-            }
-            //add laminating run operatoin
-            var laminatingRun = fields.operation96;
-            if (laminatingRun) {
-                if (hasLaminatingChosen) {
-                    if (configureglobals.cquote == null) { return; }
-                    var frontLamType = configureglobals.cquote.lpjQuote.piece.frontLaminate.type.name;
-                    if (frontLamType == 'Cold') {
-                        if (cu.getValue(laminatingRun) != 363) {
-                            cu.changeField(laminatingRun, 363, true);
+                //side 2
+                if (inkConfigOpSide2) {
+                    if (cu.getValue(fields.sides) == "2") {
+                        //default if sides was last changed
+                        if (cu.isLastChangedField(updates, fields.sides)) {
+                            cu.changeField(inkConfigOpSide2, defaultInkConfigSide2OpItem, true);
+                            return
+                        }
+                        cu.showField(inkConfigOpSide2);
+                        if (operationItemKeys.inkMatOpItemSide2) {
+                            if (cu.getValue(inkMatOpSide2) != inkMatOpSide2ItemId) {
+                                cu.changeField(inkMatOpSide2,inkMatOpSide2ItemId,true);
+                                return
+                            }
                         }
                     } else {
-                        if (cu.getValue(laminatingRun) != 364) {
-                            cu.changeField(laminatingRun, 364, true);
+                        if (cu.hasValue(inkConfigOpSide2)) { 
+                            cu.changeField(inkConfigOpSide2, '', true) 
+                            return
                         }
+                        if (cu.hasValue(inkMatOpSide2)) {
+                            cu.changeField(inkMatOpSide2, '', true) 
+                            return
+                        }
+                        cu.hideField(inkConfigOpSide2);
                     }
                 }
-                else if (cu.hasValue(laminatingRun)) {
-                    cu.changeField(laminatingRun,'',true);
-                }
             }
-            //pre-printing lam run
-            var prePrintingLamRun = fields.operation106;
-            var prePrintingLamMatl = fields.operation105;
-            if (prePrintingLamRun && prePrintingLamMatl) {
-                if (cu.hasValue(prePrintingLamMatl)) {
-                    if (!cu.hasValue(prePrintingLamRun)) {
-                        cu.changeField(prePrintingLamRun, 422, true)
-                    }
-                } else if (cu.hasValue(prePrintingLamRun)) {
-                    cu.changeField(prePrintingLamRun, '', true)
+            /************************ APPLY LAM RUN OPERATION WITH OPERATION ANSWER AS LINEAR FEET NEEDED (.01 LF) WHEN LAM SELECTED */
+            //Note: "none" operation item is id 18 (front) AND 40 (back) for products using this function
+            var hasFrontLam = (cu.hasValue(fields.frontLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.frontLaminate)) == -1));
+            var hasBackLam = (cu.hasValue(fields.backLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.backLaminate)) == -1));
+            var hasMount = cu.hasValue(fields.mountSubstrate);
+
+            var laminatingRun = fields.operation96;
+            var laminatingRunAnswer = fields.operation96_answer;
+            var laminatingRun2 = fields.operation141;
+            var laminatingRunAnswer2 = fields.operation141_answer;
+            var premask = fields.operation78;
+            var premaskRunAnswer = fields.operation78_answer;
+            if (laminatingRun) {
+                if (configureglobals.cquote == null) { return; }
+                
+                //TEMP BUILD OBJECT TO MAKE AVAILABLE TO VALIDATE RESULTS
+                //wipe lc object properties
+                for (const prop of Object.keys(lc)) {
+                  delete lc[prop];
                 }
-            }
-            /************************ APPLY MOUNT SETUP FEE WHEN LAM SELECTED */
-            var mountingSetup = fields.operation59;
-            if (mountingSetup) {
-                if(cu.hasValue(fields.mountSubstrate)) {
-                    if (!cu.hasValue(mountingSetup)) {
-                        cu.changeField(mountingSetup,215,true);
-                    }
-                }
-                else if (cu.hasValue(mountingSetup)) {
-                    cu.changeField(mountingSetup,'',true);
-                }
-            }
-            var mountingRun = fields.operation100;
-            if (mountingRun) {
-                //Turn on Mounting Run only when No laminating is selected (run costs come in through Lam Run)
-                var turnMtRunOn = false;
-                var turnMtRunOff = false;
-                if (laminatingRun) {
-                    if (cu.hasValue(fields.mountSubstrate)) {
-                        if (!cu.hasValue(laminatingRun)) {
-                            if (!cu.hasValue(mountingRun)) {
-                                cu.changeField(mountingRun,388, true);
-                            } else {
-                                
+                lc["frontLamType"]= (hasFrontLam && quote.piece.frontLaminate) ? quote.piece.frontLaminate.type.name : null;
+                lc["backLamType"]= (hasBackLam && quote.piece.backLaminate) ? quote.piece.backLaminate.type.name : null;
+                lc["hasMount"] = hasMount;
+                lc["hasFrontLam"] = hasFrontLam;
+                lc["hasBackLam"] = hasBackLam;
+
+                lc["hasColdFront"]= frontLamType == 'Cold';
+                lc["hasColdBack"]= backLamType == 'Cold';
+                lc["hasHotFront"]= frontLamType == 'Hot';
+                lc["hasHotBack"]= backLamType == 'Hot';
+                lc["hasAdhesiveBack"]= cu.getValue(fields.backLaminate) == 38;
+                lc["hasAdhesiveFront"]= cu.getValue(fields.frontLaminate) == 38;
+                lc["hasPremask"]= cu.hasValue(fields.operation78);
+                lc["selfAdhesive"]= configureglobals.cprintsubstratesmgr.choice ? configureglobals.cprintsubstratesmgr.choice.selfAdhesive : false;
+
+                var frontLamType = (hasFrontLam && quote.piece.frontLaminate) ? quote.piece.frontLaminate.type.name : null;
+                var backLamType = (hasBackLam && quote.piece.backLaminate) ? quote.piece.backLaminate.type.name : null;
+
+                var hasColdFront = frontLamType == 'Cold';
+                var hasColdBack = backLamType == 'Cold';
+                var hasHotFront = frontLamType == 'Hot';
+                var hasHotBack = backLamType == 'Hot';
+                var hasAdhesiveBack = cu.getValue(fields.backLaminate) == 38;
+                var hasAdhesiveFront = cu.getValue(fields.frontLaminate) == 38;
+                var hasPremask = cu.hasValue(fields.operation78);
+                var selfAdhesive = configureglobals.cprintsubstratesmgr.choice ? configureglobals.cprintsubstratesmgr.choice.selfAdhesive : false;
+
+                var invalidLamMessage = '<p>The mounting and laminating choices in this job is not valid.  If you need this configuration please consult Estimating and/or Planning</p>';
+                if (hasMount || hasFrontLam || hasBackLam) {
+                    if (hasMount) {
+                        if (hasPremask) {
+                            if (!hasFrontLam && !hasBackLam) { 
+                                if (selfAdhesive) {  // 1. Mount + Premask 
+                                    validateValue(laminatingRun, 711);
+                                    validateValue(laminatingRun2,'');
+                                } else { // 1. Adhesive  2. Mount + Premask
+                                    validateValue(laminatingRun, 706);
+                                    validateValue(laminatingRun2, 717);
+                                }
+                            } else if (hasHotFront) { 
+                                if (selfAdhesive) { // 1. Mount  2. Hot  3. Premask
+                                    validateValue(laminatingRun, 710);
+                                    validateValue(laminatingRun2, 718);
+                                }
+                                else { //  1. Hot / Adhesive  2. Mount + Premask
+                                    validateValue(laminatingRun, 709);
+                                    validateValue(laminatingRun2, 717);
+                                }
+                            } else if (hasColdFront) {
+                                if (selfAdhesive) { // 1. Cold / Adhesive  2.  Mount + Premask
+                                    validateValue(laminatingRun, 708);
+                                    validateValue(laminatingRun2, 717);
+                                }
+                                else { //  1. Cold / Adhesive  2. Mount + Premask
+                                    validateValue(laminatingRun, 708);
+                                    validateValue(laminatingRun2, 717);
+                                }
+                            }
+                        } else {  //mounted but no premask
+                           if (!hasFrontLam && !hasBackLam) { 
+                                if (selfAdhesive) {  // 1. Mount 
+                                    validateValue(laminatingRun, 710);
+                                    validateValue(laminatingRun2,'');
+                                } else { // 1. Adhesive  2. Mount
+                                    validateValue(laminatingRun, 706);
+                                    validateValue(laminatingRun2, 716);
+                                }
+                            } else if (hasHotFront) { 
+                                if (selfAdhesive) { // 1. Mount  2. Hot 
+                                    validateValue(laminatingRun, 710);
+                                    validateValue(laminatingRun2, 715);
+                                }
+                                else { //  1. Hot / Adhesive  2. Mount
+                                    validateValue(laminatingRun, 709);
+                                    validateValue(laminatingRun2, 716);
+                                }
+                            } else if (hasColdFront) {
+                                if (selfAdhesive) { // 1. Mount  2. Cold 
+                                    validateValue(laminatingRun, 710);
+                                    validateValue(laminatingRun2, 714);
+                                }
+                                else { //  1. Cold / Adhesive  2. Mount
+                                    validateValue(laminatingRun, 708);
+                                    validateValue(laminatingRun2, 716);
+                                }
+                            }
+                        }
+                    } else {  //everything not mounted
+                        if (hasPremask) {
+                            if (hasHotFront) {
+                                if (hasAdhesiveBack) { // 1. Hot / Adhesive 2. Premask
+                                    validateValue(laminatingRun, 709);
+                                    validateValue(laminatingRun2,718);
+                                } else if (hasHotBack) { // 1. Hot / Hot 2. Premask
+                                    validateValue(laminatingRun, 364);
+                                    validateValue(laminatingRun2,718);
+                                }
+                            } else if (hasColdFront) {
+                                if (hasColdBack) {  // 1. Cold  2. Premask
+                                    validateValue(laminatingRun, 363);
+                                    validateValue(laminatingRun2,718);
+                                } else if (hasAdhesiveBack) { // 1. Cold / Adhesive 2. Premask
+                                    validateValue(laminatingRun, 708);
+                                    validateValue(laminatingRun2,718);
+                                } else { // 1. Cold  2. Pre-mask
+                                    validateValue(laminatingRun, 363);
+                                    validateValue(laminatingRun2,718);
+                                }
+                            } else if (hasAdhesiveBack) { // 1. Adhesive  2. Premask
+                                validateValue(laminatingRun, 706);
+                                validateValue(laminatingRun2,718);
+                            } else { // 1. Premask
+                                validateValue(laminatingRun, 712);
+                                validateValue(laminatingRun2,'');
+                            }
+                        } else {  // no mount, no premask
+                            if (hasHotFront) {
+                                if (hasHotBack) { // 1. Hot / Hot
+                                    validateValue(laminatingRun, 364);
+                                    validateValue(laminatingRun2,'');
+                                } else if (hasAdhesiveBack) {  // 1. Hot / Adhesive
+                                    validateValue(laminatingRun, 709);
+                                    validateValue(laminatingRun2,'');
+                                } else {
+                                    message += invalidLamMessage;
+                                }
+                            } else if (hasColdFront) {
+                                if (hasColdBack) {  // 1. Cold / Adhesive
+                                    validateValue(laminatingRun, 708);
+                                    validateValue(laminatingRun2,'');
+                                } else if (hasAdhesiveBack) {  // 1. Cold / Adhesive
+                                    validateValue(laminatingRun, 708);
+                                    validateValue(laminatingRun2,'');
+                                } else {  // 1. Cold
+                                    validateValue(laminatingRun, 363);
+                                    validateValue(laminatingRun2,'');
+                                }
+                            } else if (hasAdhesiveBack) { // 1. Adhesive
+                                validateValue(laminatingRun, 706);
+                                validateValue(laminatingRun2,'');
                             }
                         }
                     }
+                    //Get LF needed and enter in .01LF per piece as operation answer
+                    var lamRunWithSpoil = getLamWithSpoilage();
+                    printConfig['lam_lf_with_spoilage'] = lamRunWithSpoil;
+                    if (!isNaN(lamRunWithSpoil)) {
+                        var lamRunFactor = parseInt(lamRunWithSpoil / totalQuantity * 100);
+                        if (cu.hasValue(laminatingRun)) {
+                            validateValue(laminatingRunAnswer, lamRunFactor);
+                        }
+                        if (cu.hasValue(laminatingRun2)) {
+                            validateValue(laminatingRunAnswer2, lamRunFactor);
+                        }
+                    }
+                } else {
+                    validateValue(laminatingRun, '');
+                    validateValue(laminatingRun2,'');
+                }
+
+                //loop through points to create cumulative spoilage
+                function getLamWithSpoilage() {
+                    var printLf = printConfig.print_LF_needed;
+                    var spoilPoints = [[999, .06],[1999, .04],[2999, .03],[3999,.025],[4999,.02],[5000,.015]];
+                    var spoilLf = 0;
+                    var lastPt = 0;
+                    for (var i = 0; i < spoilPoints.length; i++) {
+                        if (printLf < spoilPoints[i][0]) {
+                            spoilLf += ((printLf - lastPt) * spoilPoints[i][1]);
+                            break
+                        } else if (i == (spoilPoints.length - 1)) {
+                            spoilLf += (printLf - spoilPoints[i][0]) * spoilPoints[i][1];
+                            break
+                        } else {
+                            spoilLf += (spoilPoints[i][0] - lastPt) * spoilPoints[i][1];
+                            lastPt = spoilPoints[i][0];
+                        }
+                    }
+                    return printLf + spoilLf
                 }
             }
+
             /************************ CANNON PRINTS */
             if (cu.getPjcId(product) == 94) {
                 // add Ink Configuration and Lam for Kodak Backlit
@@ -430,23 +751,25 @@ var rollCalcLogic = {
                     }
                     if (cu.getValue(inkConfig) != 264) {
                         cu.changeField(inkConfig, 264, true);
+                        return
                     }
                     cu.disableField(inkConfig);
                 }
                 else if (cu.getValue(inkConfig) == 264) {
-                    cu.changeField(inkConfig, '', true);
                     cu.enableField(inkConfig);
+                    cu.changeField(inkConfig, '', true);
+                    return
                 }
             }
             /************************* HP INK CONFIGURATION */
             var hpInkOp = fields.operation98;
             if (hpInkOp) {
                 if (cu.getValue(fields.sides) == 2 ) {
-                    if (cu.getValue(hpInkOp) != 509) {cu.changeField(hpInkOp, 509, true);}
+                    if (cu.getValue(hpInkOp) != 509) {cu.changeField(hpInkOp, 509, true); return}
                 } else if (cu.getSelectedOptionText(fields.printSubstrate).indexOf('Backlit') != -1) {
-                    if (cu.getValue(hpInkOp) != 384) {cu.changeField(hpInkOp, 384, true);}
+                    if (cu.getValue(hpInkOp) != 384) {cu.changeField(hpInkOp, 384, true); return}
                 } else {
-                    if (cu.getValue(hpInkOp) != 383) {cu.changeField(hpInkOp, 383, true);}
+                    if (cu.getValue(hpInkOp) != 383) {cu.changeField(hpInkOp, 383, true); return}
                 }
                 cu.disableField(hpInkOp);
             }
@@ -454,10 +777,10 @@ var rollCalcLogic = {
             if (pmPortal) {
                 var proofOp = fields.proof;
                 var proofSelection = cu.getValue(proofOp);
-                if (totalSquareFeet >= 320) {
+                if (totalSquareFeet >= 700) {
                     if (hardProofMessageCount == 0) {
                         if (proofSelection != 40) {
-                            message += '<p>Jobs with a printable area over 320 square feet require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
+                            message += '<p>Jobs with a printable area over 700 square feet require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
                             hardProofMessageCount = 1;
                             cu.changeField(proofOp, 40, true);
                         }
@@ -514,11 +837,13 @@ var rollCalcLogic = {
                 var weedingResult = cuttingDesc[cuttingChoice];
                 if (cu.getValue(weedingOp) != weedingResult) {
                     cu.changeField(weedingOp, weedingResult, true);
+                    return
                 }
                 if (premaskOp) {
                     if (cu.hasValue(sumaCuttingOp)) {
                         if (cu.getValue(premaskOp) != 361) {
                             cu.changeField(premaskOp,361,true);
+                            return
                         }
                         cu.disableField(premaskOp);
                     } else {
@@ -526,7 +851,6 @@ var rollCalcLogic = {
                     }
                 }
                 cu.disableField(weedingOp);
-                
             }
             /************************ show Flute Directoin operations when Fluted substate chosed */
             var fluteDirectionOp = fields.operation101;
@@ -548,7 +872,8 @@ var rollCalcLogic = {
                 } else {
                     cu.hideField(fluteDirectionOp);
                     if (cu.hasValue(fluteDirectionOp)) {
-                        cu.changeField(fluteDirectionOp,'',true)
+                        cu.changeField(fluteDirectionOp,'',true);
+                        return
                     }
                 }
             }
@@ -558,11 +883,13 @@ var rollCalcLogic = {
                 if (cu.getValue(fields.printSubstrate) == 308) {
                     if (cu.getValue(vutekInks) != 241) {
                         cu.changeField(vutekInks, 241, true);
+                        return
                     }
                 } else {
                     if (cu.getValue(vutekInks) == 241) {
                         message += '<p>Double Strike backlit ink is only available on the Ultra Canvas Backlit.</p>';
                         cu.changeField(vutekInks,261, true);
+                        return
                     }
                 }
             }
@@ -574,25 +901,30 @@ var rollCalcLogic = {
                     if (cu.getTotalQuantity() > 100) {
                         message += '<p>Heat Bending is limited to 100 pieces.  This option has been removed from your selects.</p>';
                         cu.changeField(heatBendingOp,'', true);
+                        return
                     }
                     //No PreLam, Lam, Mount or Adhesive can be applied
                     if (hasFrontLam || hasBackLam || cu.hasValue(fields.mountSubstrate)) {
                         message += '<p>Heat Bending cannot be chosen with Laminating or mounting</p>';
                         cu.changeField(heatBendingOp,'',true);
+                        return
                     }
                     if (cu.hasValue(fields.operation84) || cu.hasValue(fields.operation67)) {
                         message += '<p>Heat Bending cannot be chosen with Laminating or mounting</p>';
                         cu.changeField(heatBendingOp,'',true);
+                        return
                     }
                     //Neight side can be lower than 36"
                     if (cu.getWidth() > 36 || cu.getHeight() > 36) {
                         message += '<p>Heat Bending cannot be chosen with either side longer than 36"</p>';
                         cu.changeField(heatBendingOp,'',true);
+                        return
                     }
                     //
                     if (substratesThatCanHeatBend.indexOf(cu.getValue(fields.printSubstrate)) == -1) {
                         message += '<p>Heat Bending can only be chosen for Styrene, EPVC, Acrylic, or PETG in calipers less than .125" (3MM).</p>';
                         cu.changeField(heatBendingOp,'',true);
+                        return
                     }
                 }
             }
@@ -603,11 +935,32 @@ var rollCalcLogic = {
                 if (cu.isValueInSet(fields.printSubstrate,fabrivuDirectMaterials)) {
                     if (cu.getValue(dyeSubTransferOp) != 442) {
                         cu.changeField(dyeSubTransferOp, 442, true);
+                        return
                     }
                 } else {
                     if (cu.getValue(dyeSubTransferOp) != 428) {
                         cu.changeField(dyeSubTransferOp, 428, true);
+                        return
                     }
+                }
+            }
+            /************************ COLOR CRITICAL JOBS */
+            var colorCriticalOp = fields.operation130;
+            var colorCriticalDevice = fields.operation131;
+            if (colorCriticalOp && colorCriticalDevice) {
+                if (cu.hasValue(colorCriticalOp)) {
+                    cu.showField(colorCriticalDevice);
+                    cu.setLabel(colorCriticalOp,"Color Critical - please indicate job # below");
+                    if (cu.getValue(colorCriticalOp) == 592) {
+                        cu.setLabel(colorCriticalOp,"Color Critical (Enter in Job # To Match Below)");
+                    }
+                } else {
+                    if (cu.hasValue(colorCriticalDevice)) {
+                        cu.changeField(colorCriticalDevice,'',true);
+                        return
+                    }
+                    cu.hideField(colorCriticalDevice);
+                    cu.setSelectedOptionText(colorCriticalOp,'No');
                 }
             }
             /************************ HIDE OPERTION ITEMS */
@@ -623,6 +976,31 @@ var rollCalcLogic = {
             if (cu.isMultipleVersion()) {
                 $('input.versionName').attr('required',true);
             }
+
+            /************************* TBG TEAM COSTING */
+            //material and labor costs are inputted into operation to create cost and markup based on team selected
+            //teams carry % of total job cost which is subject to markup
+            var teamMarkupOp = fields.operation139;
+            if (teamMarkupOp) {
+                var teamMarkupFactor = fields.operation139_answer;
+                var teamPrice = getTeamPrice();
+                var costMinusTeam = parseInt((quote.jobCostPrice + quote.operationsPrice - teamPrice));
+                if (cu.getValue(teamMarkupFactor) != costMinusTeam) {
+                    cu.changeField(teamMarkupFactor, costMinusTeam, true);
+                    return
+                }
+            }
+            function getTeamPrice() {
+                var operationQuotes = quote.operationQuotes;
+                for (var i = 0; i < operationQuotes.length; i++) {
+                    if (operationQuotes[i].operation.id == 139) {
+                        return operationQuotes[i].price
+                    }
+                }
+            }
+
+            /******************** INITIATE COST BREAKDOWN */
+            renderExtendedCostBreakdown();
             /********************************************* ALERTS */
             // show an alert when necessary
             if (message != '' || submessage != '') {
@@ -633,13 +1011,29 @@ var rollCalcLogic = {
         } // is POD
     }
 }
+//simplifies changing values of operation items
+function validateValue(field, value) {
+    if (field) {
+        if (cu.getValue(field) != value) {
+            cu.changeField(field, value, true);
+        }
+    }
+}
 function createStyleBlock(elements, styleText) {
     var x = '<style type="text/css">' + elements.join(", ") + ' {' + styleText + '}</style>';
     return x
 }
 function addClassToList(elements, newClassName) {
     for (var i = 0; i < elements.length; i++) {
-        $(elements[i]).addClass('planning');
+        $(elements[i]).addClass('newClassName');
+    }
+}
+function addClassToOperation(opList, className) {
+    if (!(Array.isArray(opList))) {
+        opList = [opList];
+    }
+    for (var i = 0; i < opList.length; i++) {
+        $('#operation' + opList[i]).addClass(className);
     }
 }
 function disableCheckoutButton(disableCheckoutText) {
@@ -674,16 +1068,6 @@ function showBannerOperations() {
     $.each(bannerFinishingOperations, function() {
         $('#operation' + this).show();
     });
-}
-function getLeadAndTailCost() {
-    var totalSubCost = configureglobals.cquote.lpjQuote.aPrintSubstratePrice;
-    var totalSquareFeet = configureglobals.cquote.lpjQuote.piece.totalSquareFeet;
-    var subSqFtCost = totalSubCost / totalSquareFeet;
-    var subWidth = configureglobals.cquote.lpjQuote.piece.aPrintSubstrate.width;
-    var subLinearFootCost = subWidth * subSqFtCost / 12;
-    var totalQuantity = configureglobals.cquote.lpjQuote.productionQuantity;
-    var leadTailCost = parseInt(subLinearFootCost * 10 / totalQuantity);
-return leadTailCost;
 }
 function trimOperationItemName(opList, deliminater) {
     //change single operation to array
@@ -732,7 +1116,8 @@ function removeOperationItemsWithString(op, string) {
 }
 
 function getOperationDetails() {
-    var operations = configureglobals.cquote.lpjQuote.operationQuotes;
+    var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
+    var operations = quote.operationQuotes;
     var ops = { };
     for (var i = 0; i < operations.length; i++) {
         var opId = operations[i].operation.id;
@@ -745,8 +1130,8 @@ function getOperationDetails() {
             'bottom' : data.bottomSide,
             'top' : data.topSide
         }
-    }
-    return ops
+        return ops
+    } return false
 }
 function validateSidesNotTheSame(opDetails, op1, op2) {
     var object1 = opDetails['op' + op1];
@@ -762,6 +1147,93 @@ function validateSidesNotTheSame(opDetails, op1, op2) {
         message += '<p>The following sides match for operations ' + object1['name'] + ' and ' + object2['name'] + ' : ' + sidesMatch.join(', ') + '.</p><p>Please make adjustments as these operations cannot be done on the same sides.</p>';
     }
     return message
+}
+
+/*
+sends in text from a text block to search for a Json object
+convert to json object
+add properties to target window object for 
+*/
+
+function setPropertyFromTextJson(text, targetObj) {
+    if (!text) {
+        console.log('no text to search for property');
+        return
+    }
+    var jsonBlock = /\{(.*?)\}/.exec(text);
+    if (jsonBlock) {
+        var jsonStr = getJsonFromString(jsonBlock[0]);
+        if (jsonStr) {
+            //create objects and properties if not exists on window
+            if (!window.targetObj) {
+                window[targetObj] = {};
+            }
+            if (!targetObj.property) {
+                target.property;
+            }
+            for (prop in jsonStr) {
+                targetObj[prop] = jsonStr[prop];
+            }
+        } else {
+            console.log('invalid json string ' + opItemKeyText);
+        }
+    }
+}
+
+// for each property in object search for text property for JSON written text and insert into customProperties properties, if designated
+function setCustomProperties (obj, textProp, newProp) {
+    if (!obj) {
+        return
+    }
+    if (!obj[textProp]) {
+        return
+    }
+    //create new property if newProp defined
+    if (newProp) {
+        obj[newProp] = {};
+    }
+    var text = obj[textProp];
+    // remove line breaks 
+    text = text.replace(/[\n\r]/g, '');
+    //Json properties must be property formed and wrapped in "[[{ }]]"
+    var taggedBlock = /\[{2}(.*?)\]{2}/.exec(text);
+    if (taggedBlock) {
+        var jsonBlock = taggedBlock[0].slice(2,-2);
+        var jsonStr = getJsonFromString(jsonBlock);
+        for (property in jsonStr) {
+            //if new property inputted insert there otherwise AND on original object (make querying results easier)
+            if (newProp) {
+                obj[newProp][property] = jsonStr[property];
+            } 
+            obj[property] = jsonStr[property]; 
+        }
+    }
+}
+
+function getJsonFromString (str) {
+    try {
+        return JSON.parse(str);
+    } catch (e) {
+        return false;
+    }
+}
+
+function roundTo(n, digits) {
+    var negative = false;
+    if (digits === undefined) {
+        digits = 0;
+    }
+        if( n < 0) {
+        negative = true;
+      n = n * -1;
+    }
+    var multiplicator = Math.pow(10, digits);
+    n = parseFloat((n * multiplicator).toFixed(11));
+    n = (Math.round(n) / multiplicator).toFixed(2);
+    if( negative ) {    
+        n = (n * -1).toFixed(2);
+    }
+    return n;
 }
 
 configureEvents.registerOnCalcLoadedListener(rollCalcLogic);

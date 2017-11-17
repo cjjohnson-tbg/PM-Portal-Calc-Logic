@@ -204,6 +204,7 @@ var rollCalcLogic = {
     },
     onQuoteUpdated: function(updates, validation, product) {
         if (!cu.isSmallFormat(product)) {
+            
             //search commet object for custom properties inserted into notes or descriptions//set custom properties
             if (!configureglobals.cquote) {return}
             var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
@@ -277,7 +278,7 @@ var rollCalcLogic = {
             //NEED TIMER SO DOESN'T RUN ASYNC???
             if (printConfig) {
                 //Paste difference from total_roll_cost - printed_roll_cost
-                printConfig['roll_wastage'] = printConfig.total_roll_cost - quote.aPrintSubstratePrice;
+                printConfig['roll_wastage'] = roundTo(printConfig.total_roll_cost - quote.aPrintSubstratePrice,2);
                 if (fields.operation135_answer) {
                     if (cu.getValue(fields.operation135_answer) != printConfig.roll_wastage) {
                         $('#optimum-substrate input').val(printConfig.substrate);
@@ -1209,13 +1210,30 @@ function setCustomProperties (obj, textProp, newProp) {
     }
 }
 
-
 function getJsonFromString (str) {
     try {
         return JSON.parse(str);
     } catch (e) {
         return false;
     }
+}
+
+function roundTo(n, digits) {
+    var negative = false;
+    if (digits === undefined) {
+        digits = 0;
+    }
+        if( n < 0) {
+        negative = true;
+      n = n * -1;
+    }
+    var multiplicator = Math.pow(10, digits);
+    n = parseFloat((n * multiplicator).toFixed(11));
+    n = (Math.round(n) / multiplicator).toFixed(2);
+    if( negative ) {    
+        n = (n * -1).toFixed(2);
+    }
+    return n;
 }
 
 configureEvents.registerOnCalcLoadedListener(rollCalcLogic);

@@ -3,7 +3,7 @@ var calcConfig = {
 	getUpdatedConfig: function(quote) {
 		//clear out existing print config
 		for (const prop of Object.keys(printConfig)) {
-        	delete config[prop];
+        	delete printConfig[prop];
         }
 		var deviceDefaults = quote.device;
 
@@ -130,9 +130,3 @@ var calcConfig = {
 		}
 	}
 }
-
-
-
-configureEvents.registerOnCalcLoadedListener(testLogic);
-//configureEvents.registerOnCalcChangedListener(testLogic);
-configureEvents.registerOnQuoteUpdatedListener(testLogic);

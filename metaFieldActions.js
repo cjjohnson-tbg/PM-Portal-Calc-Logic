@@ -56,7 +56,7 @@ var metaFieldsActions = {
             $('.additionalInformation input').val('');
         }
     },
-    onQuoteUpdated: function(updates, validation, product) {
+    onQuoteUpdated: function(product) {
         var disableCheckoutCount = 0;
         var metaMessage = '';
         /*  SHOW AND REQUIRE HARD PROOF META FIELDS WHEN HARD PROOF SELECTED */

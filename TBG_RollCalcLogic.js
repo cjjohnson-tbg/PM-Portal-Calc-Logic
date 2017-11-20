@@ -289,20 +289,22 @@ var rollCalcLogic = {
                     }
                     var rollChangeOp = fields.operation138;
                     var rollChangeOpAnswer = fields.operation138_answer;
+                    var rollChangeMins = printConfig.roll_change_mins;
                     if (rollChangeOp) {
-                        if (printConfig.roll_change_cost > 0) {
+                        if (printConfig.roll_change_mins > 0) {
                             if (!cu.hasValue(rollChangeOp)) {
                                 cu.changeField(rollChangeOp, 682, true);
                                 return
                             }
-                            var rollChangeFactor = parseInt(printConfig.roll_change_cost * 100000 / pieceQty);
-                            if (cu.getValue(rollChangeOpAnswer) != rollChangeFactor) {
-                                cu.changeField(rollChangeOpAnswer, rollChangeFactor, true);
-                                return
+                            if (rollChangeOpAnswer) {
+                                if (cu.getValue(rollChangeOpAnswer) != rollChangeMins) {
+                                    cu.changeField(rollChangeOpAnswer, rollChangeMins, true);
+                                    return
+                                }
                             }
                         } else {
                             if (cu.hasValue(rollChangeOp)) {
-                                cu.changeField(rollChangeOp, '', true);
+                                cu.changeField(rollChangeOp,'',true);
                                 return
                             }
                         }

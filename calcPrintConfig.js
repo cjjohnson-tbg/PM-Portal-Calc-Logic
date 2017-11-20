@@ -110,6 +110,7 @@ var calcConfig = {
 				'total_rolls' : rollsNeeded,
 				'full_rolls' : fullRolls,
 				'roll_change_cost' : rollChangeCost,
+				'roll_change_mins' : (rollsNeeded - 1) * deviceDefaults.rollChangeMins,
 				'numDown_down_on_last_roll' : numDownLastRoll,
 				'full_rolls_area' : fullRollArea * fullRolls,
 				'full_rolls_cost' : fullRollCost * fullRolls,

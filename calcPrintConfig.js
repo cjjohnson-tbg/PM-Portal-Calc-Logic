@@ -13,8 +13,7 @@ var calcConfig = {
 			return
 		}
 		var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
-		var pieceWidth = Number(cu.getWidth());
-		var pieceHeight = Number(cu.getHeight());
+		var piece = quote.piece;
 		var pieceQty = cu.getTotalQuantity();
 		var qty = Math.ceil(pieceQty * (1 + deviceDefaults.attrition));
 		
@@ -53,78 +52,85 @@ var calcConfig = {
 
 		//Loop through Rolls
 		for (roll in rollOptions) {
-			getPrintConfig(rollOptions[roll]);
+			getBestPrintConfig(rollOptions[roll]);
 		}
 
-
-
-		function getPrintConfig(roll, width, height, frontLam, backLam, aAdhesive, bAdhesve, mount) {
-			var numDown, numRolls, printLfNeeded, numDownPerRoll, rollsNeeded, fullRolls, numDownLastRoll, lastRollLf, lastRollSqFt, rollChangeCost;
-			var config = {};
+		function getBestPrintConfig(roll, frontLam, backLam, aAdhesive, bAdhesve, mount) {
 			var vertical_piece_orienation = false;
+			getPrintConfig(vertical_piece_orienation, roll, frontLam, backLam, aAdhesive, bAdhesve, mount);
 
-			var printableLF = (roll.length / 12) - leadWasteLF;
-			//var printableWidth = fLamWidth ? Math.min(roll.width, fLamWidth) : roll.width;
-			var printableWidth = roll.width ? roll.width : 0;
-			printableWidth = printableWidth - (devMargin *2);
-			var fullRollArea = roll.width * roll.length / 144;
-			var fullRollCost = fullRollArea * subSqFtCost; 
-
-			//horizontal orientation
-
-			var numAcross = Math.floor( (roll.width - (devMargin * 2)) / (width + (bleed * 2)) );
-			var valid_quote = false;
-			if (numAcross > 0) {
-				valid_quote = true;
-				numDown = Math.ceil(qty / numAcross);
-				numRolls = Math.ceil( (numDown * (height + (bleed * 2))) / (roll.length - (leadWasteLF * 12)) );
-				printLfNeeded = numDown * (height + (2 * bleed)) / 12 ;
-				numDownPerRoll = Math.floor(printableLF / ((height + (2 * bleed)) / 12));
-				rollsNeeded = Math.ceil(numDown / numDownPerRoll);
-				fullRolls = Math.floor(numDown / numDownPerRoll);
-				numDownLastRoll = numDown % numDownPerRoll;
-				lastRollLf = numDownLastRoll * (height + (2 * bleed)) / 12;
-				lastRollSqFt = (lastRollLf + leadWasteLF) * roll.width / 12;
-				rollChangeCost = (rollsNeeded - 1) * deviceDefaults.rollChangeMins * deviceDefaults.hourlyRate / 60;
+			//toggle orientation and rerun
+			if (!vertical_piece_orienation) {
+				vertical_piece_orienation = true;
+				getPrintConfig(vertical_piece_orienation, roll, frontLam, backLam, aAdhesive, bAdhesve, mount);
 			}
 
-			config = {
-				'valid' : valid_quote,
-				'roll_printable_LF' : printableLF,
-				'piece_width_across' : width,
-				'piece_width_down' : height,
-				'piece_number_across' : numAcross,
-				'piece_number_down' : numDown,
-				'print_LF_needed' : printLfNeeded,
-				'total_rolls' : rollsNeeded,
-				'full_rolls' : fullRolls,
-				'roll_change_cost' : rollChangeCost,
-				'roll_change_mins' : (rollsNeeded - 1) * deviceDefaults.rollChangeMins,
-				'numDown_down_on_last_roll' : numDownLastRoll,
-				'full_rolls_area' : fullRollArea * fullRolls,
-				'full_rolls_cost' : fullRollCost * fullRolls,
-				'last_roll_lf' : lastRollLf,
-				'last_roll_square_feet' : lastRollSqFt,
-				'last_roll_cost' : lastRollSqFt * subSqFtCost,
-				'total_roll_square_feet' : (fullRollArea * fullRolls) + lastRollSqFt,
-				'total_roll_cost' : (fullRolls * fullRollCost) + (lastRollSqFt * subSqFtCost),
-				'total_roll_cost_plus_labor' : (fullRolls * fullRollCost) + (lastRollSqFt * subSqFtCost) + rollChangeCost,
-				'substrate' : roll.name,
-				'substrate_width' : roll.width,
-				'substrate_length' : roll.length,
-				'substrate_pace_id' : roll.paceId ? roll.paceId : null
-			}
-			//if total cost is less, reassign to new config
+			function getPrintConfig(vertical_piece_orienation, roll, frontLam, backLam, aAdhesive, bAdhesve, mount) {
+				var numDown, numRolls, printLfNeeded, numDownPerRoll, rollsNeeded, fullRolls, numDownLastRoll, lastRollLf, lastRollSqFt, rollChangeCost, vertical_piece_orienation;
+				var config = {};
 
-			if (config.valid) {
-				if (!printConfig.lengh = 0) {
-					printConfig = config
-				} else if (config.total_roll_cost_plus_labor < printConfig.total_roll_cost_plus_labor) {
-					printConfig = config
+				var pieceWidth = vertical_piece_orienation ? piece.width : piece.height;
+				var pieceHeight = vertical_piece_orienation ? piece.height : piece.width;
+
+				var printableLF = (roll.length / 12) - leadWasteLF;
+				//var printableWidth = fLamWidth ? Math.min(roll.width, fLamWidth) : roll.width;
+				var printableWidth = roll.width ? roll.width : 0;
+				printableWidth = printableWidth - (devMargin *2);
+				var fullRollArea = roll.width * roll.length / 144;
+				var fullRollCost = fullRollArea * subSqFtCost;
+
+				var numAcross = Math.floor( (roll.width - (devMargin * 2)) / (pieceWidth + (bleed * 2)) );
+				var valid_quote = false;
+				if (numAcross > 0) {
+					valid_quote = true;
+					numDown = Math.ceil(qty / numAcross);
+					numRolls = Math.ceil( (numDown * (pieceHeight + (bleed * 2))) / (roll.length - (leadWasteLF * 12)) );
+					printLfNeeded = numDown * (pieceHeight + (2 * bleed)) / 12 ;
+					numDownPerRoll = Math.floor(printableLF / ((pieceHeight + (2 * bleed)) / 12));
+					rollsNeeded = Math.ceil(numDown / numDownPerRoll);
+					fullRolls = Math.floor(numDown / numDownPerRoll);
+					numDownLastRoll = numDown % numDownPerRoll;
+					lastRollLf = numDownLastRoll * (height + (2 * bleed)) / 12;
+					lastRollSqFt = (lastRollLf + leadWasteLF) * roll.width / 12;
+					rollChangeCost = (rollsNeeded - 1) * deviceDefaults.rollChangeMins * deviceDefaults.hourlyRate / 60;
+				}
+
+				config = {
+					'valid' : valid_quote,
+					'roll_printable_LF' : printableLF,
+					'piece_width_across' : width,
+					'piece_width_down' : height,
+					'piece_number_across' : numAcross,
+					'piece_number_down' : numDown,
+					'print_LF_needed' : printLfNeeded,
+					'total_rolls' : rollsNeeded,
+					'full_rolls' : fullRolls,
+					'roll_change_cost' : rollChangeCost,
+					'roll_change_mins' : (rollsNeeded - 1) * deviceDefaults.rollChangeMins,
+					'numDown_down_on_last_roll' : numDownLastRoll,
+					'full_rolls_area' : fullRollArea * fullRolls,
+					'full_rolls_cost' : fullRollCost * fullRolls,
+					'last_roll_lf' : lastRollLf,
+					'last_roll_square_feet' : lastRollSqFt,
+					'last_roll_cost' : lastRollSqFt * subSqFtCost,
+					'total_roll_square_feet' : (fullRollArea * fullRolls) + lastRollSqFt,
+					'total_roll_cost' : (fullRolls * fullRollCost) + (lastRollSqFt * subSqFtCost),
+					'total_roll_cost_plus_labor' : (fullRolls * fullRollCost) + (lastRollSqFt * subSqFtCost) + rollChangeCost,
+					'substrate' : roll.name,
+					'substrate_width' : roll.width,
+					'substrate_length' : roll.length,
+					'substrate_pace_id' : roll.paceId ? roll.paceId : null
+				}
+				//if total cost is less, reassign to new config
+				if (config.valid) {
+					if (!printConfig.length == 0) {
+						printConfig = config
+					} else if (config.total_roll_cost_plus_labor < printConfig.total_roll_cost_plus_labor) {
+						printConfig = config
+					}
 				}
 			}
-
-			return 
 		}
+
 	}
 }

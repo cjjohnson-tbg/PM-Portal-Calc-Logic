@@ -28,6 +28,7 @@ var calcConfig = {
 		var gutter = deviceDefaults.gutter;
 
 		//establish chosen default susbtrate config
+		var rollOptions = [];
 		var defaultRoll = {
 			"id" : configureglobals.cprintsubstratesmgr.choice.id,
 			"name" : configureglobals.cprintsubstratesmgr.choice.productionName,
@@ -35,54 +36,42 @@ var calcConfig = {
 			"length" : configureglobals.cprintsubstratesmgr.choice.height,
 			"paceId" : configureglobals.cprintsubstratesmgr.choice.referenceId
 		}
-		//get default roll config
-		printConfig = getBestPrintConfig(defaultRoll);
-		/*
-		IF altRoll exist for substrate then Loop through each alternateRolls and check for best imposition 
-		*/
+		rollOptions.push(defaultRoll);
+
+		//Build options to loop
 		var altRolls = quote.piece.aPrintSubstrate.altRolls;
 		if (altRolls) {
-			for (var i = 0; i < altRolls.length; i++) {
-				var altRollConfig = getBestPrintConfig(altRolls[i]);
-				//if better cost value then overwrite printConfig
-				if (altRollConfig) {
-					if (altRollConfig.total_roll_cost < printConfig.total_roll_cost) {
-						printConfig = altRollConfig;
-					}
-				}
+			for (roll in altRolls) {
+				rollOptions.push(altRolls[roll]);
 			}
 		}
+		var frontLams = quote.piece.frontLaminate ? quote.piece.frontLaminate.options : null;
+		var backLams = quote.piece.backLaminate ? quote.piece.backLaminate.options : null;
+		var mounts = quote.piece.mountSubstrate ? quote.piece.mountSubstrate.options : null;
+		var aAdhesives = quote.piece.aAdhesiveLaminate ? quote.piece.aAdhesiveLaminate.options : null;
+		var bAdhesive = quote.piece.bAdhesiveLaminate ? quote.piece.bAdhesiveLaminate.options : null;
 
-		function getBestPrintConfig(roll) {
-			var bestConfig;
-
-			var horizontalPrintConfig = getPrintConfig(roll, pieceWidth, pieceHeight);
-			horizontalPrintConfig['vertical_piece_orienation'] = false;
-			var vertPrintConfig = getPrintConfig(roll, pieceHeight, pieceWidth);
-			vertPrintConfig['vertical_piece_orienation'] = true;
-			//Test which orientation yields the lowest susbtrate cost
-			if (horizontalPrintConfig.valid && !vertPrintConfig.valid) {
-				bestConfig = horizontalPrintConfig;
-			} else if (!horizontalPrintConfig.valid && vertPrintConfig.valid) {
-				bestConfig = vertPrintConfig;
-			} else if (horizontalPrintConfig.total_roll_cost_plus_labor < vertPrintConfig.total_roll_cost_plus_labor) {
-				bestConfig = horizontalPrintConfig;
-			} else {
-				bestConfig = vertPrintConfig;
-			}
-			return bestConfig
+		//Loop through Rolls
+		for (roll in rollOptions) {
+			getPrintConfig(rollOptions[roll]);
 		}
-		
-		function getPrintConfig(roll, width, height) {
+
+
+
+		function getPrintConfig(roll, width, height, frontLam, backLam, aAdhesive, bAdhesve, mount) {
 			var numDown, numRolls, printLfNeeded, numDownPerRoll, rollsNeeded, fullRolls, numDownLastRoll, lastRollLf, lastRollSqFt, rollChangeCost;
 			var config = {};
 			var vertical_piece_orienation = false;
 
 			var printableLF = (roll.length / 12) - leadWasteLF;
+			//var printableWidth = fLamWidth ? Math.min(roll.width, fLamWidth) : roll.width;
+			var printableWidth = roll.width ? roll.width : 0;
+			printableWidth = printableWidth - (devMargin *2);
 			var fullRollArea = roll.width * roll.length / 144;
 			var fullRollCost = fullRollArea * subSqFtCost; 
 
 			//horizontal orientation
+
 			var numAcross = Math.floor( (roll.width - (devMargin * 2)) / (width + (bleed * 2)) );
 			var valid_quote = false;
 			if (numAcross > 0) {
@@ -125,9 +114,17 @@ var calcConfig = {
 				'substrate_length' : roll.length,
 				'substrate_pace_id' : roll.paceId ? roll.paceId : null
 			}
-			//calculate roll 
+			//if total cost is less, reassign to new config
 
-			return config
+			if (config.valid) {
+				if (!printConfig.lengh = 0) {
+					printConfig = config
+				} else if (config.total_roll_cost_plus_labor < printConfig.total_roll_cost_plus_labor) {
+					printConfig = config
+				}
+			}
+
+			return 
 		}
 	}
 }

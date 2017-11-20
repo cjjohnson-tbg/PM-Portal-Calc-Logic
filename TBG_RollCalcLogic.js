@@ -290,11 +290,23 @@ var rollCalcLogic = {
                     var rollChangeOp = fields.operation138;
                     var rollChangeOpAnswer = fields.operation138_answer;
                     var rollChangeMins = printConfig.roll_change_mins;
-                    //always require Roll Change Operation on PJC
-                    if (rollChangeOp && rollChangeOpAnswer) {
-                        if (cu.getValue(rollChangeOpAnswer) != rollChangeMins) {
-                            cu.changeField(rollChangeOpAnswer, rollChangeMins, true);
-                            return
+                    if (rollChangeOp) {
+                        if (printConfig.roll_change_mins > 0) {
+                            if (!cu.hasValue(rollChangeOp)) {
+                                cu.changeField(rollChangeOp, 682, true);
+                                return
+                            }
+                            if (rollChangeOpAnswer) {
+                                if (cu.getValue(rollChangeOpAnswer) != rollChangeMins) {
+                                    cu.changeField(rollChangeOpAnswer, rollChangeMins, true);
+                                    return
+                                }
+                            }
+                        } else {
+                            if (cu.hasValue(rollChangeOp)) {
+                                cu.changeField(rollChangeOp,'',true);
+                                return
+                            }
                         }
                     }
                 }

@@ -179,6 +179,7 @@ var printConfig = {};
 var lc = new Object();
 
 var cu = calcUtil;
+var cc = calcConfig;
 
 //grab zund data from zundSpeedFactors_sheets
 var cutMethod;
@@ -270,7 +271,7 @@ var rollCalcLogic = {
                 }
             }
             // CALL printConfig CREATION SCRIPT
-            calcConfig.getUpdatedConfig(quote);
+            cc.getUpdatedConfig(quote);
 
             /************************ 
                 WASTAGE CALCULATORS 
@@ -278,13 +279,31 @@ var rollCalcLogic = {
             //NEED TIMER SO DOESN'T RUN ASYNC???
             if (printConfig) {
                 if (printConfig.valid) {
-                    //Paste difference from total_roll_cost - printed_roll_cost
+                    // Insert Roll Substate waste 
                     printConfig['roll_wastage'] = roundTo(printConfig.total_roll_cost - quote.aPrintSubstratePrice,2);
                     if (fields.operation135_answer) {
                         if (cu.getValue(fields.operation135_answer) != printConfig.roll_wastage) {
                             $('#optimum-substrate input').val(printConfig.substrate);
                             $('#optimum-substrate-id input').val(printConfig.substrate_pace_id);
                             cu.changeField(fields.operation135_answer,printConfig.roll_wastage,true);
+                        }
+                    }
+                    //If Laminate, insert lam wastage amount
+                    var lamWasteOp = fields.operation177;
+                    var lamWasteOpAnswer = fields.operation177_answer;
+                    if (lamWasteOp) {
+                        var lamWaste = cc.getLamWaste(quote);
+                        if (lamWaste > 0) {
+                            if (!cu.hasValue(lamWasteOp)) {
+                                cu.changeField(lamWasteOp, 759, true)
+                                return
+                            }
+                            if (lamWasteOpAnswer) {
+                                if (cu.getValue(lamWasteOpAnswer) != lamWaste) {
+                                    cu.changeField(lamWasteOpAnswer, lamWaste, true)
+                                    return
+                                }
+                            }
                         }
                     }
                     var rollChangeOp = fields.operation138;

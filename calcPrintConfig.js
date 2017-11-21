@@ -182,6 +182,19 @@ var calcConfig = {
 			}
 			return result
 		}
-
+	},
+	getLamWaste : function(quote) {
+		//pulls calculated lam materials needed from printConfig and compare against Coll calculation
+		var collFrontLamCost = quote.frontLaminatePrice ? quote.frontLaminatePrice : 0;
+		var collBackLamCost = quote.backLaminatePrice ? quote.backLaminatePrice : 0;
+		var ccFrontLamCost = 0;
+		var ccBackLamCost = 0;
+		if (printConfig.materials.frontLam) {
+			ccFrontLamCost = printConfig.materials.frontLam.priceLf * printConfig.print_LF_needed;
+		}
+		if (printConfig.materials.backLam) {
+			ccBackLamCost = printConfig.materials.backLam.priceLf * printConfig.print_LF_needed;
+		}
+		return ccFrontLamCost + ccBackLamCost - collFrontLamCost - collBackLamCost
 	}
 }

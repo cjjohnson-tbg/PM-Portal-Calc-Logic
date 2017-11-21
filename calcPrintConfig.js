@@ -101,7 +101,7 @@ var calcConfig = {
 			var fullRollArea = roll.width * roll.length / 144;
 			var fullRollCost = fullRollArea * subSqFtCost;
 
-			var numAcross = Math.floor( (roll.width - (devMargin * 2)) / (pieceWidth + (bleed * 2)) );
+			var numAcross = Math.floor( (printableWidth - (devMargin * 2)) / (pieceWidth + (bleed * 2)) );
 			var valid_quote = false;
 			if (numAcross > 0) {
 				valid_quote = true;
@@ -113,13 +113,14 @@ var calcConfig = {
 				fullRolls = Math.floor(numDown / numDownPerRoll);
 				numDownLastRoll = numDown % numDownPerRoll;
 				lastRollLf = numDownLastRoll * (pieceHeight + (2 * bleed)) / 12;
-				lastRollSqFt = (lastRollLf + leadWasteLF) * roll.width / 12;
+				lastRollSqFt = (lastRollLf + leadWasteLF) * printableWidth / 12;
 				rollChangeCost = (rollsNeeded - 1) * deviceDefaults.rollChangeMins * deviceDefaults.hourlyRate / 60;
 			}
 
 			config = {
 				'valid' : valid_quote,
 				'roll_printable_LF' : printableLF,
+				'roll_printable_width' : printableWidth,
 				'piece_width_across' : pieceWidth,
 				'piece_width_down' : pieceHeight,
 				'piece_number_across' : numAcross,
@@ -141,8 +142,16 @@ var calcConfig = {
 				'substrate' : roll.name,
 				'substrate_width' : roll.width,
 				'substrate_length' : roll.length,
-				'substrate_pace_id' : roll.paceId ? roll.paceId : null
+				'substrate_pace_id' : roll.paceId ? roll.paceId : null,
+				'materials' : {}
 			}
+			//insert material to config 
+			for (mat in materials) {
+				if (materials[mat]) {
+					config.materials[mat] = materials[mat];
+				}
+			}
+
 			//if total cost is less, reassign to new config
 			if (config.valid) {
 				//if first time ran and printConfig has no properties

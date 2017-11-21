@@ -95,8 +95,8 @@ var calcConfig = {
 			var pieceHeight = vertical_piece_orienation ? piece.height : piece.width;
 
 			var printableLF = (roll.length / 12) - leadWasteLF;
-			//var printableWidth = fLamWidth ? Math.min(roll.width, fLamWidth) : roll.width;
-			var printableWidth = roll.width ? roll.width : 0;
+			//set printable width as smallest width of all materials
+			var printableWidth = getPrintableWidth(materials);
 			printableWidth = printableWidth - (devMargin *2);
 			var fullRollArea = roll.width * roll.length / 144;
 			var fullRollCost = fullRollArea * subSqFtCost;
@@ -152,6 +152,26 @@ var calcConfig = {
 					window.printConfig = config;
 				}
 			}
+		}
+
+		function getPrintableWidth(materials) {
+			//loop through each of the materials and set printable width equal to smallest number
+			var result;
+			for (mat in materials) {
+				if (materials[mat]) {
+					if (materials[mat].hasOwnProperty('width')) {
+						var matWidth = materials[mat].width;
+						if (matWidth) {
+							if (result === undefined) {
+								result = matWidth;
+							} else if (matWidth < result) {
+								result = matWidth;
+							}
+						}
+					}
+				}
+			}
+			return result
 		}
 
 	}

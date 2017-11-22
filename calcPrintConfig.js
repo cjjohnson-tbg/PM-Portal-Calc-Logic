@@ -37,7 +37,7 @@ var calcConfig = {
 		}
 		rollOptions.push(defaultRoll);
 		//Add in Roll Substrate Options
-		var altRolls = quote.piece.aPrintSubstrate.altRolls;
+		var altRolls = quote.piece.aPrintSubstrate.options;
 		if (altRolls) {
 			for (roll in altRolls) {
 				rollOptions.push(altRolls[roll]);
@@ -96,15 +96,26 @@ var calcConfig = {
 
 			var printableLF = (roll.length / 12) - leadWasteLF;
 			//set printable width as smallest width of all materials
-			var printableWidth = getPrintableWidth(materials);
-			printableWidth = printableWidth - (devMargin *2);
+			var printableWidth = getPrintableDim(materials, 'width', devMargin);
+			config.printableWidth = printableWidth;
+			var printableLen = getPrintableDim(materials, 'length', devMargin);
+			config.printableLen = printableLen;
+
 			var fullRollArea = roll.width * roll.length / 144;
 			var fullRollCost = fullRollArea * subSqFtCost;
 
-			var numAcross = Math.floor( (printableWidth - (devMargin * 2)) / (pieceWidth + (bleed * 2)) );
-			var valid_quote = false;
+			//insert materials to config 
+			for (mat in materials) {
+				if (materials[mat]) {
+					config[mat] = materials[mat];
+				}
+			}
+
+			var numAcross = Math.floor( printableWidth / (pieceWidth + (bleed * 2)) );
+			
+			config.valid_quote = false;
 			if (numAcross > 0) {
-				valid_quote = true;
+				config.valid_quote  = true;
 				numDown = Math.ceil(qty / numAcross);
 				numRolls = Math.ceil( (numDown * (pieceHeight + (bleed * 2))) / (roll.length - (leadWasteLF * 12)) );
 				printLfNeeded = numDown * (pieceHeight + (2 * bleed)) / 12 ;
@@ -117,43 +128,37 @@ var calcConfig = {
 				rollChangeCost = (rollsNeeded - 1) * deviceDefaults.rollChangeMins * deviceDefaults.hourlyRate / 60;
 			}
 
-			config = {
-				'valid' : valid_quote,
-				'roll_printable_LF' : printableLF,
-				'roll_printable_width' : printableWidth,
-				'piece_width_across' : pieceWidth,
-				'piece_width_down' : pieceHeight,
-				'piece_number_across' : numAcross,
-				'piece_number_down' : numDown,
-				'print_LF_needed' : printLfNeeded,
-				'total_rolls' : rollsNeeded,
-				'full_rolls' : fullRolls,
-				'roll_change_cost' : rollChangeCost,
-				'roll_change_mins' : (rollsNeeded - 1) * deviceDefaults.rollChangeMins,
-				'numDown_down_on_last_roll' : numDownLastRoll,
-				'full_rolls_area' : fullRollArea * fullRolls,
-				'full_rolls_cost' : fullRollCost * fullRolls,
-				'last_roll_lf' : lastRollLf,
-				'last_roll_square_feet' : lastRollSqFt,
-				'last_roll_cost' : lastRollSqFt * subSqFtCost,
-				'total_roll_square_feet' : (fullRollArea * fullRolls) + lastRollSqFt,
-				'total_roll_cost' : (fullRolls * fullRollCost) + (lastRollSqFt * subSqFtCost),
-				'total_roll_cost_plus_labor' : (fullRolls * fullRollCost) + (lastRollSqFt * subSqFtCost) + rollChangeCost,
-				'substrate' : roll.name,
-				'substrate_width' : roll.width,
-				'substrate_length' : roll.length,
-				'substrate_pace_id' : roll.paceId ? roll.paceId : null,
-				'materials' : {}
-			}
-			//insert material to config 
-			for (mat in materials) {
-				if (materials[mat]) {
-					config.materials[mat] = materials[mat];
-				}
-			}
+
+
+			config.roll_printable_LF = printableLF;
+			config.roll_printable_width = printableWidth;
+			config.piece_width_across = pieceWidth;
+			config.piece_width_down = pieceHeight;
+			config.piece_number_across = numAcross;
+			config.piece_number_down = numDown;
+			config.print_LF_needed = printLfNeeded;
+			config.total_rolls = rollsNeeded;
+			config.full_rolls = fullRolls;
+			config.roll_change_cost = rollChangeCost;
+			config.roll_change_mins = (rollsNeeded - 1) * deviceDefaults.rollChangeMins;
+			config.numDown_down_on_last_roll = numDownLastRoll;
+			config.full_rolls_area = fullRollArea * fullRolls;
+			config.full_rolls_cost = fullRollCost * fullRolls;
+			config.last_roll_lf = lastRollLf;
+			config.last_roll_square_feet = lastRollSqFt;
+			config.last_roll_cost = lastRollSqFt * subSqFtCost;
+			config.total_roll_square_feet = (fullRollArea * fullRolls) + lastRollSqFt;
+			config.total_roll_cost = (fullRolls * fullRollCost) + (lastRollSqFt * subSqFtCost);
+			config.total_roll_cost_plus_labor = (fullRolls * fullRollCost) + (lastRollSqFt * subSqFtCost) + rollChangeCost;
+			config.substrate = roll.name;
+			config.substrate_width = roll.width;
+			config.substrate_length = roll.length;
+			config.substrate_pace_id = roll.paceId ? roll.paceId : null;
+
+			//Create quote property to hold pricing for each 
 
 			//if total cost is less, reassign to new config
-			if (config.valid) {
+			if (config.valid_quote) {
 				//if first time ran and printConfig has no properties
 				if (Object.keys(printConfig).length == 0) {
 					window.printConfig = config;
@@ -163,37 +168,38 @@ var calcConfig = {
 			}
 		}
 
-		function getPrintableWidth(materials) {
-			//loop through each of the materials and set printable width equal to smallest number
+		function getPrintableDim(materials, dim, margin) {
+			//loop through each of the materials and set printable variable equal to smallest number
 			var result;
 			for (mat in materials) {
 				if (materials[mat]) {
-					if (materials[mat].hasOwnProperty('width')) {
-						var matWidth = materials[mat].width;
-						if (matWidth) {
+					if (materials[mat].hasOwnProperty(dim)) {
+						var matDim = materials[mat][dim];
+						if (matDim) {
 							if (result === undefined) {
-								result = matWidth;
-							} else if (matWidth < result) {
-								result = matWidth;
+								result = matDim;
+							} else if (matDim < result) {
+								result = matDim;
 							}
 						}
 					}
 				}
 			}
-			return result
+			return margin ? (result - (margin *2)) : result
 		}
 	},
+
 	getLamWaste : function(quote) {
 		//pulls calculated lam materials needed from printConfig and compare against Coll calculation
 		var collFrontLamCost = quote.frontLaminatePrice ? quote.frontLaminatePrice : 0;
 		var collBackLamCost = quote.backLaminatePrice ? quote.backLaminatePrice : 0;
 		var ccFrontLamCost = 0;
 		var ccBackLamCost = 0;
-		if (printConfig.materials.frontLam) {
-			ccFrontLamCost = printConfig.materials.frontLam.priceLf * printConfig.print_LF_needed;
+		if (printConfig.frontLam) {
+			ccFrontLamCost = printConfig.frontLam.price * printConfig.lam_lf_with_spoilage;
 		}
-		if (printConfig.materials.backLam) {
-			ccBackLamCost = printConfig.materials.backLam.priceLf * printConfig.print_LF_needed;
+		if (printConfig.backLam) {
+			ccBackLamCost = printConfig.backLam.price * printConfig.lam_lf_with_spoilage;
 		}
 		return ccFrontLamCost + ccBackLamCost - collFrontLamCost - collBackLamCost
 	}

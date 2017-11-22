@@ -278,7 +278,7 @@ var rollCalcLogic = {
                 *************************/
             //NEED TIMER SO DOESN'T RUN ASYNC???
             if (printConfig) {
-                if (printConfig.valid) {
+                if (printConfig.valid_quote) {
                     // Insert Roll Substate waste 
                     printConfig['roll_wastage'] = roundTo(printConfig.total_roll_cost - quote.aPrintSubstratePrice,2);
                     if (fields.operation135_answer) {

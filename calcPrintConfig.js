@@ -64,11 +64,11 @@ var calcConfig = {
 							for (var bAdhesive = 0; bAdhesive < (bAdhesives ? bAdhesives.length : 1); bAdhesive++ ) {
 								var materials = {
 									"roll" : rollOptions[roll],
-									"frontLam" : (frontLams ? frontLams[frontLam] : null),
-									"backLam" : (backLams ? backLams[backLam] : null),
-									"mount" : (mounts ? mounts[mount] : null),
-									"aAdhesive" : (aAdhesives ? aAdhesives[backLam] : null),
-									"bAdhesive" : (bAdhesives ? bAdhesives[backLam] : null)
+									"frontLaminate" : (frontLams ? frontLams[frontLam] : null),
+									"backLaminate" : (backLams ? backLams[backLam] : null),
+									"mountSubstrate" : (mounts ? mounts[mount] : null),
+									"aAdhesiveLaminate" : (aAdhesives ? aAdhesives[backLam] : null),
+									"bAdhesiveLaminate" : (bAdhesives ? bAdhesives[backLam] : null)
 								}
 								setBestPrintConfig(materials);
 							}
@@ -193,8 +193,8 @@ var calcConfig = {
 				cf.frontLamLF = config.fullSignatureLF + config.lastSigLf;
 				cf.totalCost = cf.frontLamLF * cf.price;
 			}
-			if (config.backLam) {
-				var cb = config.backLam;
+			if (config.backLaminate) {
+				var cb = config.backLaminate;
 				if (!cb.price) {
 					cb.price = (quote.backLaminatePrice / totalSquareFeet) * cb.width / 12;
 				}
@@ -237,7 +237,7 @@ var calcConfig = {
 				'aPrintSubstrateCost' : (config.aPrintSubstrate ? config.aPrintSubstrate.totalCost : 0),
 				'bPrintSubstrateCost' : (config.bPrintSubstrate ? config.bPrintSubstrate.totalCost : 0),
 				'frontLaminateCost' : (config.frontLaminate ? config.frontLaminate.totalCost : 0),
-				'backLaminateCost' : (config.backLam ? config.backLam.totalCost : 0),
+				'backLaminateCost' : (config.backLaminate ? config.backLam.totalCost : 0),
 				'mountSubstrateCost' : (config.mountSubstrate ? config.mountSubstrate.totalCost : 0),
 				'aAdhesiveLaminateCost' : (config.aAdhesiveLaminate ? config.aAdhesiveLaminate.totalCost : 0),
 				'bAdhesiveLaminateCost' : (config.bAdhesiveLaminate ? config.bAdhesiveLaminate.totalCost : 0)

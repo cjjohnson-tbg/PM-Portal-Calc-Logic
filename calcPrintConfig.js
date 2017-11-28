@@ -161,7 +161,10 @@ var calcConfig = {
 				//calc roll change
 				cr.rollChangeMins = cr.fullRolls * deviceDefaults.rollChangeMins;
 				cr.rollChangeCost = cr.fullRolls * deviceDefaults.rollChangeMins * deviceDefaults.hourlyRate / 60;
-				
+				//temp check for roll change calc error
+				if (isNaN(cr.rollChangeCost)) {
+					var stop = 1;
+				}
 				cr.totalCost = cr.totalRollMatCost + cr.rollChangeCost;
 
 				//now assign roll calculations to aPrintSusbtrate and bPrintSubstrate, if present
@@ -237,7 +240,7 @@ var calcConfig = {
 				'aPrintSubstrateCost' : (config.aPrintSubstrate ? config.aPrintSubstrate.totalCost : 0),
 				'bPrintSubstrateCost' : (config.bPrintSubstrate ? config.bPrintSubstrate.totalCost : 0),
 				'frontLaminateCost' : (config.frontLaminate ? config.frontLaminate.totalCost : 0),
-				'backLaminateCost' : (config.backLaminate ? config.backLam.totalCost : 0),
+				'backLaminateCost' : (config.backLaminate ? config.backLaminate.totalCost : 0),
 				'mountSubstrateCost' : (config.mountSubstrate ? config.mountSubstrate.totalCost : 0),
 				'aAdhesiveLaminateCost' : (config.aAdhesiveLaminate ? config.aAdhesiveLaminate.totalCost : 0),
 				'bAdhesiveLaminateCost' : (config.bAdhesiveLaminate ? config.bAdhesiveLaminate.totalCost : 0)

@@ -185,8 +185,8 @@ var calcConfig = {
 
 			// Laminates
 			//laminates based on total LF of full signatures plus partial LF 
-			if (config.frontLam) {
-				var cf = config.frontLam;
+			if (config.frontLaminate) {
+				var cf = config.frontLaminate;
 				if (!cf.price) {
 					cf.price = (quote.frontLaminatePrice / totalSquareFeet) * cf.width / 12;
 				}
@@ -204,8 +204,8 @@ var calcConfig = {
 
 			// Mounts
 			// Cost based on full sheets used.  Partials count as 1 full
-			if (config.mount) {
-				var cm = config.mount;
+			if (config.mountSubstrate) {
+				var cm = config.mountSubstrate;
 				if (!cm.price) {
 					cm.price = (quote.mountSubstratePrice / totalSquareFeet) * cm.width * cm.length / 144;
 				}
@@ -215,16 +215,16 @@ var calcConfig = {
 
 			// Adhesives
 			// Cost based on total LF of Signatures
-			if (config.aAdhesive) {
-				var caa = config.aAdhesive;
+			if (config.aAdhesiveLaminate) {
+				var caa = config.aAdhesiveLaminate;
 				if (!caa.price) {
 					caa.price = (quote.aAdhesiveLaminatePrice / totalSquareFeet) + caa.width / 12;
 				}
 				caa.lfNeeded = config.totalSigLF;
 				caa.totalCost = caa.lfNeeded * caa.price;
 			}
-			if (config.bAdhesive) {
-				var cba = config.aAdhesive;
+			if (config.bAdhesiveLaminate) {
+				var cba = config.bAdhesiveLaminate;
 				if (!cba.price) {
 					cba.price = (quote.aAdhesiveLaminatePrice / totalSquareFeet) + cba.width / 12;
 				}
@@ -236,11 +236,11 @@ var calcConfig = {
 			config.quote = {
 				'aPrintSubstrateCost' : (config.aPrintSubstrate ? config.aPrintSubstrate.totalCost : 0),
 				'bPrintSubstrateCost' : (config.bPrintSubstrate ? config.bPrintSubstrate.totalCost : 0),
-				'frontLaminatePrice' : (config.frontLam ? config.frontLam.totalCost : 0),
-				'backLaminatePrice' : (config.backLam ? config.backLam.totalCost : 0),
-				'mountSubstratePrice' : (config.mount ? config.mount.totalCost : 0),
-				'aAdhesiveLaminatePrice' : (config.aAdhesive ? config.aAdhesive.totalCost : 0),
-				'bAdhesiveLaminatePrice' : (config.bAdhesive ? config.bAdhesive.totalCost : 0)
+				'frontLaminateCost' : (config.frontLaminate ? config.frontLaminate.totalCost : 0),
+				'backLaminateCost' : (config.backLam ? config.backLam.totalCost : 0),
+				'mountSubstrateCost' : (config.mountSubstrate ? config.mountSubstrate.totalCost : 0),
+				'aAdhesiveLaminateCost' : (config.aAdhesiveLaminate ? config.aAdhesiveLaminate.totalCost : 0),
+				'bAdhesiveLaminateCost' : (config.bAdhesiveLaminate ? config.bAdhesiveLaminate.totalCost : 0)
 			}
 			//add up all values 
 			config.totalCost = 0;

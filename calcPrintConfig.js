@@ -7,6 +7,10 @@ var calcConfig = {
         }
 		var deviceDefaults = quote.device;
 
+		//declare all configs to capture data for analysis
+		window.allConfigs = [];
+		window.allTotalCost = [];
+
 		//if no device default the break out
 		if (!deviceDefaults.customProperties) {
 			console.log('no device custom properties defined');
@@ -15,7 +19,7 @@ var calcConfig = {
 		var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
 		var piece = quote.piece;
 		var pieceQty = cu.getTotalQuantity();
-		var qty = Math.ceil(pieceQty * (1 + deviceDefaults.attrition));
+		var productionQty = Math.ceil(pieceQty * (1 + deviceDefaults.attrition));
 		
 		var totalSubCost = quote.aPrintSubstratePrice;
 		var totalSquareFeet = quote.piece.totalSquareFeet;
@@ -78,16 +82,19 @@ var calcConfig = {
 			var vertical_piece_orienation = false;
 			getPrintConfig(materials, vertical_piece_orienation);
 
-			//toggle orientation and rerun
-			if (!vertical_piece_orienation) {
-				vertical_piece_orienation = true;
-				getPrintConfig(materials, vertical_piece_orienation);
+			//toggle orientation and rerun if sides different
+			if (piece.width != piece.height) {
+				if (!vertical_piece_orienation) {
+					vertical_piece_orienation = true;
+					getPrintConfig(materials, vertical_piece_orienation);
+				}
 			}
 		}
 
 		function getPrintConfig(materials, vertical_piece_orienation) {
 			var numDown, numRolls, printLfNeeded, numDownPerRoll, rollsNeeded, fullRolls, numDownLastRoll, lastRollLf, lastRollSqFt, rollChangeCost, vertical_piece_orienation;
 			var config = {};
+			config.vertPiece = vertical_piece_orienation;
 
 			var roll = materials.roll;
 
@@ -96,10 +103,8 @@ var calcConfig = {
 
 			var printableLF = (roll.length / 12) - leadWasteLF;
 			//set printable width as smallest width of all materials
-			var printableWidth = getPrintableDim(materials, 'width', devMargin);
-			config.printableWidth = printableWidth;
-			var printableLen = getPrintableDim(materials, 'length', devMargin);
-			config.printableLen = printableLen;
+			config.signatureWidth = getSignatureDim(materials, 'width');
+			config.printableWidth = config.signatureWidth - (2 * devMargin);
 
 			var fullRollArea = roll.width * roll.length / 144;
 			var fullRollCost = fullRollArea * subSqFtCost;
@@ -111,64 +116,154 @@ var calcConfig = {
 				}
 			}
 
-			var numAcross = Math.floor( printableWidth / (pieceWidth + (bleed * 2)) );
+			config.numAcross = Math.floor( config.printableWidth / (pieceWidth + ( (bleed + gutter) * 2)) );
+			config.numDown = Math.ceil(productionQty / config.numAcross);
+			/***
+			  In this context, a Signature (sig) is defined as a sheet of pieces.  If no mount, a signature is defined as 1 row across
+			  Similar to a "sheetOnPress" in Pace vernacular
+			***/
+			//assign nDownSig = 1 and override if mount is selected
+			config.nDownSig = 1;
+			config.signatureLength = pieceHeight + (2 * (bleed + gutter));
+			if (config.mount) {
+				config.signatureLength = getSignatureDim(materials, 'length');
+				config.printableLength = config.signatureLength - (2 * devMargin);
+				config.nDownSig = Math.floor( config.printableLength / (pieceHeight + ( (bleed + gutter) * 2)) );
+			}
+			//production quantity must round up if not equal to # across to fill up 1 full signature
+			config.totalSigs = Math.ceil( Math.max(productionQty,config.numAcross) / (config.numAcross * config.nDownSig) );
+			config.totalSigLF = config.totalSigs * config.signatureLength / 12;
+			config.totalFullSigs = Math.floor( Math.max(productionQty,config.numAcross) / (config.numAcross * config.nDownSig) );
+			config.fullSignatureLF = config.totalFullSigs * config.signatureLength / 12;
 			
-			config.valid_quote = false;
-			if (numAcross > 0) {
-				config.valid_quote  = true;
-				numDown = Math.ceil(qty / numAcross);
-				numRolls = Math.ceil( (numDown * (pieceHeight + (bleed * 2))) / (roll.length - (leadWasteLF * 12)) );
-				printLfNeeded = numDown * (pieceHeight + (2 * bleed)) / 12 ;
-				numDownPerRoll = Math.floor(printableLF / ((pieceHeight + (2 * bleed)) / 12));
-				rollsNeeded = Math.ceil(numDown / numDownPerRoll);
-				fullRolls = Math.floor(numDown / numDownPerRoll);
-				numDownLastRoll = numDown % numDownPerRoll;
-				lastRollLf = numDownLastRoll * (pieceHeight + (2 * bleed)) / 12;
-				lastRollSqFt = (lastRollLf + leadWasteLF) * printableWidth / 12;
-				rollChangeCost = (rollsNeeded - 1) * deviceDefaults.rollChangeMins * deviceDefaults.hourlyRate / 60;
+			config.nDownLastSig =  config.numDown % config.nDownSig;
+			config.lastSigLf = config.nDownLastSig * (pieceHeight + (2 * (bleed + gutter) )) / 12;
+
+			config.valid_quote = (config.numAcross > 0 && config.nDownSig > 0) ? true : false;
+
+			/***** 
+			  calculate materials usage based on signature 
+			******/
+			// Substrate
+			if (config.roll) {
+				var cr = config.roll;
+				if (!cr.price) {
+					cr.price = subSqFtCost * cr.width / 12;
+				}
+				cr.printableRollWidth = cr.length - (leadWasteLF * 12);
+				cr.sigsPerRoll = Math.ceil(cr.printableRollWidth / config.signatureLength);
+				cr.rollsNeeded = Math.ceil(config.totalSigs / cr.sigsPerRoll);
+				cr.fullRolls = cr.rollsNeeded - 1;
+				cr.sigsOnLastRoll = Math.ceil(config.totalSigs) % cr.sigsPerRoll
+				cr.lastRollLf = (cr.sigsOnLastRoll * config.signatureLength) / 12 + leadWasteLF;
+				cr.totalRollMatCost = (cr.fullRolls * (cr.length / 12) + cr.lastRollLf) * cr.price;
+
+				//calc roll change
+				cr.rollChangeMins = cr.fullRolls * deviceDefaults.rollChangeMins;
+				cr.rollChangeCost = cr.fullRolls * deviceDefaults.rollChangeMins * deviceDefaults.hourlyRate / 60;
+				
+				cr.totalCost = cr.totalRollMatCost + cr.rollChangeCost;
+
+				//now assign roll calculations to aPrintSusbtrate and bPrintSubstrate, if present
+				if (quote.piece.aPrintSubstrate) {
+					config.aPrintSubstrate = {};
+					var ca = config.aPrintSubstrate;
+					//assign all properties of Roll to aPrintSubstrate
+					for (prop in config.roll) {
+						config.aPrintSubstrate[prop] = config.roll[prop];
+					}
+				}
+				if (quote.piece.bPrintSubstrate) {
+					config.bPrintSubstrate = {};
+					var cb = config.bPrintSubstrate;
+					//assign all properties of Roll to aPrintSubstrate
+					for (prop in config.roll) {
+						config.bPrintSubstrate[prop] = config.roll[prop];
+					}
+				}
 			}
 
+			// Laminates
+			//laminates based on total LF of full signatures plus partial LF 
+			if (config.frontLam) {
+				var cf = config.frontLam;
+				if (!cf.price) {
+					cf.price = (quote.frontLaminatePrice / totalSquareFeet) * cf.width / 12;
+				}
+				cf.frontLamLF = config.fullSignatureLF + config.lastSigLf;
+				cf.totalCost = cf.frontLamLF * cf.price;
+			}
+			if (config.backLam) {
+				var cb = config.backLam;
+				if (!cb.price) {
+					cb.price = (quote.backLaminatePrice / totalSquareFeet) * cb.width / 12;
+				}
+				cb.backLamLF = (config.fullSignatureLF + config.lastSigLf);
+				cb.totalCost = cb.backLamLF * cb.price;
+			}
 
+			// Mounts
+			// Cost based on full sheets used.  Partials count as 1 full
+			if (config.mount) {
+				var cm = config.mount;
+				if (!cm.price) {
+					cm.price = (quote.mountSubstratePrice / totalSquareFeet) * cm.width * cm.length / 144;
+				}
+				cm.totalMountSubstrates = config.totalSigs;
+				cm.totalCost = cm.totalMountSubstrates * cm.price;
+			}
 
-			config.roll_printable_LF = printableLF;
-			config.roll_printable_width = printableWidth;
-			config.piece_width_across = pieceWidth;
-			config.piece_width_down = pieceHeight;
-			config.piece_number_across = numAcross;
-			config.piece_number_down = numDown;
-			config.print_LF_needed = printLfNeeded;
-			config.total_rolls = rollsNeeded;
-			config.full_rolls = fullRolls;
-			config.roll_change_cost = rollChangeCost;
-			config.roll_change_mins = (rollsNeeded - 1) * deviceDefaults.rollChangeMins;
-			config.numDown_down_on_last_roll = numDownLastRoll;
-			config.full_rolls_area = fullRollArea * fullRolls;
-			config.full_rolls_cost = fullRollCost * fullRolls;
-			config.last_roll_lf = lastRollLf;
-			config.last_roll_square_feet = lastRollSqFt;
-			config.last_roll_cost = lastRollSqFt * subSqFtCost;
-			config.total_roll_square_feet = (fullRollArea * fullRolls) + lastRollSqFt;
-			config.total_roll_cost = (fullRolls * fullRollCost) + (lastRollSqFt * subSqFtCost);
-			config.total_roll_cost_plus_labor = (fullRolls * fullRollCost) + (lastRollSqFt * subSqFtCost) + rollChangeCost;
-			config.substrate = roll.name;
-			config.substrate_width = roll.width;
-			config.substrate_length = roll.length;
-			config.substrate_pace_id = roll.paceId ? roll.paceId : null;
+			// Adhesives
+			// Cost based on total LF of Signatures
+			if (config.aAdhesive) {
+				var caa = config.aAdhesive;
+				if (!caa.price) {
+					caa.price = (quote.aAdhesiveLaminatePrice / totalSquareFeet) + caa.width / 12;
+				}
+				caa.lfNeeded = config.totalSigLF;
+				caa.totalCost = caa.lfNeeded * caa.price;
+			}
+			if (config.bAdhesive) {
+				var cba = config.aAdhesive;
+				if (!cba.price) {
+					cba.price = (quote.aAdhesiveLaminatePrice / totalSquareFeet) + cba.width / 12;
+				}
+				cba.lfNeeded = config.totalSigLF;
+				cba.totalCost = cba.lfNeeded * cba.price;
+			}
 
-			//Create quote property to hold pricing for each 
+			//Combine all costs into a single quote area
+			config.quote = {
+				'aPrintSubstrateCost' : (config.aPrintSubstrate ? config.aPrintSubstrate.totalCost : 0),
+				'bPrintSubstrateCost' : (config.bPrintSubstrate ? config.bPrintSubstrate.totalCost : 0),
+				'frontLaminatePrice' : (config.frontLam ? config.frontLam.totalCost : 0),
+				'backLaminatePrice' : (config.backLam ? config.backLam.totalCost : 0),
+				'mountSubstratePrice' : (config.mount ? config.mount.totalCost : 0),
+				'aAdhesiveLaminatePrice' : (config.aAdhesive ? config.aAdhesive.totalCost : 0),
+				'bAdhesiveLaminatePrice' : (config.bAdhesive ? config.bAdhesive.totalCost : 0)
+			}
+			//add up all values 
+			config.totalCost = 0;
+			for (prop in config.quote) {
+				config.totalCost += config.quote[prop]
+			}
+			config.totalCost = Math.round(config.totalCost * 100) / 100;
 
+			//push config to all configs for review
+			window.allConfigs.push(config);
+			window.allTotalCost.push(config.totalCost);
 			//if total cost is less, reassign to new config
 			if (config.valid_quote) {
 				//if first time ran and printConfig has no properties
 				if (Object.keys(printConfig).length == 0) {
 					window.printConfig = config;
-				} else if (config.total_roll_cost_plus_labor < printConfig.total_roll_cost_plus_labor) {
+				} else if (config.totalCost < printConfig.totalCost) {
 					window.printConfig = config;
 				}
 			}
 		}
 
-		function getPrintableDim(materials, dim, margin) {
+		function getSignatureDim(materials, dim) {
 			//loop through each of the materials and set printable variable equal to smallest number
 			var result;
 			for (mat in materials) {
@@ -185,7 +280,7 @@ var calcConfig = {
 					}
 				}
 			}
-			return margin ? (result - (margin *2)) : result
+			return result
 		}
 	},
 

@@ -279,52 +279,108 @@ var rollCalcLogic = {
             //NEED TIMER SO DOESN'T RUN ASYNC???
             if (printConfig) {
                 if (printConfig.valid_quote) {
-                    // Insert Roll Substate waste 
-                    printConfig['roll_wastage'] = roundTo(printConfig.total_roll_cost - quote.aPrintSubstratePrice,2);
-                    if (fields.operation135_answer) {
-                        if (cu.getValue(fields.operation135_answer) != printConfig.roll_wastage) {
-                            $('#optimum-substrate input').val(printConfig.substrate);
-                            $('#optimum-substrate-id input').val(printConfig.substrate_pace_id);
-                            cu.changeField(fields.operation135_answer,printConfig.roll_wastage,true);
+                    // Roll Substrate Waste
+                    if (printConfig.aPrintSubstrate || printConfig.bPrintSubstrate) {
+                        var waste = 0;
+                        if (printConfig.aPrintSubstrate) {
+                            waste += printConfig.aPrintSubstrate.totalCost - quote.aPrintSubstratePrice;
                         }
-                    }
-                    //If Laminate, insert lam wastage amount
-                    var lamWasteOp = fields.operation177;
-                    var lamWasteOpAnswer = fields.operation177_answer;
-                    if (lamWasteOp) {
-                        var lamWaste = cc.getLamWaste(quote);
-                        if (lamWaste > 0) {
-                            if (!cu.hasValue(lamWasteOp)) {
-                                cu.changeField(lamWasteOp, 759, true)
-                                return
+                        if (printConfig.bPrintSubstrate) {
+                            waste += printConfig.bPrintSubstrate.totalCost - quote.bPrintSubstratePrice;
+                        }
+                        waste = roundTo(waste,2);
+                        if (!isNaN(waste)) {
+                            if (fields.operation135_answer) {
+                                if (cu.getValue(fields.operation135_answer) != waste) {
+                                    $('#optimum-substrate input').val(printConfig.substrate);
+                                    $('#optimum-substrate-id input').val(printConfig.substrate_pace_id);
+                                    cu.changeField(fields.operation135_answer,waste,true);
+                                }
                             }
-                            if (lamWasteOpAnswer) {
-                                if (cu.getValue(lamWasteOpAnswer) != lamWaste) {
-                                    cu.changeField(lamWasteOpAnswer, lamWaste, true)
+                        }
+                    } else if (cu.getValue(fields.operation135_answer) > 0) {
+                        cu.changeField(fields.operation135_answer, 0, true);
+                    }
+                    //Laminates
+                    if (printConfig.frontLaminate || printConfig.backLaminate) {
+                        var waste = 0;
+                        if (printConfig.frontLaminate) {
+                            waste += roundTo(printConfig.frontLaminate.totalCost - quote.frontLaminatePrice,2);
+                        }
+                        if (printConfig.backLaminate) {
+                            waste += roundTo(printConfig.backLaminate.totalCost - quote.backLaminatePrice,2);
+                        }
+                        waste = roundTo(waste,2);
+                        if (!isNaN(waste)) {
+                            if (fields.operation177_answer) {
+                                if (cu.getValue(fields.operation177_answer) != waste) {
+                                    cu.changeField(fields.operation177_answer, waste, true)
                                     return
                                 }
                             }
                         }
+                    } else if (cu.getValue(fields.operation177_answer) != 0) {
+                        cu.changeField(fields.operation177_answer, 0, true)
+                        return
+                    } 
+                    //Mount
+                    if (printConfig.mountSubstrate) {
+                        var waste = 0;
+                        if (printConfig.mountSubstrate) {
+                            waste += printConfig.mountSubstrate.totalCost - quote.mountSubstratePrice;
+                        }
+                        waste = roundTo(waste,2);
+                        if (!isNaN(waste)) {
+                            if (fields.operation178_answer) {
+                                if (cu.getValue(fields.operation178_answer) != waste) {
+                                    cu.changeField(fields.operation178_answer, waste, true)
+                                    return
+                                }
+                            }
+                        }
+                    } else if (cu.getValue(fields.operation178_answer) != 0) {
+                        cu.changeField(fields.operation178_answer, 0, true)
+                        return
+                    } 
+                    //Adhesive Laminates
+                    if (printConfig.aAdhesiveLaminate || printConfig.bAdhesiveLaminate) {
+                        var waste = 0;
+                        if (printConfig.aAdhesiveLaminate) {
+                            waste += printConfig.aAdhesiveLaminate.totalCost - quote.aAdhesiveLaminatePrice;
+                        }
+                        if (printConfig.bAdhesiveLaminate) {
+                            waste += printConfig.bAdhesiveLaminate.totalCost - quote.bAdhesiveLaminatePrice;
+                        }
+                        waste = roundTo(waste,2);
+                        if (!isNaN(waste)) {
+                            if (fields.operation179_answer) {
+                                if (cu.getValue(fields.operation179_answer) != waste) {
+                                    cu.changeField(fields.operation179_answer, waste, true)
+                                    return
+                                }
+                            }
+                        }
+                    } else if (cu.getValue(fields.operation179_answer) != 0) {
+                        cu.changeField(fields.operation179_answer, 0, true)
+                        return
                     }
+                    //Roll Change Minutes
                     var rollChangeOp = fields.operation138;
                     var rollChangeOpAnswer = fields.operation138_answer;
-                    var rollChangeMins = printConfig.roll_change_mins;
+                    var rollChangeMins = 0;
+                    if (printConfig.aPrintSubstrate) {
+                        rollChangeMins += printConfig.aPrintSubstrate.rollChangeMins;
+                    }
+                    if (printConfig.bPrintSubstrate) {
+                        rollChangeMins += printConfig.bPrintSubstrate.rollChangeMins;
+                    } 
                     if (rollChangeOp) {
-                        if (printConfig.roll_change_mins > 0) {
-                            if (!cu.hasValue(rollChangeOp)) {
-                                cu.changeField(rollChangeOp, 682, true);
-                                return
-                            }
+                        if (!isNaN(rollChangeMins)) {
                             if (rollChangeOpAnswer) {
                                 if (cu.getValue(rollChangeOpAnswer) != rollChangeMins) {
                                     cu.changeField(rollChangeOpAnswer, rollChangeMins, true);
                                     return
                                 }
-                            }
-                        } else {
-                            if (cu.hasValue(rollChangeOp)) {
-                                cu.changeField(rollChangeOp,'',true);
-                                return
                             }
                         }
                     }
@@ -1246,7 +1302,7 @@ function roundTo(n, digits) {
     if (digits === undefined) {
         digits = 0;
     }
-        if( n < 0) {
+    if( n < 0) {
         negative = true;
       n = n * -1;
     }

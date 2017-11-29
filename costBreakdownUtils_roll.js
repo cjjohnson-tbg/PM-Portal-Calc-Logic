@@ -236,7 +236,7 @@ function renderExtendedCostBreakdown () {
                 if (pc.valid_quote) {
                     //loop through each printConfig property to check if xCost is in pc.quote and create materials, else push into general config table
                     var $configContainer = $('<div><h5>General Roll Configuration</h5></div>');
-                    var $matConfigContainer = $('<div><h5>General Roll Configuration</h5></div>');
+                    var $matConfigContainer = $('<div><h5>Material Details</h5></div>');
                     var $configTable = $('<table class="debug-table"><tr><th>Property</th><th>Value</th></tr></table>');
                     var configRows = '';
                     for (mat in pc) {

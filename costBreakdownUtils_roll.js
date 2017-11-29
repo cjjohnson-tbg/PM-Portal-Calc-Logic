@@ -130,11 +130,15 @@ function renderExtendedCostBreakdown () {
         var $costAndMarginTable;
         var $estimateDetailsTable;
         var $printSpecificationsTable;
+        var $printConfigs;
+        var $configTable;
+        var $materialsConfigTable;
         
         addOperationsData();
         buildCostAndMarginTable();
         buildEstimateDetailTable();
         buildPrintSpecificationsTable();
+        buildPrintConfigurationTable();
         updateUI();
 
         return;
@@ -224,6 +228,49 @@ function renderExtendedCostBreakdown () {
             $printSpecificationsTable = $wrapper;
         }
 
+        function buildPrintConfigurationTable() {
+            var $wrapper = $('<div class="print-material-configuration"><h4>Print Material Configuration Details</h4></div>');
+            
+            if (window.printConfig) {
+                var pc = window.printConfig;
+                if (pc.valid_quote) {
+                    //loop through each printConfig property to check if xCost is in pc.quote and create materials, else push into general config table
+                    var $configContainer = $('<div><h5>General Roll Configuration</h5></div>');
+                    var $matConfigContainer = $('<div><h5>General Roll Configuration</h5></div>');
+                    var $configTable = $('<table class="debug-table"><tr><th>Property</th><th>Value</th></tr></table>');
+                    var configRows = '';
+                    for (mat in pc) {
+                        var costProp = mat + 'Cost';
+                        if (pc.quote[costProp]) {
+                            var $tableContainer = $('<div><h6>' + mat + '</h6></div>');
+                            var $table = $('<table class="debug-table print-specifications-table"><tr><th class="cell-property">Property</th><th class="cell-property-value">Item</th></tr></table>');
+                            var rows = '';
+                            var matDetail = pc[mat];
+                            for (prop in matDetail) {
+                                if (matDetail[prop]) {
+                                    rows += '<tr><td class="cell-property">' + prop + '</td><td class="cell-property-value">' +roundTo(matDetail[prop],2) + '</td></tr>';
+                                }
+                            }
+                            $table.append(rows);
+                            $tableContainer.append($table);
+                            $matConfigContainer.append($tableContainer);
+                        } else {
+                            // if not material, push into config table
+                            if (typeof pc[mat] != 'object') {
+                                configRows += '<tr><td class="cell-property">' + mat + '</td><td class="cell-property-value">' + roundTo(pc[mat],2) + '</td></tr>';
+                            }
+                        }
+                    }
+                    $configTable.append(configRows);
+                    $configContainer.append($configTable);
+                    $wrapper.append($configContainer);
+                    $wrapper.append($matConfigContainer);
+                }
+            }
+
+            $printConfigs = $wrapper;
+        }
+
         function updateUI () {
             var $container = $('#calculator').length ? $('#calculator') : $('#lfCalculator');
 
@@ -239,13 +286,16 @@ function renderExtendedCostBreakdown () {
                 $container.after($ps);
             } else {
                 $ps.empty();
-            } 
+            }
 
             $el.append($costAndMarginTable);
             $el.append($estimateDetailsTable);
+            $el.append($printConfigs);
             $container.after($el);
             $('body').append($ps);
             $ps.append($printSpecificationsTable);
+
+            
         }
 
         function isLargeFormat () {
@@ -254,6 +304,33 @@ function renderExtendedCostBreakdown () {
 
         function getLargeOrSmallFormatOperationChoices () {
             return configureglobals.coperationsmgr ? configureglobals.coperationsmgr.operations : configureglobals.coperationdata.list;
+        }
+
+        function roundTo(n, digits) {
+            if (isNaN(n)) {
+                return n
+            }
+            if (typeof n === 'boolean') {
+                return n
+            }
+            if (n % 1 === 0) {
+                return n
+            }
+            var negative = false;
+            if (digits === undefined) {
+                digits = 0;
+            }
+            if( n < 0) {
+                negative = true;
+              n = n * -1;
+            }
+            var multiplicator = Math.pow(10, digits);
+            n = parseFloat((n * multiplicator).toFixed(11));
+            n = (Math.round(n) / multiplicator).toFixed(2);
+            if( negative ) {    
+                n = (n * -1).toFixed(2);
+            }
+            return n;
         }
 
     }

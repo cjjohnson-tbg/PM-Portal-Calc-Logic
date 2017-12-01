@@ -69,7 +69,7 @@ function renderExtendedCostBreakdown () {
             item: quote.piece.aPrintSubstrate.productionName ? quote.piece.aPrintSubstrate.productionName : null,
             item: quote.piece.aPrintSubstrate ? quote.piece.aPrintSubstrate.productionName : null,
             cost_basis: '',
-            description: printConfig ? 'OPTIMUM ROLL ' + printConfig.substrate : quote.piece.aPrintSubstrate.referenceId ? quote.piece.aPrintSubstrate.referenceId : null,
+            description: printConfig ? printConfig.aPrintSubstrate ? 'OPTIMUM ROLL ' + printConfig.aPrintSubstrate.name : quote.piece.aPrintSubstrate.referenceId  : null,
             shouldDisplay: quote.piece.aPrintSubstrate ? true : false,
             costingOnly: false
         },
@@ -236,6 +236,20 @@ function renderExtendedCostBreakdown () {
                 if (pc.valid_quote) {
                     //loop through each printConfig property to check if xCost is in pc.quote and create materials, else push into general config table
                     var $configContainer = $('<div><h5>General Roll Configuration</h5></div>');
+                    var $deviceContainer = $('<div><h6>Device Configuration</h6></div>');
+                    var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
+                    if (quote.device) {
+                        if (quote.device.customProperties) {
+                            var $table = $('<table class="debug-table print-specifications-table"><tr><th class="cell-property">Property</th><th class="cell-property-value">Item</th></tr></table>');
+                            var rows = '';
+                            var devProp = quote.device.customProperties;
+                            for (prop in devProp) {
+                                rows += '<tr><td class="cell-property">' + prop + '</td><td class="cell-property-value">' +devProp[prop] + '</td></tr>';
+                            }
+                            $table.append(rows);
+                            $deviceContainer.append($table);
+                        }
+                    }
                     var $matConfigContainer = $('<div><h5>Material Details</h5></div>');
                     var $configTable = $('<table class="debug-table"><tr><th>Property</th><th>Value</th></tr></table>');
                     var configRows = '';
@@ -263,6 +277,7 @@ function renderExtendedCostBreakdown () {
                     }
                     $configTable.append(configRows);
                     $configContainer.append($configTable);
+                    $configContainer.append($deviceContainer);
                     $wrapper.append($configContainer);
                     $wrapper.append($matConfigContainer);
                 }

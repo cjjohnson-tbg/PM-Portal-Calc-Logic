@@ -92,7 +92,7 @@ var calcConfig = {
 		}
 
 		function getPrintConfig(materials, vertical_piece_orienation) {
-			var numDown, numRolls, printLfNeeded, numDownPerRoll, rollsNeeded, fullRolls, numDownLastRoll, lastRollLf, lastRollSqFt, rollChangeCost, vertical_piece_orienation;
+			var nDownTotal, numRolls, printLfNeeded, nDownTotalPerRoll, rollsNeeded, fullRolls, nDownTotalLastRoll, lastRollLf, lastRollSqFt, rollChangeCost, vertical_piece_orienation;
 			var config = {};
 			config.vertPiece = vertical_piece_orienation;
 
@@ -100,14 +100,22 @@ var calcConfig = {
 
 			var pieceWidth = vertical_piece_orienation ? piece.width : piece.height;
 			var pieceHeight = vertical_piece_orienation ? piece.height : piece.width;
+			
+			config.productionQty = productionQty;
 
-			var printableLF = (roll.length / 12) - leadWasteLF;
 			//set printable width as smallest width of all materials
-			config.signatureWidth = getSignatureDim(materials, 'width');
-			config.printableWidth = config.signatureWidth - (2 * devMargin);
+			config.formWidth = getSignatureDim(materials, 'width');
+			config.printableWidth = config.formWidth - (2 * devMargin);
 
-			var fullRollArea = roll.width * roll.length / 144;
-			var fullRollCost = fullRollArea * subSqFtCost;
+			//special Exception, if 126" roll form Length = 200, else 120 or min set by subsrate
+			config.formLength = roll.width == 126 ? Math.max(pieceHeight, 200) : Math.max(pieceHeight, 120);
+			//if limited by substrates, update formLength
+			var minMatLength = getSignatureDim(materials, 'length');
+			if (config.formLength > minMatLength) {
+				config.formLength = minMatLength;
+			}
+
+			config.printableLength = config.formLength - (2 * devMargin);
 
 			//insert materials to config 
 			for (mat in materials) {
@@ -116,30 +124,22 @@ var calcConfig = {
 				}
 			}
 
-			config.numAcross = Math.floor( config.printableWidth / (pieceWidth + ( (bleed + gutter) * 2)) );
-			config.numDown = Math.ceil(productionQty / config.numAcross);
-			/***
-			  In this context, a Signature (sig) is defined as a sheet of pieces.  If no mount, a signature is defined as 1 row across
-			  Similar to a "sheetOnPress" in Pace vernacular
-			***/
-			//assign nDownSig = 1 and override if mount is selected
-			config.nDownSig = 1;
-			config.signatureLength = pieceHeight + (2 * (bleed + gutter));
-			if (config.mount) {
-				config.signatureLength = getSignatureDim(materials, 'length');
-				config.printableLength = config.signatureLength - (2 * devMargin);
-				config.nDownSig = Math.floor( config.printableLength / (pieceHeight + ( (bleed + gutter) * 2)) );
-			}
-			//production quantity must round up if not equal to # across to fill up 1 full signature
-			config.totalSigs = Math.ceil( Math.max(productionQty,config.numAcross) / (config.numAcross * config.nDownSig) );
-			config.totalSigLF = config.totalSigs * config.signatureLength / 12;
-			config.totalFullSigs = Math.floor( Math.max(productionQty,config.numAcross) / (config.numAcross * config.nDownSig) );
-			config.fullSignatureLF = config.totalFullSigs * config.signatureLength / 12;
-			
-			config.nDownLastSig =  config.numDown % config.nDownSig;
-			config.lastSigLf = config.nDownLastSig * (pieceHeight + (2 * (bleed + gutter) )) / 12;
+			config.nAcrossForm = Math.floor( config.printableWidth / (pieceWidth + ( (bleed + gutter) * 2)) );
+			config.nDownForm = Math.floor( config.printableLength / (pieceHeight + ( (bleed + gutter) * 2)) );
+			config.nUpPerForm = config.nAcrossForm * config.nDownForm;
 
-			config.valid_quote = (config.numAcross > 0 && config.nDownSig > 0) ? true : false;
+			config.nDownTotal = Math.ceil(productionQty / config.nAcrossForm);
+
+
+			//production quantity must round up if not equal to # across to fill up 1 full signature
+			config.totalForms = Math.ceil( config.productionQty / config.nUpPerForm );
+			config.totalFormLF = config.totalForms * config.formLength / 12;
+			config.totalFullForms = Math.floor( config.productionQty / config.nUpPerForm );
+			
+			config.nDownLastForm =  config.nDownTotal % config.nDownForm;
+			config.lastPartialFormLF = config.nDownLastForm * (pieceHeight + (2 * (bleed + gutter) )) / 12;
+
+			config.valid_quote = (config.nAcrossForm > 0 && config.nDownForm > 0) ? true : false;
 
 			/***** 
 			  calculate materials usage based on signature 
@@ -150,13 +150,17 @@ var calcConfig = {
 				if (!cr.price) {
 					cr.price = subSqFtCost * cr.width / 12;
 				}
-				cr.printableRollWidth = cr.length - (leadWasteLF * 12);
-				cr.sigsPerRoll = Math.ceil(cr.printableRollWidth / config.signatureLength);
-				cr.rollsNeeded = Math.ceil(config.totalSigs / cr.sigsPerRoll);
-				cr.fullRolls = cr.rollsNeeded - 1;
-				cr.sigsOnLastRoll = Math.ceil(config.totalSigs) % cr.sigsPerRoll
-				cr.lastRollLf = (cr.sigsOnLastRoll * config.signatureLength) / 12 + leadWasteLF;
-				cr.totalRollMatCost = (cr.fullRolls * (cr.length / 12) + cr.lastRollLf) * cr.price;
+				cr.leadWasteLF = leadWasteLF;
+				cr.printableRollLen = cr.length - (leadWasteLF * 12);
+				cr.formsPerRoll = Math.floor(cr.printableRollLen / config.formLength);
+				cr.fullRolls = Math.floor(config.totalForms / cr.formsPerRoll);
+
+				cr.formsOnLastRoll = config.totalForms % cr.formsPerRoll;
+				cr.fullFormsOnLastRoll = config.totalFullForms % cr.formsPerRoll;
+				cr.lastPartialFormLF = config.lastPartialFormLF;
+				cr.lastRollLf = leadWasteLF + (cr.fullFormsOnLastRoll * config.formLength) / 12 + cr.lastPartialFormLF;
+				cr.totalRollLF = cr.fullRolls * (cr.length / 12) + cr.lastRollLf;
+				cr.totalRollMatCost = cr.totalRollLF * cr.price;
 
 				//calc roll change
 				cr.rollChangeMins = cr.fullRolls * deviceDefaults.rollChangeMins;
@@ -193,7 +197,7 @@ var calcConfig = {
 				if (!cf.price) {
 					cf.price = (quote.frontLaminatePrice / totalSquareFeet) * cf.width / 12;
 				}
-				cf.frontLamLF = config.fullSignatureLF + config.lastSigLf;
+				cf.frontLamLF = config.formLength + config.lastPartialFormLF;
 				cf.totalCost = cf.frontLamLF * cf.price;
 			}
 			if (config.backLaminate) {
@@ -201,7 +205,7 @@ var calcConfig = {
 				if (!cb.price) {
 					cb.price = (quote.backLaminatePrice / totalSquareFeet) * cb.width / 12;
 				}
-				cb.backLamLF = (config.fullSignatureLF + config.lastSigLf);
+				cb.backLamLF = (config.formLength + config.lastPartialFormLF);
 				cb.totalCost = cb.backLamLF * cb.price;
 			}
 
@@ -212,7 +216,7 @@ var calcConfig = {
 				if (!cm.price) {
 					cm.price = (quote.mountSubstratePrice / totalSquareFeet) * cm.width * cm.length / 144;
 				}
-				cm.totalMountSubstrates = config.totalSigs;
+				cm.totalMountSubstrates = config.totalForms;
 				cm.totalCost = cm.totalMountSubstrates * cm.price;
 			}
 
@@ -223,7 +227,7 @@ var calcConfig = {
 				if (!caa.price) {
 					caa.price = (quote.aAdhesiveLaminatePrice / totalSquareFeet) + caa.width / 12;
 				}
-				caa.lfNeeded = config.totalSigLF;
+				caa.lfNeeded = config.totalFormLF;
 				caa.totalCost = caa.lfNeeded * caa.price;
 			}
 			if (config.bAdhesiveLaminate) {
@@ -231,7 +235,7 @@ var calcConfig = {
 				if (!cba.price) {
 					cba.price = (quote.aAdhesiveLaminatePrice / totalSquareFeet) + cba.width / 12;
 				}
-				cba.lfNeeded = config.totalSigLF;
+				cba.lfNeeded = config.totalFormLF;
 				cba.totalCost = cba.lfNeeded * cba.price;
 			}
 

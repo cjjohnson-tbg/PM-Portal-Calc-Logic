@@ -16,7 +16,8 @@ var metaFieldsActions = {
             ['Pace Estimate','paceEstimate'],
             ['Color Critical', 'colorCritical'],
             ['Hard Proof', 'hardProof'],
-            ['Kitting Code','kittingCode']
+            ['Kitting Code','kittingCode'],
+            ['Shipping Due Date','shipDate']
         ]
         $.each(metaFieldClass , function (i, val) {
             $('#additionalProductFields .additionalInformation div label:contains("' + val[0] + '")').parent().addClass(val[1]);

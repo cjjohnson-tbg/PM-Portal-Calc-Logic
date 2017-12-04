@@ -9,6 +9,7 @@ var metaFieldsActions = {
             ['Buy-out', 'buyout'],
             ['Date Due to Fab', 'fabDate'],
             ['Date Due in Kitting', 'kitDate'],
+            ['Finishing Due Date', 'finishingDate'],
             ['Soft Proof Date', 'softProofDate'],
             ['Sub-out Date', 'subOutDate'],
             ['SKU', 'sku'],

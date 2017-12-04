@@ -202,38 +202,46 @@ var bucketCalcLogic = {
             var topInchDecreaserAnswer = fields.operation123_answer;
 
             //Increase Operation Pieces to square inch with bleed
-            var pieceSqInch = (parseFloat(pieceWidth) + .5) * (parseFloat(pieceHeight) + .5);
-            pieceSqInch = parseInt(pieceSqInch);
-            if (cu.getValue(SqInchIncreaserAnswer) != pieceSqInch) {
-                cu.changeField(SqInchIncreaserAnswer, pieceSqInch, true);
-                return
+            if (SqInchIncreaserAnswer && SqInchDecreaserAnswer) {
+                var pieceSqInch = (parseFloat(pieceWidth) + .5) * (parseFloat(pieceHeight) + .5);
+                pieceSqInch = parseInt(pieceSqInch);
+                if (cu.getValue(SqInchIncreaserAnswer) != pieceSqInch) {
+                    cu.changeField(SqInchIncreaserAnswer, pieceSqInch, true);
+                    return
+                }
+                if (cu.getValue(SqInchDecreaserAnswer) != pieceSqInch) {
+                    cu.changeField(SqInchDecreaserAnswer, pieceSqInch, true);
+                    return
+                }
             }
-            if (cu.getValue(SqInchDecreaserAnswer) != pieceSqInch) {
-                cu.changeField(SqInchDecreaserAnswer, pieceSqInch, true);
-                return
-            }
+                
             //Increase Operation Pieces to linear inch
-            var pieceLinInch = (2 * (pieceWidth) + 2 * (pieceHeight));
-            pieceLinInch = parseInt(pieceLinInch);
-            if (cu.getValue(LinInchIncreaserAnswer) != pieceLinInch) {
-                cu.changeField(LinInchIncreaserAnswer, pieceLinInch, true);
-                return
+            if (LinInchIncreaserAnswer && LinInchDecreaserAnswer) {
+                var pieceLinInch = (2 * (pieceWidth) + 2 * (pieceHeight));
+                pieceLinInch = parseInt(pieceLinInch);
+                if (cu.getValue(LinInchIncreaserAnswer) != pieceLinInch) {
+                    cu.changeField(LinInchIncreaserAnswer, pieceLinInch, true);
+                    return
+                }
+                if (cu.getValue(LinInchDecreaserAnswer) != pieceLinInch) {
+                    cu.changeField(LinInchDecreaserAnswer, pieceLinInch, true);
+                    return
+                }
             }
-            if (cu.getValue(LinInchDecreaserAnswer) != pieceLinInch) {
-                cu.changeField(LinInchDecreaserAnswer, pieceLinInch, true);
-                return
-            }
+                
             //Increase Operation Pieces to Top Side Linear Inch
             var topLinInch = pieceWidth;
             topLinInch = parseInt(topLinInch);
-            if (cu.getValue(topInchIncreaserAnswer) != topLinInch) {
-                cu.changeField(topInchIncreaserAnswer, topLinInch, true);
-                return
-            }
-            if (cu.getValue(topInchDecreaserAnswer) != topLinInch) {
-                cu.changeField(topInchDecreaserAnswer, topLinInch, true);
-                return
-            }
+            if (topInchIncreaserAnswer && topInchDecreaserAnswer) {
+                if (cu.getValue(topInchIncreaserAnswer) != topLinInch) {
+                    cu.changeField(topInchIncreaserAnswer, topLinInch, true);
+                    return
+                }
+                if (cu.getValue(topInchDecreaserAnswer) != topLinInch) {
+                    cu.changeField(topInchDecreaserAnswer, topLinInch, true);
+                    return
+                }
+            } 
             /********* Align Ink to Color in Operations */
             var sideOneInk = cu.getValue(fields.printingS1);
             var sideTwoInk = cu.getValue(fields.printingS2);

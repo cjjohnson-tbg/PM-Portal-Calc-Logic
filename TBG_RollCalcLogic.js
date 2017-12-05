@@ -312,15 +312,15 @@ var rollCalcLogic = {
                         }
                         waste = roundTo(waste,2);
                         if (!isNaN(waste)) {
-                            if (fields.operation177_answer) {
-                                if (cu.getValue(fields.operation177_answer) != waste) {
-                                    cu.changeField(fields.operation177_answer, waste, true)
+                            if (fields.operation146_answer) {
+                                if (cu.getValue(fields.operation146_answer) != waste) {
+                                    cu.changeField(fields.operation146_answer, waste, true)
                                     return
                                 }
                             }
                         }
-                    } else if (cu.getValue(fields.operation177_answer) != 0) {
-                        cu.changeField(fields.operation177_answer, 0, true)
+                    } else if (cu.getValue(fields.operation146_answer) != 0) {
+                        cu.changeField(fields.operation146_answer, 0, true)
                         return
                     } 
                     //Mount
@@ -331,15 +331,15 @@ var rollCalcLogic = {
                         }
                         waste = roundTo(waste,2);
                         if (!isNaN(waste)) {
-                            if (fields.operation178_answer) {
-                                if (cu.getValue(fields.operation178_answer) != waste) {
-                                    cu.changeField(fields.operation178_answer, waste, true)
+                            if (fields.operation147_answer) {
+                                if (cu.getValue(fields.operation147_answer) != waste) {
+                                    cu.changeField(fields.operation147_answer, waste, true)
                                     return
                                 }
                             }
                         }
-                    } else if (cu.getValue(fields.operation178_answer) != 0) {
-                        cu.changeField(fields.operation178_answer, 0, true)
+                    } else if (cu.getValue(fields.operation147_answer) != 0) {
+                        cu.changeField(fields.operation147_answer, 0, true)
                         return
                     } 
                     //Adhesive Laminates
@@ -353,15 +353,15 @@ var rollCalcLogic = {
                         }
                         waste = roundTo(waste,2);
                         if (!isNaN(waste)) {
-                            if (fields.operation179_answer) {
-                                if (cu.getValue(fields.operation179_answer) != waste) {
-                                    cu.changeField(fields.operation179_answer, waste, true)
+                            if (fields.operation149_answer) {
+                                if (cu.getValue(fields.operation149_answer) != waste) {
+                                    cu.changeField(fields.operation149_answer, waste, true)
                                     return
                                 }
                             }
                         }
-                    } else if (cu.getValue(fields.operation179_answer) != 0) {
-                        cu.changeField(fields.operation179_answer, 0, true)
+                    } else if (cu.getValue(fields.operation149_answer) != 0) {
+                        cu.changeField(fields.operation149_answer, 0, true)
                         return
                     }
                     //Roll Change Minutes

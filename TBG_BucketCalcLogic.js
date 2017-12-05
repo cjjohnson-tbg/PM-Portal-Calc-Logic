@@ -167,6 +167,16 @@ var bucketCalcLogic = {
         trimOperationItemName(lfOpsToTrimWithUnderscore, '_');
         //run meta field action
         metaFieldsActions.onCalcLoaded(product);
+
+        //Ship Date restriction 
+        $('.shipDate').removeClass('date');
+        $('.shipDate input').removeClass('hasDatepicker');
+        $('.shipDate input').unbind();
+        $('.shipDate input').datepicker({
+            showAnim: "fold",
+            beforeShowDay: $.datepicker.noWeekends,  // disable weekends
+            minDate : isNowBeforeCSTCutoffTime(13,15) ? 1 : 2 // if before 1:15, 1, if after 1:15 then 2
+        });
     },
     onCalcChanged: function(updates, product) {
     },
@@ -354,26 +364,26 @@ var bucketCalcLogic = {
                 //Align Zund Loading Speed Factor
                 if (zundLoading) {
                     var zundLoadingItem = !zundOpItemMapLoading[zundFactor] ? 202 : zundOpItemMapLoading[zundFactor];
-                	if (cu.getValue(zundLoading) != zundLoadingItem) {
-                		cu.changeField(zundLoading, zundLoadingItem, true);
-                	}
+                    if (cu.getValue(zundLoading) != zundLoadingItem) {
+                        cu.changeField(zundLoading, zundLoadingItem, true);
+                    }
                 }
                 //Align Zund Cutting Speed Factor
                 if (zundCutting) {
                     var zundCuttingItem = !zundOpItemMapCutting[zundFactor] ? 195 : zundOpItemMapCutting[zundFactor];
                     if (cu.getValue(zundCutting) != zundCuttingItem) {
-                		cu.changeField(zundCutting, zundCuttingItem, true);
-                	}
+                        cu.changeField(zundCutting, zundCuttingItem, true);
+                    }
                 }
                 //Align Zund Unloading Speed Factor
                 if (zundUnloading) {
                     var zundUnloadingItem = !zundOpItemMapUnloading[zundFactor] ? 195 : zundOpItemMapUnloading[zundFactor];
                     if (cu.getValue(zundUnloading) != zundUnloadingItem) {
-                    	cu.changeField(zundUnloading, zundUnloadingItem, true);
-                	}
+                        cu.changeField(zundUnloading, zundUnloadingItem, true);
+                    }
                 }
             } 
-	    } //END LARGE FORMAT
+        } //END LARGE FORMAT
 
         /************************ BOARD BUCKET LIMITATIONS */
         //limit to 200 sq ft

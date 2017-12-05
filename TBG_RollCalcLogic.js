@@ -179,6 +179,7 @@ var printConfig = {};
 var lc = new Object();
 
 var cu = calcUtil;
+var cc = calcConfig;
 
 //grab zund data from zundSpeedFactors_sheets
 var cutMethod;
@@ -270,42 +271,116 @@ var rollCalcLogic = {
                 }
             }
             // CALL printConfig CREATION SCRIPT
-            calcConfig.getUpdatedConfig(quote);
+            cc.getUpdatedConfig(quote);
 
             /************************ 
                 WASTAGE CALCULATORS 
                 *************************/
             //NEED TIMER SO DOESN'T RUN ASYNC???
             if (printConfig) {
-                if (printConfig.valid) {
-                    //Paste difference from total_roll_cost - printed_roll_cost
-                    printConfig['roll_wastage'] = roundTo(printConfig.total_roll_cost - quote.aPrintSubstratePrice,2);
-                    if (fields.operation135_answer) {
-                        if (cu.getValue(fields.operation135_answer) != printConfig.roll_wastage) {
-                            $('#optimum-substrate input').val(printConfig.substrate);
-                            $('#optimum-substrate-id input').val(printConfig.substrate_pace_id);
-                            cu.changeField(fields.operation135_answer,printConfig.roll_wastage,true);
+                if (printConfig.valid_quote) {
+                    // Roll Substrate Waste
+                    if (printConfig.aPrintSubstrate || printConfig.bPrintSubstrate) {
+                        var waste = 0;
+                        if (printConfig.aPrintSubstrate) {
+                            waste += printConfig.aPrintSubstrate.totalCost - quote.aPrintSubstratePrice;
                         }
+                        if (printConfig.bPrintSubstrate) {
+                            waste += printConfig.bPrintSubstrate.totalCost - quote.bPrintSubstratePrice;
+                        }
+                        waste = roundTo(waste,2);
+                        if (!isNaN(waste)) {
+                            if (fields.operation135_answer) {
+                                if (cu.getValue(fields.operation135_answer) != waste) {
+                                    $('#optimum-substrate input').val(printConfig.substrate);
+                                    $('#optimum-substrate-id input').val(printConfig.substrate_pace_id);
+                                    cu.changeField(fields.operation135_answer,waste,true);
+                                }
+                            }
+                        }
+                    } else if (cu.getValue(fields.operation135_answer) > 0) {
+                        cu.changeField(fields.operation135_answer, 0, true);
                     }
+                    //Laminates
+                    if (printConfig.frontLaminate || printConfig.backLaminate) {
+                        var waste = 0;
+                        if (printConfig.frontLaminate) {
+                            waste += roundTo(printConfig.frontLaminate.totalCost - quote.frontLaminatePrice,2);
+                        }
+                        if (printConfig.backLaminate) {
+                            waste += roundTo(printConfig.backLaminate.totalCost - quote.backLaminatePrice,2);
+                        }
+                        waste = roundTo(waste,2);
+                        if (!isNaN(waste)) {
+                            if (fields.operation146_answer) {
+                                if (cu.getValue(fields.operation146_answer) != waste) {
+                                    cu.changeField(fields.operation146_answer, waste, true)
+                                    return
+                                }
+                            }
+                        }
+                    } else if (cu.getValue(fields.operation146_answer) != 0) {
+                        cu.changeField(fields.operation146_answer, 0, true)
+                        return
+                    } 
+                    //Mount
+                    if (printConfig.mountSubstrate) {
+                        var waste = 0;
+                        if (printConfig.mountSubstrate) {
+                            waste += printConfig.mountSubstrate.totalCost - quote.mountSubstratePrice;
+                        }
+                        waste = roundTo(waste,2);
+                        if (!isNaN(waste)) {
+                            if (fields.operation147_answer) {
+                                if (cu.getValue(fields.operation147_answer) != waste) {
+                                    cu.changeField(fields.operation147_answer, waste, true)
+                                    return
+                                }
+                            }
+                        }
+                    } else if (cu.getValue(fields.operation147_answer) != 0) {
+                        cu.changeField(fields.operation147_answer, 0, true)
+                        return
+                    } 
+                    //Adhesive Laminates
+                    if (printConfig.aAdhesiveLaminate || printConfig.bAdhesiveLaminate) {
+                        var waste = 0;
+                        if (printConfig.aAdhesiveLaminate) {
+                            waste += printConfig.aAdhesiveLaminate.totalCost - quote.aAdhesiveLaminatePrice;
+                        }
+                        if (printConfig.bAdhesiveLaminate) {
+                            waste += printConfig.bAdhesiveLaminate.totalCost - quote.bAdhesiveLaminatePrice;
+                        }
+                        waste = roundTo(waste,2);
+                        if (!isNaN(waste)) {
+                            if (fields.operation149_answer) {
+                                if (cu.getValue(fields.operation149_answer) != waste) {
+                                    cu.changeField(fields.operation149_answer, waste, true)
+                                    return
+                                }
+                            }
+                        }
+                    } else if (cu.getValue(fields.operation149_answer) != 0) {
+                        cu.changeField(fields.operation149_answer, 0, true)
+                        return
+                    }
+                    //Roll Change Minutes
                     var rollChangeOp = fields.operation138;
                     var rollChangeOpAnswer = fields.operation138_answer;
-                    var rollChangeMins = printConfig.roll_change_mins;
+                    var rollChangeMins = 0;
+                    if (printConfig.aPrintSubstrate) {
+                        rollChangeMins += printConfig.aPrintSubstrate.rollChangeMins;
+                    }
+                    if (printConfig.bPrintSubstrate) {
+                        rollChangeMins += printConfig.bPrintSubstrate.rollChangeMins;
+                    } 
                     if (rollChangeOp) {
-                        if (printConfig.roll_change_mins > 0) {
-                            if (!cu.hasValue(rollChangeOp)) {
-                                cu.changeField(rollChangeOp, 682, true);
-                                return
-                            }
+                        if (!isNaN(rollChangeMins)) {
                             if (rollChangeOpAnswer) {
                                 if (cu.getValue(rollChangeOpAnswer) != rollChangeMins) {
                                     cu.changeField(rollChangeOpAnswer, rollChangeMins, true);
                                     return
                                 }
-                            }
-                        } else {
-                            if (cu.hasValue(rollChangeOp)) {
-                                cu.changeField(rollChangeOp,'',true);
-                                return
                             }
                         }
                     }
@@ -1227,7 +1302,7 @@ function roundTo(n, digits) {
     if (digits === undefined) {
         digits = 0;
     }
-        if( n < 0) {
+    if( n < 0) {
         negative = true;
       n = n * -1;
     }

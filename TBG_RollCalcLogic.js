@@ -354,14 +354,14 @@ var rollCalcLogic = {
                         waste = roundTo(waste,2);
                         if (!isNaN(waste)) {
                             if (fields.operation149_answer) {
-                                if (cu.getValue(fields.operation149_answer) != waste) {
-                                    cu.changeField(fields.operation149_answer, waste, true)
+                                if (cu.getValue(fields.operation148_answer) != waste) {
+                                    cu.changeField(fields.operation148_answer, waste, true)
                                     return
                                 }
                             }
                         }
-                    } else if (cu.getValue(fields.operation149_answer) != 0) {
-                        cu.changeField(fields.operation149_answer, 0, true)
+                    } else if (cu.getValue(fields.operation148_answer) != 0) {
+                        cu.changeField(fields.operation148_answer, 0, true)
                         return
                     }
                     //Roll Change Minutes

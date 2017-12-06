@@ -353,7 +353,7 @@ var rollCalcLogic = {
                         }
                         waste = roundTo(waste,2);
                         if (!isNaN(waste)) {
-                            if (fields.operation149_answer) {
+                            if (fields.operation148_answer) {
                                 if (cu.getValue(fields.operation148_answer) != waste) {
                                     cu.changeField(fields.operation148_answer, waste, true)
                                     return

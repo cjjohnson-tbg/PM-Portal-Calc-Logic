@@ -43,12 +43,12 @@ var zundOpItemMapUnloading = {
 6  : 212     //Speed Factor 6 
 }
 var zundFactors = {
-    "K1" : {"factor" : "Knife 1", "loadingOpItem" : 2, "unloadingOpItem" : 3 , "runOpItem": 3, "rank" : 1},
-    "K2" : {"factor" : "Knife 2", "loadingOpItem" : 2, "unloadingOpItem" : 3 , "runOpItem": 3, "rank" : 2},
-    "R1" : {"factor" : "Router 1", "loadingOpItem" : 2, "unloadingOpItem" : 3 , "runOpItem": 3, "rank" : 3},
-    "R2" : {"factor" : "Router 2", "loadingOpItem" : 2, "unloadingOpItem" : 3 , "runOpItem": 3, "rank" : 4},
-    "R3" : {"factor" : "Router 3", "loadingOpItem" : 2, "unloadingOpItem" : 3 , "runOpItem": 3, "rank" : 5},
-    "R4" : {"factor" : "Router 4", "loadingOpItem" : 2, "unloadingOpItem" : 3 , "runOpItem": 3, "rank" : 6}
+    "K1" : {"name" : "Knife 1", "loadingOpItem" : 764, "unloadingOpItem" : 772 , "runOpItem": 766, "intCutOpItem": 772, "rank" : 1},
+    "K2" : {"name" : "Knife 2", "loadingOpItem" : 764, "unloadingOpItem" : 772 , "runOpItem": 767, "intCutOpItem": 772, "rank" : 2},
+    "R1" : {"name" : "Router 1", "loadingOpItem" : 765, "unloadingOpItem" : 772 , "runOpItem": 768, "intCutOpItem": 772, "rank" : 3},
+    "R2" : {"name" : "Router 2", "loadingOpItem" : 765, "unloadingOpItem" : 772 , "runOpItem": 769, "intCutOpItem": 772, "rank" : 4},
+    "R3" : {"name" : "Router 3", "loadingOpItem" : 765, "unloadingOpItem" : 772 , "runOpItem": 770, "intCutOpItem": 772, "rank" : 5},
+    "R4" : {"name" : "Router 4", "loadingOpItem" : 765, "unloadingOpItem" : 772 , "runOpItem": 771, "intCutOpItem": 772, "rank" : 6}
 }
 var canvasSubstrates = [
 '144',  //6.5oz. Ultraflex Mult-tex Canvas
@@ -452,45 +452,49 @@ var rollCalcLogic = {
             if (cutMethod == 'zund') {
                 //default zundFactor to K1, and check materials for largest index
                 var zundChoice = zundFactors.K1;
-                for (prop in jobMaterials) {
-                    if (jobMaterials.hasOwnProperty(prop)) {
-                        var material = jobMaterials[prop];
-                        if (material) {
-                            if (material.hasOwnProperty("customProperties")) {
-                                if (material.zundFactor) {
-                                    var matZundFactor = zundFactors[material.zundFactor];
-                                    //if has higher rank, then reassign zundChoice
-                                    if (matZundFactor) {
-                                        if (matZundFactor.rank > zundChoice.rank) {
-                                            zundChoice = matZundFactor;
-                                        }
-                                    }
-                                }
+                //check print substrate A and Mount for highest ranked factor
+                setZundFactor('aPrintSubstrate');
+                setZundFactor('mountSubstrate');
+                //insert zund into printConfig to display on page for estimators
+                printConfig.zundFactor = zundChoice;
+                function setZundFactor (substrate) {
+                    var mat = quote.piece[substrate];
+                    if (mat) {
+                        if (mat.zundFactor) {
+                            var matZundFactor = zundFactors[mat.zundFactor];
+                            if (matZundFactor.rank > zundChoice.rank) {
+                                zundChoice = matZundFactor;
+                            } else {
+                                console.log('no zundfactor assigned on ' + mat.name);
                             }
                         }
                     }
                 }
                 //Align Zund Loading Speed Factor
                 if (zundLoading) {
-                    var zundLoadingItem = !zundOpItemMapLoading[zundFactor] ? 202 : zundOpItemMapLoading[zundFactor];
-                    if (cu.getValue(zundLoading) != zundLoadingItem) {
-                        cu.changeField(zundLoading, zundLoadingItem, true);
+                    if (cu.getValue(zundLoading) != zundChoice.loadingOpItem) {
+                        cu.changeField(zundLoading, zundChoice.loadingOpItem, true);
                         return
+                    }
+                    //insert form count into operation answer
+                    if (fields.operation53_answer) {
+                        if (cu.getValue(fields.operation53_answer) != printConfig.totalForms) {
+                            cu.changeField(fields.operation53_answer, printConfig.totalForms);
+                            return
+                        }
                     }
                 }
                 //Align Zund Cutting Speed Factor
-                    if (zundCutting) {
-                    var zundCuttingItem = !zundOpItemMapCutting[zundFactor] ? 195 : zundOpItemMapCutting[zundFactor];
-                    if (cu.getValue(zundCutting) != zundCuttingItem) {
-                        cu.changeField(zundCutting, zundCuttingItem, true);
+                if (zundCutting) {
+                    if (cu.getValue(zundCutting) != zundChoice.runOpItem) {
+                        cu.changeField(zundCutting, zundChoice.runOpItem, true);
                         return
                     }
                 }
                 //Align Zund Unloading Speed Factor
                 if (zundUnloading) {
-                    var zundUnloadingItem = !zundOpItemMapUnloading[zundFactor] ? 195 : zundOpItemMapUnloading[zundFactor];
-                    if (cu.getValue(zundUnloading) != zundUnloadingItem) {
-                        cu.changeField(zundUnloading, zundUnloadingItem, true);
+                    if (cu.getValue(zundUnloading) != zundChoice.unloadingOpItem) {
+                        cu.changeField(zundUnloading, zundChoice.unloadingOpItem, true);
                         return
                     }
                 }

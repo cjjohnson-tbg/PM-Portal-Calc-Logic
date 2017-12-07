@@ -42,6 +42,14 @@ var zundOpItemMapUnloading = {
 5  : 211,    //Speed Factor 5
 6  : 212     //Speed Factor 6 
 }
+var zundFactors = {
+    "K1" : {"factor" : "Knife 1", "loadingOpItem" : 2, "unloadingOpItem" : 3 , "runOpItem": 3, "rank" : 1},
+    "K2" : {"factor" : "Knife 2", "loadingOpItem" : 2, "unloadingOpItem" : 3 , "runOpItem": 3, "rank" : 2},
+    "R1" : {"factor" : "Router 1", "loadingOpItem" : 2, "unloadingOpItem" : 3 , "runOpItem": 3, "rank" : 3},
+    "R2" : {"factor" : "Router 2", "loadingOpItem" : 2, "unloadingOpItem" : 3 , "runOpItem": 3, "rank" : 4},
+    "R3" : {"factor" : "Router 3", "loadingOpItem" : 2, "unloadingOpItem" : 3 , "runOpItem": 3, "rank" : 5},
+    "R4" : {"factor" : "Router 4", "loadingOpItem" : 2, "unloadingOpItem" : 3 , "runOpItem": 3, "rank" : 6}
+}
 var canvasSubstrates = [
 '144',  //6.5oz. Ultraflex Mult-tex Canvas
 '83'   //Canvas - Matte Finish
@@ -442,13 +450,26 @@ var rollCalcLogic = {
             }
             //Zund Cut
             if (cutMethod == 'zund') {
-                var lfSubstrateZundFactor = getZundSpeedFactor('lfSubstrates', substrateId);
-                if (cu.hasValue(fields.mountSubstrate)) {
-                    lfMountZundFactor = getZundSpeedFactor('lfMounts', mountId);
-                } else {
-                    lfMountZundFactor = 0;
+                //default zundFactor to K1, and check materials for largest index
+                var zundChoice = zundFactors.K1;
+                for (prop in jobMaterials) {
+                    if (jobMaterials.hasOwnProperty(prop)) {
+                        var material = jobMaterials[prop];
+                        if (material) {
+                            if (material.hasOwnProperty("customProperties")) {
+                                if (material.zundFactor) {
+                                    var matZundFactor = zundFactors[material.zundFactor];
+                                    //if has higher rank, then reassign zundChoice
+                                    if (matZundFactor) {
+                                        if (matZundFactor.rank > zundChoice.rank) {
+                                            zundChoice = matZundFactor;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
-                zundFactor = Math.max(lfMountZundFactor, lfSubstrateZundFactor);
                 //Align Zund Loading Speed Factor
                 if (zundLoading) {
                     var zundLoadingItem = !zundOpItemMapLoading[zundFactor] ? 202 : zundOpItemMapLoading[zundFactor];

@@ -18,29 +18,13 @@ var planningOnlyOps = [
 var estimatingOnlyOps = [
     139     //TBG Team Factor
 ]
-var zundOpItemMapLoading = {
-1  : 202,    //Speed Factor 1
-2  : 203,    //Speed Factor 2
-3  : 204,    //Speed Factor 3
-4  : 205,    //Speed Factor 4
-5  : 206,    //Speed Factor 5
-6  : 207     //Speed Factor 6
-}
-var zundOpItemMapCutting = {
-1  : 195,    //Speed Factor 1
-2  : 196,    //Speed Factor 2
-3  : 197,    //Speed Factor 3
-4  : 198,    //Speed Factor 4
-5  : 199,    //Speed Factor 5
-6  : 200     //Speed Factor 6
-}
-var zundOpItemMapUnloading = {
-1  : 201,    //Speed Factor 1
-2  : 208,    //Speed Factor 2
-3  : 209,    //Speed Factor 3
-4  : 210,    //Speed Factor 4
-5  : 211,    //Speed Factor 5
-6  : 212     //Speed Factor 6 
+var zundFactors = {
+    "K1" : {"name" : "Knife 1", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 195, "intCutOpItem": 773, "rank" : 1},
+    "K2" : {"name" : "Knife 2", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 196, "intCutOpItem": 774, "rank" : 2},
+    "R1" : {"name" : "Router 1", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 197, "intCutOpItem": 775, "rank" : 3},
+    "R2" : {"name" : "Router 2", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 198, "intCutOpItem": 776, "rank" : 4},
+    "R3" : {"name" : "Router 3", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 199, "intCutOpItem": 777, "rank" : 5},
+    "R4" : {"name" : "Router 4", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 200, "intCutOpItem": 778, "rank" : 6}
 }
 var canvasSubstrates = [
 '144',  //6.5oz. Ultraflex Mult-tex Canvas
@@ -181,10 +165,6 @@ var lc = new Object();
 var cu = calcUtil;
 var cc = calcConfig;
 
-//grab zund data from zundSpeedFactors_sheets
-var cutMethod;
-var lfMountZundFactor;
-getZundData();
 
 var rollCalcLogic = {
     onCalcLoaded: function(product) {
@@ -236,7 +216,6 @@ var rollCalcLogic = {
             var deviceId = configureglobals.cquotedata.device.id ? configureglobals.cquotedata.device.id : null;
             var substrateId = cu.getValue(fields.printSubstrate);
             var mountId = cu.getValue(fields.mountSubstrate);
-            var zundFactor = 1;
             var totalQuantity = cu.getTotalQuantity();
             var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
 
@@ -417,6 +396,8 @@ var rollCalcLogic = {
             var noCutOp = fields.operation110;
             var fabCutOp = fields.operation116;
 
+            var intCutOpAnswer = fields.operation180_answer;
+
             //SET CUTTING METHOD
             //if MCT is chosen default to that selection
             if (cu.hasValue(mctCutting)) {
@@ -442,37 +423,63 @@ var rollCalcLogic = {
             }
             //Zund Cut
             if (cutMethod == 'zund') {
-                var lfSubstrateZundFactor = getZundSpeedFactor('lfSubstrates', substrateId);
-                if (cu.hasValue(fields.mountSubstrate)) {
-                    lfMountZundFactor = getZundSpeedFactor('lfMounts', mountId);
-                } else {
-                    lfMountZundFactor = 0;
+                //default zundFactor to K1, and check materials for largest index
+                var zundChoice = zundFactors.K1;
+                //check print substrate A and Mount for highest ranked factor
+                setZundFactor('aPrintSubstrate');
+                setZundFactor('mountSubstrate');
+                //insert zund into printConfig to display on page for estimators
+                printConfig.zundFactor = zundChoice;
+                function setZundFactor (substrate) {
+                    var mat = quote.piece[substrate];
+                    if (mat) {
+                        if (mat.zundFactor) {
+                            var matZundFactor = zundFactors[mat.zundFactor];
+                            if (matZundFactor.rank > zundChoice.rank) {
+                                zundChoice = matZundFactor;
+                            } else {
+                                console.log('no zundfactor assigned on ' + mat.name);
+                            }
+                        }
+                    }
                 }
-                zundFactor = Math.max(lfMountZundFactor, lfSubstrateZundFactor);
                 //Align Zund Loading Speed Factor
                 if (zundLoading) {
-                    var zundLoadingItem = !zundOpItemMapLoading[zundFactor] ? 202 : zundOpItemMapLoading[zundFactor];
-                    if (cu.getValue(zundLoading) != zundLoadingItem) {
-                        cu.changeField(zundLoading, zundLoadingItem, true);
+                    if (cu.getValue(zundLoading) != zundChoice.loadingOpItem) {
+                        cu.changeField(zundLoading, zundChoice.loadingOpItem, true);
                         return
                     }
                 }
                 //Align Zund Cutting Speed Factor
-                    if (zundCutting) {
-                    var zundCuttingItem = !zundOpItemMapCutting[zundFactor] ? 195 : zundOpItemMapCutting[zundFactor];
-                    if (cu.getValue(zundCutting) != zundCuttingItem) {
-                        cu.changeField(zundCutting, zundCuttingItem, true);
+                if (zundCutting) {
+                    if (cu.getValue(zundCutting) != zundChoice.runOpItem) {
+                        cu.changeField(zundCutting, zundChoice.runOpItem, true);
                         return
                     }
                 }
                 //Align Zund Unloading Speed Factor
                 if (zundUnloading) {
-                    var zundUnloadingItem = !zundOpItemMapUnloading[zundFactor] ? 195 : zundOpItemMapUnloading[zundFactor];
-                    if (cu.getValue(zundUnloading) != zundUnloadingItem) {
-                        cu.changeField(zundUnloading, zundUnloadingItem, true);
+                    if (cu.getValue(zundUnloading) != zundChoice.unloadingOpItem) {
+                        cu.changeField(zundUnloading, zundChoice.unloadingOpItem, true);
                         return
                     }
                 }
+                //INTERNAL CUTTING - map to choice item and enter answer 
+                if (cu.hasValue(intCutOpAnswer)) {
+                    var intCutInches = cu.getValue(intCutOpAnswer);
+                    if (cu.getValue(fields.operation179) != zundChoice.intCutOpItem) {
+                        cu.changeField(fields.operation179, zundChoice.intCutOpItem, true);
+                        return
+                    }
+                    if (cu.getValue(fields.operation179_answer) != intCutInches) {
+                        cu.changeField(fields.operation179_answer, intCutInches, true);
+                        return
+                    }
+                } else if (cu.hasValue(fields.operation179)) {
+                    cu.changeField(fields.operation179, '', true);
+                    return
+                }
+
             } else {
                 if (cu.hasValue(zundLoading)) {
                     cu.changeField(zundLoading, '', true);
@@ -511,7 +518,7 @@ var rollCalcLogic = {
             var intCutOp = fields.operation112;
             //trim and only show option for current zund factor
             trimOperationItemName(112, '_');
-            if (zundFactor < 3) {
+            if (zundChoice.rank < 3) {
                 hideOperationItems(intCutRouteOptions);
             } else {
                 hideOperationItems(intCutBladeOptions);

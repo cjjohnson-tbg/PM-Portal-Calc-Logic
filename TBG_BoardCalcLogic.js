@@ -115,29 +115,13 @@ var side2InkMap = {
     112 : 1040,    //Vutek HS100 - W + W + CMYK (Spot / First Surface) - 600 DPI_HS
 }
 
-var zundLoadingSelections = {
-    1  :  645,   //Speed Factor 1
-    2  :  646,   //Speed Factor 2
-    3  :  647,   //Speed Factor 3
-    4  :  648,   //Speed Factor 4
-    5  :  649,   //Speed Factor 5
-    6  :  650    //Speed Factor 6
-}
-var zundUnloadingSelections = {
-    1  :  606,   //Speed Factor 1
-    2  :  607,   //Speed Factor 2
-    3  :  608,   //Speed Factor 3
-    4  :  609,   //Speed Factor 4
-    5  :  610,   //Speed Factor 5
-    6  :  611    //Speed Factor 6
-}
-var zundCuttingSelections = {
-    1  :  593,   //Speed Factor 1
-    2  :  594,   //Speed Factor 2
-    3  :  595,   //Speed Factor 3
-    4  :  596,   //Speed Factor 4
-    5  :  597,   //Speed Factor 5
-    6  :  598    //Speed Factor 6
+var zundFactors = {
+    "K1" : {"name" : "Knife 1", "loadingOpItem" : 645, "unloadingOpItem" : 606 , "runOpItem": 593, "intCutOpItem": 773, "rank" : 1},
+    "K2" : {"name" : "Knife 2", "loadingOpItem" : 645, "unloadingOpItem" : 606 , "runOpItem": 594, "intCutOpItem": 774, "rank" : 2},
+    "R1" : {"name" : "Router 1", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 595, "intCutOpItem": 775, "rank" : 3},
+    "R2" : {"name" : "Router 2", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 596, "intCutOpItem": 776, "rank" : 4},
+    "R3" : {"name" : "Router 3", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 597, "intCutOpItem": 777, "rank" : 5},
+    "R4" : {"name" : "Router 4", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 598, "intCutOpItem": 778, "rank" : 6}
 }
 
 var substratesForceCMYKBacklit = [
@@ -291,8 +275,6 @@ var operationItemKeys = new Object();
 var cu = calcUtil;
 
 var cutMethod;
-//grab zund data from zundSpeedFactors_sheets
-getZundData();
 
 var boardCalcLogic = {
     onCalcLoaded: function(product) {
@@ -381,6 +363,9 @@ var boardCalcLogic = {
                         }
                     });
                 }
+
+                /**************** SET CUSTOM PROPERTIES */
+                setCustomProperties(quote.pressSheetQuote.pressSheet,"description","customProperties");
 
                 /********* Color Critical Check */
                 var colorCriticalOp = fields.operation205;
@@ -557,16 +542,16 @@ var boardCalcLogic = {
                 var fabCutOp = fields.operation174;
                 //zund Cutting
                 if (cutMethod == 'zund') {
-                    var zundMaterialId = cu.getPressSheetId();
-                    var zundMaterialType = 'sfPressSheets';
-                    var speedFactor = getZundSpeedFactor(zundMaterialType,zundMaterialId);
-                    var zundLoadingFactor = zundLoadingSelections[speedFactor];
-                    var zundUnloadingFactor = zundUnloadingSelections[speedFactor];
-                    var zundCuttingFactor = zundCuttingSelections[speedFactor];
+                    //default zundFactor to K1, and check materials for largest index
+                    var zundChoice = zundFactors.K1;
+                    //check print substrate A and Mount for highest ranked factor
+                    if (quote.pressSheetQuote.pressSheet.zundFactor) {
+                        zundChoice = zundFactors[quote.pressSheetQuote.pressSheet.zundFactor];
+                    }
 
-                    if (cu.getValue(zundLoadingOp) != zundLoadingFactor) {cu.changeField(zundLoadingOp,zundLoadingFactor,true); return}
-                    if (cu.getValue(zundUnloadingOp) != zundUnloadingFactor) {cu.changeField(zundUnloadingOp,zundUnloadingFactor,true); return}
-                    if (cu.getValue(zundCuttingOp) != zundCuttingFactor) {cu.changeField(zundCuttingOp,zundCuttingFactor,true); return}
+                    if (cu.getValue(zundLoadingOp) != zundChoice.loadingOpItem) {cu.changeField(zundLoadingOp,zundChoice.loadingOpItem,true); return}
+                    if (cu.getValue(zundUnloadingOp) != zundChoice.unloadingOpItem) {cu.changeField(zundUnloadingOp,zundChoice.unloadingOpItem,true); return}
+                    if (cu.getValue(zundCuttingOp) != zundChoice.runOpItem) {cu.changeField(zundCuttingOp,zundChoice.runOpItem,true); return}
                 } else {
                     if (cu.hasValue(zundLoadingOp)) {cu.changeField(zundLoadingOp,'', true); return}
                     if (cu.hasValue(zundUnloadingOp)) {cu.changeField(zundUnloadingOp,'', true); return}

@@ -19,12 +19,12 @@ var estimatingOnlyOps = [
     139     //TBG Team Factor
 ]
 var zundFactors = {
-    "K1" : {"name" : "Knife 1", "loadingOpItem" : 764, "unloadingOpItem" : 772 , "runOpItem": 766, "intCutOpItem": 773, "rank" : 1},
-    "K2" : {"name" : "Knife 2", "loadingOpItem" : 764, "unloadingOpItem" : 772 , "runOpItem": 767, "intCutOpItem": 774, "rank" : 2},
-    "R1" : {"name" : "Router 1", "loadingOpItem" : 765, "unloadingOpItem" : 772 , "runOpItem": 768, "intCutOpItem": 775, "rank" : 3},
-    "R2" : {"name" : "Router 2", "loadingOpItem" : 765, "unloadingOpItem" : 772 , "runOpItem": 769, "intCutOpItem": 776, "rank" : 4},
-    "R3" : {"name" : "Router 3", "loadingOpItem" : 765, "unloadingOpItem" : 772 , "runOpItem": 770, "intCutOpItem": 777, "rank" : 5},
-    "R4" : {"name" : "Router 4", "loadingOpItem" : 765, "unloadingOpItem" : 772 , "runOpItem": 771, "intCutOpItem": 778, "rank" : 6}
+    "K1" : {"name" : "Knife 1", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 195, "intCutOpItem": 773, "rank" : 1},
+    "K2" : {"name" : "Knife 2", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 196, "intCutOpItem": 774, "rank" : 2},
+    "R1" : {"name" : "Router 1", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 197, "intCutOpItem": 775, "rank" : 3},
+    "R2" : {"name" : "Router 2", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 198, "intCutOpItem": 776, "rank" : 4},
+    "R3" : {"name" : "Router 3", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 199, "intCutOpItem": 777, "rank" : 5},
+    "R4" : {"name" : "Router 4", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 200, "intCutOpItem": 778, "rank" : 6}
 }
 var canvasSubstrates = [
 '144',  //6.5oz. Ultraflex Mult-tex Canvas
@@ -165,10 +165,6 @@ var lc = new Object();
 var cu = calcUtil;
 var cc = calcConfig;
 
-//grab zund data from zundSpeedFactors_sheets
-var cutMethod;
-var lfMountZundFactor;
-getZundData();
 
 var rollCalcLogic = {
     onCalcLoaded: function(product) {
@@ -220,7 +216,6 @@ var rollCalcLogic = {
             var deviceId = configureglobals.cquotedata.device.id ? configureglobals.cquotedata.device.id : null;
             var substrateId = cu.getValue(fields.printSubstrate);
             var mountId = cu.getValue(fields.mountSubstrate);
-            var zundFactor = 1;
             var totalQuantity = cu.getTotalQuantity();
             var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
 
@@ -523,7 +518,7 @@ var rollCalcLogic = {
             var intCutOp = fields.operation112;
             //trim and only show option for current zund factor
             trimOperationItemName(112, '_');
-            if (zundFactor < 3) {
+            if (zundChoice.rank < 3) {
                 hideOperationItems(intCutRouteOptions);
             } else {
                 hideOperationItems(intCutBladeOptions);

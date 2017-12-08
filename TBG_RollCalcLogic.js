@@ -43,12 +43,12 @@ var zundOpItemMapUnloading = {
 6  : 212     //Speed Factor 6 
 }
 var zundFactors = {
-    "K1" : {"name" : "Knife 1", "loadingOpItem" : 764, "unloadingOpItem" : 772 , "runOpItem": 766, "intCutOpItem": 772, "rank" : 1},
-    "K2" : {"name" : "Knife 2", "loadingOpItem" : 764, "unloadingOpItem" : 772 , "runOpItem": 767, "intCutOpItem": 772, "rank" : 2},
-    "R1" : {"name" : "Router 1", "loadingOpItem" : 765, "unloadingOpItem" : 772 , "runOpItem": 768, "intCutOpItem": 772, "rank" : 3},
-    "R2" : {"name" : "Router 2", "loadingOpItem" : 765, "unloadingOpItem" : 772 , "runOpItem": 769, "intCutOpItem": 772, "rank" : 4},
-    "R3" : {"name" : "Router 3", "loadingOpItem" : 765, "unloadingOpItem" : 772 , "runOpItem": 770, "intCutOpItem": 772, "rank" : 5},
-    "R4" : {"name" : "Router 4", "loadingOpItem" : 765, "unloadingOpItem" : 772 , "runOpItem": 771, "intCutOpItem": 772, "rank" : 6}
+    "K1" : {"name" : "Knife 1", "loadingOpItem" : 764, "unloadingOpItem" : 772 , "runOpItem": 766, "intCutOpItem": 773, "rank" : 1},
+    "K2" : {"name" : "Knife 2", "loadingOpItem" : 764, "unloadingOpItem" : 772 , "runOpItem": 767, "intCutOpItem": 774, "rank" : 2},
+    "R1" : {"name" : "Router 1", "loadingOpItem" : 765, "unloadingOpItem" : 772 , "runOpItem": 768, "intCutOpItem": 775, "rank" : 3},
+    "R2" : {"name" : "Router 2", "loadingOpItem" : 765, "unloadingOpItem" : 772 , "runOpItem": 769, "intCutOpItem": 776, "rank" : 4},
+    "R3" : {"name" : "Router 3", "loadingOpItem" : 765, "unloadingOpItem" : 772 , "runOpItem": 770, "intCutOpItem": 777, "rank" : 5},
+    "R4" : {"name" : "Router 4", "loadingOpItem" : 765, "unloadingOpItem" : 772 , "runOpItem": 771, "intCutOpItem": 778, "rank" : 6}
 }
 var canvasSubstrates = [
 '144',  //6.5oz. Ultraflex Mult-tex Canvas
@@ -425,6 +425,8 @@ var rollCalcLogic = {
             var noCutOp = fields.operation110;
             var fabCutOp = fields.operation116;
 
+            var intCutOpAnswer = fields.operation180_answer;
+
             //SET CUTTING METHOD
             //if MCT is chosen default to that selection
             if (cu.hasValue(mctCutting)) {
@@ -476,13 +478,6 @@ var rollCalcLogic = {
                         cu.changeField(zundLoading, zundChoice.loadingOpItem, true);
                         return
                     }
-                    //insert form count into operation answer
-                    if (fields.operation53_answer) {
-                        if (cu.getValue(fields.operation53_answer) != printConfig.totalForms) {
-                            cu.changeField(fields.operation53_answer, printConfig.totalForms);
-                            return
-                        }
-                    }
                 }
                 //Align Zund Cutting Speed Factor
                 if (zundCutting) {
@@ -498,6 +493,22 @@ var rollCalcLogic = {
                         return
                     }
                 }
+                //INTERNAL CUTTING - map to choice item and enter answer 
+                if (cu.hasValue(intCutOpAnswer)) {
+                    var intCutInches = cu.getValue(intCutOpAnswer);
+                    if (cu.getValue(fields.operation179) != zundChoice.intCutOpItem) {
+                        cu.changeField(fields.operation179, zundChoice.intCutOpItem, true);
+                        return
+                    }
+                    if (cu.getValue(fields.operation179_answer) != intCutInches) {
+                        cu.changeField(fields.operation179_answer, intCutInches, true);
+                        return
+                    }
+                } else if (cu.hasValue(fields.operation179)) {
+                    cu.changeField(fields.operation179, '', true);
+                    return
+                }
+
             } else {
                 if (cu.hasValue(zundLoading)) {
                     cu.changeField(zundLoading, '', true);

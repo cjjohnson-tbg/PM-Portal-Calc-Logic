@@ -141,7 +141,7 @@ var lfDeviceInk = {
     }
 }
 
-
+var calcCount = 0;
 
 var pmPortal = ((location.hostname.indexOf("tbg-pm.collaterate.com") != -1) || (location.hostname.indexOf("tbghub.com") != -1));
 var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") != -1);
@@ -181,6 +181,9 @@ var rollCalcLogic = {
     onQuoteUpdated: function(updates, validation, product) {
         if (!cu.isSmallFormat(product)) {
             
+            calcCount++;
+            console.log('count is ' + calcCount);
+
             //search commet object for custom properties inserted into notes or descriptions//set custom properties
             if (!configureglobals.cquote) {return}
             var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
@@ -375,7 +378,6 @@ var rollCalcLogic = {
             //if Suma selected set cutting Op to No Cutting
             if (cu.hasValue(fields.operation82)) {
                 if (cu.isLastChangedField(updates, fields.operation82)) {
-                    console.log('suma is last change ');
                     if (cu.getValue(fields.operation111) != 450) {
                         cu.changeField(fields.operation111,450,true);
                     }
@@ -779,11 +781,8 @@ var rollCalcLogic = {
                             }
                         }
                     }
-                    //Get LF needed and enter in .01LF per piece as operation answer
-                    printConfig.lamLf = (printConfig.formLength * printConfig.totalFullForms) / 12 + printConfig.lastPartialFormLF;
-                    lamLfWithSpoilage = getLamWithSpoilage();
-                    if (!isNaN(lamLfWithSpoilage)) {
-                        printConfig.lamLfWithSpoilage = roundTo(lamLfWithSpoilage, 1);
+                    
+                    if (printConfig.lamLfWithSpoilage) {
                         if (cu.hasValue(laminatingRun)) {
                             validateValue(laminatingRunAnswer, printConfig.lamLfWithSpoilage);
                         }
@@ -794,26 +793,6 @@ var rollCalcLogic = {
                 } else {
                     validateValue(laminatingRun, '');
                     validateValue(laminatingRun2,'');
-                }
-
-                //loop through points to create cumulative spoilage
-                function getLamWithSpoilage() {
-                    var spoilPoints = [[999, .06],[1999, .04],[2999, .03],[3999,.025],[4999,.02],[5000,.015]];
-                    var spoilLf = 0;
-                    var lastPt = 0;
-                    for (var i = 0; i < spoilPoints.length; i++) {
-                        if (printConfig.lamLf < spoilPoints[i][0]) {
-                            spoilLf += ((printConfig.lamLf - lastPt) * spoilPoints[i][1]);
-                            break
-                        } else if (i == (spoilPoints.length - 1)) {
-                            spoilLf += (printConfig.lamLf - spoilPoints[i][0]) * spoilPoints[i][1];
-                            break
-                        } else {
-                            spoilLf += (spoilPoints[i][0] - lastPt) * spoilPoints[i][1];
-                            lastPt = spoilPoints[i][0];
-                        }
-                    }
-                    return printConfig.lamLf + spoilLf
                 }
             }
 

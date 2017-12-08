@@ -18,30 +18,6 @@ var planningOnlyOps = [
 var estimatingOnlyOps = [
     139     //TBG Team Factor
 ]
-var zundOpItemMapLoading = {
-1  : 202,    //Speed Factor 1
-2  : 203,    //Speed Factor 2
-3  : 204,    //Speed Factor 3
-4  : 205,    //Speed Factor 4
-5  : 206,    //Speed Factor 5
-6  : 207     //Speed Factor 6
-}
-var zundOpItemMapCutting = {
-1  : 195,    //Speed Factor 1
-2  : 196,    //Speed Factor 2
-3  : 197,    //Speed Factor 3
-4  : 198,    //Speed Factor 4
-5  : 199,    //Speed Factor 5
-6  : 200     //Speed Factor 6
-}
-var zundOpItemMapUnloading = {
-1  : 201,    //Speed Factor 1
-2  : 208,    //Speed Factor 2
-3  : 209,    //Speed Factor 3
-4  : 210,    //Speed Factor 4
-5  : 211,    //Speed Factor 5
-6  : 212     //Speed Factor 6 
-}
 var zundFactors = {
     "K1" : {"name" : "Knife 1", "loadingOpItem" : 764, "unloadingOpItem" : 772 , "runOpItem": 766, "intCutOpItem": 773, "rank" : 1},
     "K2" : {"name" : "Knife 2", "loadingOpItem" : 764, "unloadingOpItem" : 772 , "runOpItem": 767, "intCutOpItem": 774, "rank" : 2},

@@ -101,11 +101,6 @@ var intCutRouteOptions = [
     457,  // Simple_Route
     456   // Complex_Route
 ]
-var noneLamintingOptions = [
-    '18',     //No Front Laminating
-    '40',     //For Back Laminating
-    '46'      //For back laminating with Hot as front
-]
 var substratesThatCanHeatBend =[
     '4',     //Styrene 020
     '5',     //Styrene 030
@@ -623,8 +618,8 @@ var rollCalcLogic = {
             }
             /************************ APPLY LAM RUN OPERATION WITH OPERATION ANSWER AS LINEAR FEET NEEDED (.01 LF) WHEN LAM SELECTED */
             //Note: "none" operation item is id 18 (front) AND 40 (back) for products using this function
-            var hasFrontLam = (cu.hasValue(fields.frontLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.frontLaminate)) == -1));
-            var hasBackLam = (cu.hasValue(fields.backLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.backLaminate)) == -1));
+            var hasFrontLam = cu.hasValue(fields.frontLaminate);
+            var hasBackLam = cu.hasValue(fields.backLaminate);
             var hasMount = cu.hasValue(fields.mountSubstrate);
 
             var laminatingRun = fields.operation96;
@@ -785,15 +780,15 @@ var rollCalcLogic = {
                         }
                     }
                     //Get LF needed and enter in .01LF per piece as operation answer
-                    var lamRunWithSpoil = getLamWithSpoilage();
-                    printConfig['lam_lf_with_spoilage'] = lamRunWithSpoil;
-                    if (!isNaN(lamRunWithSpoil)) {
-                        var lamRunFactor = parseInt(lamRunWithSpoil / totalQuantity * 100);
+                    printConfig.lamLf = (printConfig.formLength * printConfig.totalFullForms) / 12 + printConfig.lastPartialFormLF;
+                    lamLfWithSpoilage = getLamWithSpoilage();
+                    if (!isNaN(lamLfWithSpoilage)) {
+                        printConfig.lamLfWithSpoilage = roundTo(lamLfWithSpoilage, 1);
                         if (cu.hasValue(laminatingRun)) {
-                            validateValue(laminatingRunAnswer, lamRunFactor);
+                            validateValue(laminatingRunAnswer, printConfig.lamLfWithSpoilage);
                         }
                         if (cu.hasValue(laminatingRun2)) {
-                            validateValue(laminatingRunAnswer2, lamRunFactor);
+                            validateValue(laminatingRunAnswer2, printConfig.lamLfWithSpoilage);
                         }
                     }
                 } else {
@@ -803,23 +798,22 @@ var rollCalcLogic = {
 
                 //loop through points to create cumulative spoilage
                 function getLamWithSpoilage() {
-                    var printLf = printConfig.print_LF_needed;
                     var spoilPoints = [[999, .06],[1999, .04],[2999, .03],[3999,.025],[4999,.02],[5000,.015]];
                     var spoilLf = 0;
                     var lastPt = 0;
                     for (var i = 0; i < spoilPoints.length; i++) {
-                        if (printLf < spoilPoints[i][0]) {
-                            spoilLf += ((printLf - lastPt) * spoilPoints[i][1]);
+                        if (printConfig.lamLf < spoilPoints[i][0]) {
+                            spoilLf += ((printConfig.lamLf - lastPt) * spoilPoints[i][1]);
                             break
                         } else if (i == (spoilPoints.length - 1)) {
-                            spoilLf += (printLf - spoilPoints[i][0]) * spoilPoints[i][1];
+                            spoilLf += (printConfig.lamLf - spoilPoints[i][0]) * spoilPoints[i][1];
                             break
                         } else {
                             spoilLf += (spoilPoints[i][0] - lastPt) * spoilPoints[i][1];
                             lastPt = spoilPoints[i][0];
                         }
                     }
-                    return printLf + spoilLf
+                    return printConfig.lamLf + spoilLf
                 }
             }
 

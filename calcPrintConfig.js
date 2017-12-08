@@ -203,7 +203,7 @@ var calcConfig = {
 				if (!cf.price) {
 					cf.price = (quote.frontLaminatePrice / totalSquareFeet) * cf.width / 12;
 				}
-				cf.frontLamLF = config.lamLfWithSpoilage ? config.lamLfWithSpoilage : config.formLength + config.lastPartialFormLF;
+				cf.frontLamLF = config.lamLfWithSpoilage ? config.lamLfWithSpoilage : config.formLength / 12 + config.lastPartialFormLF;
 				cf.totalCost = cf.frontLamLF * cf.price;
 			}
 			if (config.backLaminate) {
@@ -211,7 +211,7 @@ var calcConfig = {
 				if (!cb.price) {
 					cb.price = (quote.backLaminatePrice / totalSquareFeet) * cb.width / 12;
 				}
-				cb.backLamLF = config.lamLfWithSpoilage ? config.lamLfWithSpoilage : config.formLength + config.lastPartialFormLF;
+				cb.backLamLF = config.lamLfWithSpoilage ? config.lamLfWithSpoilage : config.formLength /12 + config.lastPartialFormLF;
 				cb.totalCost = cb.backLamLF * cb.price;
 			}
 
@@ -331,7 +331,7 @@ var calcConfig = {
 		    if( negative ) {    
 		        n = (n * -1).toFixed(2);
 		    }
-		    return n;
+		    return Number(n);
 		}
 	
 	},

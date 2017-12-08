@@ -191,13 +191,19 @@ var calcConfig = {
 			}
 
 			// Laminates
+			//Build in lamLF and spoilage even if no lam involved
+			config.lamLf = (config.formLength * config.totalFullForms) / 12 + config.lastPartialFormLF;
+			var lamLfWithSpoilage = getLamWithSpoilage(config.lamLf);
+			if (!isNaN(lamLfWithSpoilage)) {
+				config.lamLfWithSpoilage = roundTo(lamLfWithSpoilage, 1);
+			}
 			//laminates based on total LF of full signatures plus partial LF 
 			if (config.frontLaminate) {
 				var cf = config.frontLaminate;
 				if (!cf.price) {
 					cf.price = (quote.frontLaminatePrice / totalSquareFeet) * cf.width / 12;
 				}
-				cf.frontLamLF = config.formLength + config.lastPartialFormLF;
+				cf.frontLamLF = config.lamLfWithSpoilage ? config.lamLfWithSpoilage : config.formLength + config.lastPartialFormLF;
 				cf.totalCost = cf.frontLamLF * cf.price;
 			}
 			if (config.backLaminate) {
@@ -205,7 +211,7 @@ var calcConfig = {
 				if (!cb.price) {
 					cb.price = (quote.backLaminatePrice / totalSquareFeet) * cb.width / 12;
 				}
-				cb.backLamLF = (config.formLength + config.lastPartialFormLF);
+				cb.backLamLF = config.lamLfWithSpoilage ? config.lamLfWithSpoilage : config.formLength + config.lastPartialFormLF;
 				cb.totalCost = cb.backLamLF * cb.price;
 			}
 
@@ -289,6 +295,45 @@ var calcConfig = {
 			}
 			return result
 		}
+
+		//loop through points to create cumulative spoilage
+		function getLamWithSpoilage(matLength) {
+			var spoilPoints = [[999, .06],[1999, .04],[2999, .03],[3999,.025],[4999,.02],[5000,.015]];
+			var spoilLf = 0;
+			var lastPt = 0;
+			for (var i = 0; i < spoilPoints.length; i++) {
+				if (matLength < spoilPoints[i][0]) {
+					spoilLf += ((matLength - lastPt) * spoilPoints[i][1]);
+				break
+				} else if (i == (spoilPoints.length - 1)) {
+					spoilLf += (matLength - spoilPoints[i][0]) * spoilPoints[i][1];
+					break
+				} else {
+					spoilLf += (spoilPoints[i][0] - lastPt) * spoilPoints[i][1];
+					lastPt = spoilPoints[i][0];
+				}
+			}
+			return Number(matLength + spoilLf)
+		}
+
+		function roundTo(n, digits) {
+		    var negative = false;
+		    if (digits === undefined) {
+		        digits = 0;
+		    }
+		    if( n < 0) {
+		        negative = true;
+		      n = n * -1;
+		    }
+		    var multiplicator = Math.pow(10, digits);
+		    n = parseFloat((n * multiplicator).toFixed(11));
+		    n = (Math.round(n) / multiplicator).toFixed(2);
+		    if( negative ) {    
+		        n = (n * -1).toFixed(2);
+		    }
+		    return n;
+		}
+	
 	},
 
 	getLamWaste : function(quote) {
@@ -305,4 +350,5 @@ var calcConfig = {
 		}
 		return ccFrontLamCost + ccBackLamCost - collFrontLamCost - collBackLamCost
 	}
-}
+} 
+

@@ -101,11 +101,6 @@ var intCutRouteOptions = [
     457,  // Simple_Route
     456   // Complex_Route
 ]
-var noneLamintingOptions = [
-    '18',     //No Front Laminating
-    '40',     //For Back Laminating
-    '46'      //For back laminating with Hot as front
-]
 var substratesThatCanHeatBend =[
     '4',     //Styrene 020
     '5',     //Styrene 030
@@ -146,7 +141,7 @@ var lfDeviceInk = {
     }
 }
 
-
+var calcCount = 0;
 
 var pmPortal = ((location.hostname.indexOf("tbg-pm.collaterate.com") != -1) || (location.hostname.indexOf("tbghub.com") != -1));
 var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") != -1);
@@ -186,6 +181,9 @@ var rollCalcLogic = {
     onQuoteUpdated: function(updates, validation, product) {
         if (!cu.isSmallFormat(product)) {
             
+            calcCount++;
+            console.log('count is ' + calcCount);
+
             //search commet object for custom properties inserted into notes or descriptions//set custom properties
             if (!configureglobals.cquote) {return}
             var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
@@ -380,7 +378,6 @@ var rollCalcLogic = {
             //if Suma selected set cutting Op to No Cutting
             if (cu.hasValue(fields.operation82)) {
                 if (cu.isLastChangedField(updates, fields.operation82)) {
-                    console.log('suma is last change ');
                     if (cu.getValue(fields.operation111) != 450) {
                         cu.changeField(fields.operation111,450,true);
                     }
@@ -623,8 +620,8 @@ var rollCalcLogic = {
             }
             /************************ APPLY LAM RUN OPERATION WITH OPERATION ANSWER AS LINEAR FEET NEEDED (.01 LF) WHEN LAM SELECTED */
             //Note: "none" operation item is id 18 (front) AND 40 (back) for products using this function
-            var hasFrontLam = (cu.hasValue(fields.frontLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.frontLaminate)) == -1));
-            var hasBackLam = (cu.hasValue(fields.backLaminate) && (noneLamintingOptions.indexOf(cu.getValue(fields.backLaminate)) == -1));
+            var hasFrontLam = cu.hasValue(fields.frontLaminate);
+            var hasBackLam = cu.hasValue(fields.backLaminate);
             var hasMount = cu.hasValue(fields.mountSubstrate);
 
             var laminatingRun = fields.operation96;
@@ -784,42 +781,18 @@ var rollCalcLogic = {
                             }
                         }
                     }
-                    //Get LF needed and enter in .01LF per piece as operation answer
-                    var lamRunWithSpoil = getLamWithSpoilage();
-                    printConfig['lam_lf_with_spoilage'] = lamRunWithSpoil;
-                    if (!isNaN(lamRunWithSpoil)) {
-                        var lamRunFactor = parseInt(lamRunWithSpoil / totalQuantity * 100);
+                    
+                    if (printConfig.lamLfWithSpoilage) {
                         if (cu.hasValue(laminatingRun)) {
-                            validateValue(laminatingRunAnswer, lamRunFactor);
+                            validateValue(laminatingRunAnswer, printConfig.lamLfWithSpoilage);
                         }
                         if (cu.hasValue(laminatingRun2)) {
-                            validateValue(laminatingRunAnswer2, lamRunFactor);
+                            validateValue(laminatingRunAnswer2, printConfig.lamLfWithSpoilage);
                         }
                     }
                 } else {
                     validateValue(laminatingRun, '');
                     validateValue(laminatingRun2,'');
-                }
-
-                //loop through points to create cumulative spoilage
-                function getLamWithSpoilage() {
-                    var printLf = printConfig.print_LF_needed;
-                    var spoilPoints = [[999, .06],[1999, .04],[2999, .03],[3999,.025],[4999,.02],[5000,.015]];
-                    var spoilLf = 0;
-                    var lastPt = 0;
-                    for (var i = 0; i < spoilPoints.length; i++) {
-                        if (printLf < spoilPoints[i][0]) {
-                            spoilLf += ((printLf - lastPt) * spoilPoints[i][1]);
-                            break
-                        } else if (i == (spoilPoints.length - 1)) {
-                            spoilLf += (printLf - spoilPoints[i][0]) * spoilPoints[i][1];
-                            break
-                        } else {
-                            spoilLf += (spoilPoints[i][0] - lastPt) * spoilPoints[i][1];
-                            lastPt = spoilPoints[i][0];
-                        }
-                    }
-                    return printLf + spoilLf
                 }
             }
 

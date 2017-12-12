@@ -1,6 +1,5 @@
-
 var calcConfig = {
-	getUpdatedConfig: function(quote) {
+    getUpdatedConfig: function(quote) {
 		//clear out existing print config
 		for (const prop of Object.keys(printConfig)) {
         	delete printConfig[prop];
@@ -128,18 +127,24 @@ var calcConfig = {
 			config.nDownForm = Math.floor( config.printableLength / (pieceHeight + ( (bleed + gutter) * 2)) );
 			config.nUpPerForm = config.nAcrossForm * config.nDownForm;
 
+			config.sheetsOnPress = Math.ceil(productionQty / config.nAcrossForm);
+
 			config.nDownTotal = Math.ceil(productionQty / config.nAcrossForm);
 
 
 			//production quantity must round up if not equal to # across to fill up 1 full signature
 			config.totalForms = Math.ceil( config.productionQty / config.nUpPerForm );
 			config.totalFormLF = config.totalForms * config.formLength / 12;
-			config.totalFullForms = Math.floor( config.productionQty / config.nUpPerForm );
+			config.totalFullForms = Math.floor( config.nDownTotal / config.nDownForm );
 			
 			config.nDownLastForm =  config.nDownTotal % config.nDownForm;
 			config.lastPartialFormLF = config.nDownLastForm * (pieceHeight + (2 * (bleed + gutter) )) / 12;
 
 			config.valid_quote = (config.nAcrossForm > 0 && config.nDownForm > 0) ? true : false;
+
+			if (!config.valid_quote) {
+				return
+			}
 
 			/***** 
 			  calculate materials usage based on signature 
@@ -165,10 +170,7 @@ var calcConfig = {
 				//calc roll change
 				cr.rollChangeMins = cr.fullRolls * deviceDefaults.rollChangeMins;
 				cr.rollChangeCost = cr.fullRolls * deviceDefaults.rollChangeMins * deviceDefaults.hourlyRate / 60;
-				//temp check for roll change calc error
-				if (isNaN(cr.rollChangeCost)) {
-					var stop = 1;
-				}
+
 				cr.totalCost = cr.totalRollMatCost + cr.rollChangeCost;
 
 				//now assign roll calculations to aPrintSusbtrate and bPrintSubstrate, if present
@@ -269,9 +271,20 @@ var calcConfig = {
 			if (config.valid_quote) {
 				//if first time ran and printConfig has no properties
 				if (Object.keys(printConfig).length == 0) {
-					window.printConfig = config;
+					for (const prop of Object.keys(printConfig)) {
+						delete printConfig[prop];
+					}
+					for (prop in config) {
+						window.printConfig[prop] = config[prop];
+					}
 				} else if (config.totalCost < printConfig.totalCost) {
-					window.printConfig = config;
+					//clear current printConfig properties
+					for (const prop of Object.keys(printConfig)) {
+						delete printConfig[prop];
+					}
+					for (prop in config) {
+						window.printConfig[prop] = config[prop];
+					}
 				}
 			}
 		}
@@ -350,5 +363,4 @@ var calcConfig = {
 		}
 		return ccFrontLamCost + ccBackLamCost - collFrontLamCost - collBackLamCost
 	}
-} 
-
+}

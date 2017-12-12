@@ -122,6 +122,10 @@ var substratesThatCanHeatBend =[
 var fabrivuDirectMaterials = [
     '398'   //Berger Flag Fabric White 4oz
 ]
+var utrlaCanvasBacklitInks = [
+    '241',  //Backlit (Double Strike)
+    '239'   //W + CMYK (Flood / First Surface)
+]
 
 var lfDeviceInk = {
     45 : {
@@ -940,12 +944,12 @@ var rollCalcLogic = {
             var vutekInks = fields.operation52;
             if (vutekInks) {
                 if (cu.getValue(fields.printSubstrate) == 308) {
-                    if (cu.getValue(vutekInks) != 241) {
-                        cu.changeField(vutekInks, 241, true);
+                    if (!cu.isValueInSet(vutekInks, utrlaCanvasBacklitInks)) {
+                        cu.changeField(vutekInks, utrlaCanvasBacklitInks[0], true);
                         return
                     }
                 } else {
-                    if (cu.getValue(vutekInks) == 241) {
+                    if (cu.isValueInSet(vutekInks, utrlaCanvasBacklitInks)) {
                         message += '<p>Double Strike backlit ink is only available on the Ultra Canvas Backlit.</p>';
                         cu.changeField(vutekInks,261, true);
                         return

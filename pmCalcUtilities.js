@@ -7,13 +7,31 @@ var pmCalcUtil = {
             cu.alert(onQuoteUpdatedMessages);
             onQuoteUpdatedMessages = '';
         }
-    }
-    trimOperationItemName: function(opList, deliminater) {
-        if (!(Array.isArray(opList))) {
-            opList = [opList];
+    },
+    addClassToFields: function (fieldList, className) {
+        if (!(Array.isArray(fieldList))) {
+            fieldList = [fieldList];
         }
-        for (var i = 0; i < opList.length; i++) {
-            $('select#operation' + opList[i] + ' option').each(function() {
+        for (var i = 0; i < fieldList.length; i++) {
+            $('#operation' + fieldList[i]).addClass(className);
+        }
+    },
+    removeClassFromFields: function (fieldList, className) {
+        if (!(Array.isArray(fieldList))) {
+            fieldList = [fieldList];
+        }
+        for (var i = 0; i < fieldList.length; i++) {
+            $('#operation' + fieldList[i] + '').each(function() {
+                $(this).removeClass('' + className + '');
+            });
+        }
+    },
+    trimOptionItemsName: function(fieldList, deliminater) {
+        if (!(Array.isArray(fieldList))) {
+            fieldList = [fieldList];
+        }
+        for (var i = 0; i < fieldList.length; i++) {
+            $('select#operation' + fieldList[i] + ' option').each(function() {
                 //var label = $(this).text;
                 var label = this.text;
                 var index = label.indexOf(deliminater);
@@ -23,74 +41,29 @@ var pmCalcUtil = {
                 }
             });
         } 
-    }
-    hideAllOperationItemsWithText: function(objectList, identifyer) {
-        if (!objectList.is('select')) {
-            console.log('object list is not a select for hiding operation items with ' + identifyer );
-            return
+    },
+    hideFieldOptions: function(fieldList, operation) {
+        //change single operation to array
+        if (!(Array.isArray(fieldList))) {
+            fieldList = [fieldList];
         }
-        for (var i = 0; i < objectList.length; i++) {
-            $(objectList +' select option').each(function() {
+        for (var i = 0; i < fieldList.length; i++) {
+            $('option[value="' + fieldList[i] + '"]').hide();
+        }
+    },
+    removeFieldItemsWithString: function(fieldList, string) {
+        //change single operation to array
+        if (!(Array.isArray(fieldList))) {
+            fieldList = [fieldList];
+        }
+        for (var i = 0; i < fieldList.length; i++) {
+            $('select#operation' + op +' option').each(function() {
                 var item = this.text;
-                var index = item.indexOf(identifyer);
+                var index = item.indexOf(string);
                 if (index != -1) {
                     $(this).hide();
                 }
             });
         }
     }
-    hideOperationItemsWithText: function(opList, identifyer) {
-        if (!(Array.isArray(opList))) {
-            opList = [opList];
-        }
-        $('select#operation' + opList +' option').each(function() {
-            var item = this.text;
-            var index = item.indexOf(identifyer);
-            if (index != -1) {
-                $(this).hide();
-            }
-        });
-    }
-    addClassToOperation: function (opList, className) {
-        if (!(Array.isArray(opList))) {
-            opList = [opList];
-        }
-        for (var i = 0; i < opList.length; i++) {
-            $('#operation' + opList[i]).addClass(className);
-        }
-    }
-    removeClassFromOperation: function (opList, className) {
-        if (!(Array.isArray(opList))) {
-            opList = [opList];
-        }
-        for (var i = 0; i < opList.length; i++) {
-            $('#operation' + opList[i] + '').each(function() {
-                $(this).removeClass('' + className + '');
-            });
-        }
-    }
-    addClassToOperationItem: function (opList, className, identifyer) {
-        if (!(Array.isArray(opList))) {
-            opList = [opList];
-        }
-        for (var i = 0; i < opList.length; i++) {
-            $('select#operation' + opList[i] + ' option').each(function() {
-                if ($(this).text().indexOf(identifyer) != -1) {
-                    $(this).addClass(className);
-                }
-            });
-        }
-    }
-    removeClassFromOperationItem: function (opList, className, identifyer) {
-        if (!(Array.isArray(opList))) {
-            opList = [opList];
-        }
-        for (var i = 0; i < opList.length; i++) {
-            $('select#operation' + opList[i] + ' option').each(function() {
-                if ($(this).text().indexOf(identifyer) != -1) {
-                    $(this).addClass(className);
-                }
-            });
-        }
-    } 
 }

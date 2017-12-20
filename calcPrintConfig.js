@@ -101,20 +101,22 @@ var calcConfig = {
 			var pieceHeight = vertical_piece_orienation ? piece.height : piece.width;
 			
 			config.productionQty = productionQty;
+			config.sides = Number(cu.getValue(fields.sides));
 
 			//set printable width as smallest width of all materials
 			config.formWidth = getSignatureDim(materials, 'width');
 			config.printableWidth = config.formWidth - (2 * devMargin);
 
 			//special Exception, if 126" roll form Length = 200, else 120 or min set by subsrate
-			config.formLength = roll.width == 126 ? Math.max(pieceHeight, 200) : Math.max(pieceHeight, 120);
+			//if piece > 200 then maxFormLF = 
+			config.formLengthMax = roll.width == 126 ? Math.max(pieceHeight, 200) : Math.max(pieceHeight, 120);
 			//if limited by substrates, update formLength
 			var minMatLength = getSignatureDim(materials, 'length');
-			if (config.formLength > minMatLength) {
-				config.formLength = minMatLength;
+			if (config.minMatLength < config.formLengthMax) {
+				config.formLengthMax = minMatLength;
 			}
 
-			config.printableLength = config.formLength - (2 * devMargin);
+			config.printableLength = config.formLengthMax - (2 * devMargin);
 
 			//insert materials to config 
 			for (mat in materials) {
@@ -127,10 +129,9 @@ var calcConfig = {
 			config.nDownForm = Math.floor( config.printableLength / (pieceHeight + ( (bleed + gutter) * 2)) );
 			config.nUpPerForm = config.nAcrossForm * config.nDownForm;
 
-			config.sheetsOnPress = Math.ceil(productionQty / config.nAcrossForm);
-
 			config.nDownTotal = Math.ceil(productionQty / config.nAcrossForm);
 
+			config.formLength = config.nDownForm * (pieceHeight + ( (bleed + gutter) * 2) );
 
 			//production quantity must round up if not equal to # across to fill up 1 full signature
 			config.totalForms = Math.ceil( config.productionQty / config.nUpPerForm );
@@ -159,6 +160,7 @@ var calcConfig = {
 				cr.printableRollLen = cr.length - (leadWasteLF * 12);
 				cr.formsPerRoll = Math.floor(cr.printableRollLen / config.formLength);
 				cr.fullRolls = Math.floor(config.totalForms / cr.formsPerRoll);
+				cr.totalRolls = Math.ceil(config.totalForms / cr.formsPerRoll);
 
 				cr.formsOnLastRoll = config.totalForms % cr.formsPerRoll;
 				cr.fullFormsOnLastRoll = config.totalFullForms % cr.formsPerRoll;
@@ -167,8 +169,8 @@ var calcConfig = {
 				cr.totalRollLF = cr.fullRolls * (cr.length / 12) + cr.lastRollLf;
 				cr.totalRollMatCost = cr.totalRollLF * cr.price;
 
-				//calc roll change
-				cr.rollChangeMins = cr.fullRolls * deviceDefaults.rollChangeMins;
+				//calc roll change -- Full rolls plus all rolls if 2 sides
+				cr.rollChangeMins = deviceDefaults.rollChangeMins * (cr.fullRolls + (cr.totalRolls * (config.sides - 1)));
 				cr.rollChangeCost = cr.fullRolls * deviceDefaults.rollChangeMins * deviceDefaults.hourlyRate / 60;
 
 				cr.totalCost = cr.totalRollMatCost + cr.rollChangeCost;

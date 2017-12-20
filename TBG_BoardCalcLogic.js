@@ -36,7 +36,6 @@ var side1InkMap = {
     96  : 1038,    //Vutek HS100 - W + W Only (Spot / First Surface) - 1000 DPI_HS
     125 : 749,   //Vutek HS100 - White Only (Spot / Second Surface) - 1000 DPI_HS
     133 : 1038,   //Vutek HS125 - W + W Only (Flood / First Surface) - 1000 GS-LS
-
     136 : 1038,   //Vutek HS125 - W + W Only (Flood / First Surface) - 600 DPI-HS
     138  : 749,    //Vutek HS125 - White Only - 600 DPI-HS
     111 : 904,    //Vutek HS125 - CMYK + W + W (Flood / Second Surface) - 600 DPI-HS
@@ -81,7 +80,6 @@ var side2InkMap = {
     91 : 891,    //Inca Q40 - W + W
     88 : 891,    //Inca Q40 - W + W + CMYK (Flood / First Surface)
     93 : 891,    //Inca Q40 - W + W + CMYK (Spot / First Surface)
-    
     109  : 613,    //Vutek HS100 Q40 W + CMYK (First Surface)
     133 : 1039,   //Vutek HS125 - W + W Only (Flood / First Surface) - 1000 GS-LS
     136 : 1039,  //Vutek HS125 - W + W Only (Flood / First Surface) - 600 DPI-HS
@@ -135,11 +133,6 @@ var smLaminatingOps = [
 var sfPrePrintLamOps = [
     '129',   //LF Pre-Printing Front Laminate
     '144'    //LF Pre-Printing Back Laminate
-]
-
-var flutedSubstrateNames = [
-    'Coroplast',
-    'Flute'
 ]
 var opsWithSubIds = [
     129,    //LF Pre-Printing Front Laminate
@@ -196,50 +189,6 @@ var opsWithOther = [
     144,
     139
 ]
-var boardTypesThatCanHeatBend = [
-    '173',   // Styrene
-    '189',   // Styrene - white
-    '190',   // Styrene - black
-    '193',   // Styrene - translucent
-    '182',   // PETG
-    '228',   // PETG Non-Glare
-    '262',   // PETG Transilwrap
-    '183',   // Sintra Expanded PVC - white
-    '197',   // Sintra Expanded PVC - black
-    '231',   // Komatex Expanded PVC - White
-    '232',   // Komatex Expanded PVC - Black
-    '301',    //EPVC Komatex - White
-    '302',    //EPVC Komatex - Black
-    '303',    //EPVC Sintra - Black
-    '304',    //EPVC Sintra - White
-    '138',   // Acrylic - non TBG*
-    '185',   // Optix DA Digital Acrylic
-    '253',   // Acrylic P95 Frosted 1 Side
-    '255',   // Acrylic - White 3015
-    '259',   // Acrylic DP95 Frosted 2 Sides
-    '261',   // Acrylic Clear Extruded
-    '263',   // Acrylic Extruded
-    '264',   // Acrylic Black Extruded
-    '268',   // Acrylic Black Cast
-    '278',   // Acrylic White Extruded
-    '283'    // Acrylic Clear Cast
-]
-var boardWeightsThatCanHeatBend = [
-    '63',   // 1MM
-    '64',   // 2MM
-    '65',   // 3MM
-    '55',   // .015
-    '56',   // .020
-    '57',   // .030
-    '58',   // .040
-    '59',   // .060
-    '60',   // .080
-    '61',   // .125
-    '62',   // .118
-    '77',   // .065
-    '77',   // .065
-    '79'    // .010
-]
 var cutMethodId = {
     1079: 'noCut' , //No Cutting
     1080: 'zund' , //Cut
@@ -269,12 +218,12 @@ var hardProofMessageCount = 0;
 var mountingEstimateMessageCount = 0;
 var allowHeatBend = true;
 
-// Operation Item Keys object - in window for testing
-var operationItemKeys = new Object();  
-
 var cu = calcUtil;
 
 var cutMethod;
+
+var calcCount = 0;
+var opChangeList = [];
 
 var boardCalcLogic = {
     onCalcLoaded: function(product) {
@@ -294,661 +243,712 @@ var boardCalcLogic = {
         removeOperationItemsWithString(133,'Other');
     },
     onCalcChanged: function(updates, product) {
+        console.log('onCalcChanged Start');
         if (cu.isPOD(product)) {
+            //IDENTIFY CHANGED OPERATION
+            console.log('calc changed. logic list: ', opChangeList);
+
             //Change Ink to Full Color - Backlit if Backlit Film or translucent styrene is Selected
             if (cu.isValueInSet(fields.paperType, substratesForceCMYKBacklit)) {
                 console.log('trigger backlit on loaded logic');
                 if (cu.getValue(fields.printingS1) != 55) {
-                    cu.changeField(fields.printingS1, 55, true);
-                    
+                    var changeEventTriggered = cu.changeField(fields.printingS1, 55, true);
+                    if (changeEventTriggered) {
+                        return;
+                    }
                 }
                 //No printing on back side
                 if (cu.hasValue(fields.printingS2)) {
-                    cu.changeField(fields.printingS2, '', true);
+                    var changeEventTriggered = cu.changeField(fields.printingS2, '', true);
                     onQuoteUpdatedMessages += '<p>Backlit Film cannot be printed on the back side.</p>';
-                    return
+                    if (changeEventTriggered) {
+                        return;
+                    }
                 }
             }
+
+            opChangeList = [];
+            // while (opChangeList.length) {
+            //     opChangeList.pop();
+            //}
         }
+        console.log('onCalcChanged End');
     },
     onQuoteUpdated: function(updates, validation, product) {
+        console.log('onQuoteUpdated Start');
+        calcCount++;
+        console.log('Calc count: ', calcCount);
         if (cu.isPOD(product)) {
-         /*re-init on every update*/
-            cu.initFields();
-            //TEMP ADD IN FIELDS.CHOICE UNTIL CREATED IN CALCULATORUTILIES.JS
-            addOperationChoiceProperties();
+            //STOP IF CALCULATOR NOT RETURNING QUOTE
+            if (!configureglobals.cquote) { return; }
+            if (!configureglobals.cquote.success) { return; }
 
-            var submessage = ''; 
-
-            //run meta field action
-            metaFieldsActions.onQuoteUpdated(product);
-            
-            if (cu.isSmallFormat(product)) { 
-                addClassToOperation(planningOnlyOperations,'planning');
-                addClassToOperation(estimstingOnlyOperations,'estimating');
-                addClassToOperation(trainingOps,'training');
-                addOtherOpClass(opsWithOther);
-                removeClassFromOp(170,'costingOnly');
-                removeClassFromOp(205,'costingOnly');
-
-                //Change Labels for Paper Type, Weight, Color
-                cu.setLabel(fields.paperType,'Substrate');
-                if (fields.pages) {
-                    cu.setLabel(fields.pages,'Pieces per Set');
-                }
-                //CHange label of pages for Setrs
-                cu.setLabel(fields.paperWeight,'Thickness');
-
-                /**************** OPERATION ITEM KEYS */
-                //Create object from key value pairs inserted into operation Item Description surrounded by double brackets "{{ }}"
-                //var operationItemKeys = new Object();  
-                for (const prop of Object.keys(operationItemKeys)) {
-                  delete operationItemKeys[prop];
-                }
-                var quote = configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote ? configureglobals.cquote.pjQuote || configureglobals.cquote.lpjQuote : null;
-                if (quote) {
-                    var ops = quote.operationQuotes;
-                    var descriptions = [];
-                    ops.forEach(function(operationQuote) {
-                        var opItemDescription = operationQuote.data.choice.description;
-                        descriptions.push(opItemDescription);
-                        //var opItemKeyText = opItemDescription.replace(/(^.*{{|}}.*$)/g, '' );
-                        var opItemKeyText = /\[(.*?)\]/.exec(opItemDescription);
-                        if (opItemKeyText) {
-                            var opItemObj = JSON.parse(opItemKeyText[1]);
-                            //push to calc object
-                            Object.keys(opItemObj).forEach(function(key) {
-                                operationItemKeys[key] = opItemObj[key];
-                            });
-                        }
-                    });
-                }
-
-                /**************** SET CUSTOM PROPERTIES */
-                setCustomProperties(quote.pressSheetQuote.pressSheet,"description","customProperties");
-
-                /********* Color Critical Check */
-                var colorCriticalOp = fields.operation205;
-                var colorCriticalDevice = fields.operation206;
-                if (colorCriticalOp && colorCriticalDevice) {
-                    var hasQtyError = false;
-                    if (cu.hasValue(colorCriticalOp)) {
-                        //Show special message if quantity of device not hit
-                        if (calcValidation.hasErrorForField(validation, fields.quantity)) {
-                            hasQtyError = true;
-                        }
-                        cu.showField(colorCriticalDevice);
-                        cu.setLabel(colorCriticalOp,"Color Critical - please indicate job # below");
-                        if (cu.hasValue(colorCriticalDevice)) {
-                            if (configureglobals.cdevicemgr.autoDeviceSwitch) {
-                                toggleAutoDeviceTypeButton();
-                                $('select[name="DEVICEDD"]').trigger('focus').trigger('change');
-                                return
-                            }
-                            var criticalDeviceId = getCriticalDeviceId[cu.getValue(colorCriticalDevice)] ? getCriticalDeviceId[cu.getValue(colorCriticalDevice)] : null;
-                            if (criticalDeviceId && !hasQtyError) {
-                                if (cu.getDeviceType() != criticalDeviceId) {
-                                    setDevice(criticalDeviceId);
-                                    return
-                                }
-                            }
-                        }
-                        if (hasQtyError) {
-                            cu.alert('<p>The default settings for this device cannot run with these specifications. Resubmit the specs with your Color Critical requirements, but do not select a device. Instead, enter a press note with the device required</p>');
-                        }
-
-                    } else {
-                        if (cu.hasValue(colorCriticalDevice)) {
-                            cu.changeField(colorCriticalDevice,'',true);
-                        }
-                        cu.hideField(colorCriticalDevice);
-                        cu.setSelectedOptionText(colorCriticalOp,'No');
-                         {
-                            if (!configureglobals.cdevicemgr.autoDeviceSwitch) {
-                                toggleAutoDeviceTypeButton();
-                            }
-                        }
-                    }
-                }
-
-
-                //STOP IF QALCULATOR NOT RETURNING QUOTE
-                if (!configureglobals.cquote) { return; }
-                if (!configureglobals.cquote.success) { return; }
-
-                /********* Convert pieces for Operation Costing */
-                var pieceWidth = cu.getWidth();
-                var pieceHeight = cu.getHeight();
-                var quantity = cu.getTotalQuantity();
-                
-                var SqInchIncreaserAnswer = fields.operation97_answer;
-                var SqInchDecreaserAnswer = fields.operation100_answer;
-                var LinInchIncreaserAnswer = fields.operation101_answer;
-                var LinInchDecreaserAnswer = fields.operation103_answer;
-                var topInchIncreaserAnswer = fields.operation121_answer;
-                var topInchDecreaserAnswer = fields.operation123_answer;
-
-                //Increase Operation Pieces to square inch with bleed
-                if (SqInchIncreaserAnswer && SqInchDecreaserAnswer) {
-                    var pieceSqInch = (parseFloat(pieceWidth) + .5) * (parseFloat(pieceHeight) + .5);
-                    pieceSqInch = parseInt(pieceSqInch);
-                    if (cu.getValue(SqInchIncreaserAnswer) != pieceSqInch) {
-                        cu.changeField(SqInchIncreaserAnswer, pieceSqInch, true);
-                        return
-                    }
-                    if (cu.getValue(SqInchDecreaserAnswer) != pieceSqInch) {
-                        cu.changeField(SqInchDecreaserAnswer, pieceSqInch, true);
-                        return
-                    }
-                }
-                    
-                //Increase Operation Pieces to linear inch
-                if (LinInchIncreaserAnswer && LinInchDecreaserAnswer) {
-                    var pieceLinInch = (2 * (pieceWidth) + 2 * (pieceHeight));
-                    pieceLinInch = parseInt(pieceLinInch);
-                    if (cu.getValue(LinInchIncreaserAnswer) != pieceLinInch) {
-                        cu.changeField(LinInchIncreaserAnswer, pieceLinInch, true);
-                        return
-                    }
-                    if (cu.getValue(LinInchDecreaserAnswer) != pieceLinInch) {
-                        cu.changeField(LinInchDecreaserAnswer, pieceLinInch, true);
-                        return
-                    }
-                }
-                    
-                //Increase Operation Pieces to Top Side Linear Inch
-                var topLinInch = pieceWidth;
-                topLinInch = parseInt(topLinInch);
-                if (topInchIncreaserAnswer && topInchDecreaserAnswer) {
-                    if (cu.getValue(topInchIncreaserAnswer) != topLinInch) {
-                        cu.changeField(topInchIncreaserAnswer, topLinInch, true);
-                        return
-                    }
-                    if (cu.getValue(topInchDecreaserAnswer) != topLinInch) {
-                        cu.changeField(topInchDecreaserAnswer, topLinInch, true);
-                        return
-                    }
-                } 
-                    
-                /********* Align Ink to Color in Operations */
-                var sideOneInk = cu.getValue(fields.printingS1);
-                var sideTwoInk = cu.getValue(fields.printingS2);
-                var sideOneInkId = configureglobals.cquote.pjQuote.side1Ink.id;
-                var sideTwoInkId = null;
-                if (cu.hasValue(fields.printingS2)) {
-                    sideTwoInkId = configureglobals.cquote.pjQuote.side2Ink.id;
-                }
-                var sideOneInkOp = fields.operation98;
-                var sideTwoInkOp = fields.operation99;
-                var shrinkOpTest = fields.operation143;  
-
-                //Change Ink to Full Color - Backlit if Backlit Film or translucent styrene is Selected
-                if (cu.isValueInSet(fields.paperType, substratesForceCMYKBacklit)) {
-                    console.log('trigger backlit logic');
-                    if (cu.getValue(fields.printingS1) != 55) {
-                        cu.changeField(fields.printingS1, 55, true);
-                        return
-                    }
-                    //No printing on back side
-                    if (cu.hasValue(fields.printingS2)) {
-                        cu.changeField(fields.printingS2, '', true);
-                        onQuoteUpdatedMessages += '<p>Backlit Film cannot be printed on the back side.</p>';
-                        return
-                    }
-                }
-                //NEW
-                if (sideOneInkId) {
-                    var sideOneInkOpId = side1InkMap[sideOneInkId] ? side1InkMap[sideOneInkId] : null;
-                    if (sideOneInkOpId) {
-                        if (cu.getValue(sideOneInkOp) != sideOneInkOpId) {
-                            cu.changeField(sideOneInkOp, sideOneInkOpId, true);
-                            return
-                        }
-                    } else {
-                        console.log('Side 1 ink operation not mapping for ink ' + sideOneInkId);
-                    }
-                }
-                if (sideTwoInkOp) {
-                    if (sideTwoInkId) {
-                        var sideTwoInkOpId = side2InkMap[sideTwoInkId] ? side2InkMap[sideTwoInkId] : null;
-                        if (sideTwoInkOpId) {
-                            if (cu.getValue(sideTwoInkOp) != sideTwoInkOpId) {
-                                cu.changeField(sideTwoInkOp, sideTwoInkOpId, true);
-                            }
-                        } else {
-                            if (cu.hasValue(sideTwoInkOp)) {
-                                cu.changeField(sideTwoInkOp,'', true);
-                            }
-                        }
-                    } else {
-                        if (cu.hasValue(sideTwoInkOp)) {
-                            cu.changeField(sideTwoInkOp,'', true);
-                        }
-                    }
-                }
-                /********* CUTTING LOGIC */
-                var cuttingOp = fields.operation170;
-                if (cu.hasValue(cuttingOp)) {
-                    cutMethod = cutMethodId[cu.getValue(cuttingOp)];
-                } else {
-                    cutMethod = 'zund'
-                }
-                var zundCuttingOp = fields.operation102;
-                var zundLoadingOp = fields.operation104;
-                var zundUnloadingOp = fields.operation105;
-                var noCutOp = fields.operation168;
-                var outsourceCutOp = fields.operation156;
-                var guillotineCutOp = fields.operation154;
-                var fabCutOp = fields.operation174;
-                //zund Cutting
-                if (cutMethod == 'zund') {
-                    //default zundFactor to K1, and check materials for largest index
-                    var zundChoice = zundFactors.K1;
-                    //check print substrate A and Mount for highest ranked factor
-                    if (quote.pressSheetQuote.pressSheet.zundFactor) {
-                        zundChoice = zundFactors[quote.pressSheetQuote.pressSheet.zundFactor];
-                    }
-
-                    if (cu.getValue(zundLoadingOp) != zundChoice.loadingOpItem) {cu.changeField(zundLoadingOp,zundChoice.loadingOpItem,true); return}
-                    if (cu.getValue(zundUnloadingOp) != zundChoice.unloadingOpItem) {cu.changeField(zundUnloadingOp,zundChoice.unloadingOpItem,true); return}
-                    if (cu.getValue(zundCuttingOp) != zundChoice.runOpItem) {cu.changeField(zundCuttingOp,zundChoice.runOpItem,true); return}
-                } else {
-                    if (cu.hasValue(zundLoadingOp)) {cu.changeField(zundLoadingOp,'', true); return}
-                    if (cu.hasValue(zundUnloadingOp)) {cu.changeField(zundUnloadingOp,'', true); return}
-                    if (cu.hasValue(zundCuttingOp)) {cu.changeField(zundCuttingOp,'', true); return}
-                }
-                //no cutting -- ENTER IN NO CUT FOR noCut AND fabCut
-                if (cutMethod == 'noCut') {
-                    if (!cu.hasValue(noCutOp)) {cu.changeField(noCutOp, 1076, true); return}
-                } else {
-                    if (cu.hasValue(noCutOp)) {cu.changeField(noCutOp, '', true); return}
-                }
-                //Fab cut
-                if (cutMethod == 'fabCut') {
-                    if (!cu.hasValue(fabCutOp)) {cu.changeField(fabCutOp, 1108, true); return}
-                    removeClassFromOp(174, 'planning');
-                    //if Fab Laser Cut is chosen, force Pre-mask 2 sides=
-                    if (cu.getValue(fabCutOp) == 1162) {
-                        if (cu.getValue(fields.operation133) != 761) {
-                            cu.changeField(fields.operation133, 761, true);
-                            onQuoteUpdatedMessages += '<p>Fab Laser Cut requires Premask on both sides.  This has been chosen on your behalf.</p>';
-                        }
-                    }
-                } else {
-                    if (cu.hasValue(fabCutOp)) {cu.changeField(fabCutOp, '', true); return}
-                }
-                //outsourced
-                if (cutMethod == 'outsourceCut' || cutMethod == 'outsourceDieCut') {
-                    if (cutMethod == 'outsourceCut') {
-                        if (!cu.hasValue(outsourceCutOp)) {cu.changeField(outsourceCutOp, 911, true); return}
-                    }
-                    if (cutMethod == 'outsourceDieCut') {
-                        if (!cu.hasValue(outsourceCutOp)) {cu.changeField(outsourceCutOp, 1096, true); return}
-                        if (!cu.hasValue(guillotineCutOp)) {cu.changeField(guillotineCutOp, 907, true); return}
-                    } else {
-                        if (cu.hasValue(guillotineCutOp)) {cu.changeField(guillotineCutOp, '', true); return}
-                    }
-                } else {
-                    if (cu.getSelectedOptionText(outsourceCutOp).indexOf('Cut') != -1) {
-                        if (cu.hasValue(outsourceCutOp)) {
-                            cu.changeField(outsourceCutOp,'',true);
-                        }
-                    }
-                    removeOperationItemsWithString(156,'Cut');
-                }
-                /********* Disallow Edge Banding for incorrect sizes */
-                var edgeBanding = fields.operation119;
-                if (edgeBanding) {
-                    //disable field unless 1/2" or 1" substrate selected
-                    if (cu.getValue(fields.paperWeight) == 52 || cu.getValue(fields.paperWeight) == 53) {   
-                        cu.enableField(edgeBanding);
-                    }
-                    else {
-                        cu.disableField(edgeBanding);
-                        cu.setSelectedOptionText(edgeBanding,'Must Select 1" or 1/2" Substrate');
-                    }
-                    if (cu.hasValue(edgeBanding)) {
-                        // .5" options
-                        if (cu.getValue(edgeBanding) == 692 || cu.getValue(edgeBanding) == 693) {
-                            if (cu.getValue(fields.paperWeight) != 52) {
-                                cu.changeField(edgeBanding, '', true);
-                                onQuoteUpdatedMessages += '<p>1/2" Edgebanding requires a 1/2" substrate.  Please choose an appropriate substrate and then add Edgebanding.</p>';
-                                return
-                            }
-                        }
-                        // 1" options
-                        if (cu.getValue(edgeBanding) == 694 || cu.getValue(edgeBanding) == 695) {
-                            if (cu.getValue(fields.paperWeight) != 53) {
-                                cu.changeField(edgeBanding, '', true);
-                                onQuoteUpdatedMessages += '<p>1/2" Edgebanding requires a 1/2" substrate.  Please choose an appropriate substrate and then add Edgebanding.</p>';
-                                return
-                            }
-                        }
-                    }
-                }
-                /************************* ADD LAMINATING RUN 1 AND 2 FOR LAMINATING, MOUNTING, AND PREMASK */
-                var frontLamOp = fields.operation131;
-                var backLamOp = fields.operation130;
-                var mountOp = fields.operation139;
-                var premaskOp = fields.operation133;
-                var hasFrontLam = cu.hasValue(frontLamOp);
-                var hasBackLam = cu.hasValue(backLamOp);
-                var hasMount = cu.hasValue(mountOp);
-                var hasPremask = cu.hasValue(premaskOp);
-
-                if (frontLamOp) {
-                    var hasColdFront = fields.operation131.choice ? fields.operation131.choice.frontLamType == 'Cold' : false;
-                    var hasHotFront = fields.operation131.choice ? fields.operation131.choice.frontLamType == 'Hot' : false;
-                    var hasAdhesiveFront = fields.operation131.choice ? fields.operation131.choice.frontLamType == 'Adhesive' : false;
-                }
-                if (backLamOp) {
-                    var hasColdBack = fields.operation130.choice ? fields.operation130.choice.backLamType == 'Cold' : false;
-                    var hasHotBack = fields.operation130.choice ? fields.operation130.choice.backLamType == 'Hot' : false;
-                    var hasAdhesiveBack = fields.operation130.choice ? fields.operation130.choice.backLamType == 'Adhesive' : false;
-                }
-                var laminatingRun = fields.operation135;
-                var laminatingRun2 = fields.operation221;
-                if (laminatingRun && laminatingRun2) {
-                    setLamRunOperations();
-                }
-                /************************* ADD PRE- PRINTING LAMINATING SETUP FEE AND RUN WHEN FRONT AND/OR BACK LAM CHOSEN */
-                var sfPreLaminating = cu.findOperationFromSet(sfPrePrintLamOps);
-                if (cu.hasValue(sfPreLaminating)) {
-                    if (!cu.hasValue(fields.operation151)) {
-                        cu.changeField(fields.operation151, 898, true);
-                        return
-                    }
-                } else {
-                    if (cu.hasValue(fields.operation151)) {
-                        cu.changeField(fields.operation151, '', true);
-                        return
-                    }
-                }
-                /************************* HIDE OPERATION QUESTION */
-                if (cu.hasValue(fields.operation133)) {
-                    hideOperationQuestion('133');
-                }
-
-                /************************* SHOW HARD PROOF MESSAGE ON THROUGHPUT THRESHOLDS */
-                if (pmPortal) {
-                    var boardThroughput = cu.getTotalPressSheets();
-                    var proofOp = fields.proof;
-                    var proofSelection = cu.getValue(proofOp);
-                    if (boardThroughput >= 20) {
-                        if (hardProofMessageCount == 0) {
-                            if (proofSelection != 40 && proofSelection != 43) {
-                                onQuoteUpdatedMessages += '<p>Jobs with a throughput of 20 boards require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
-                                hardProofMessageCount = 1;
-                                cu.changeField(proofOp, 40, true);
-                                return
-                            }
-                        } 
-                    }
-                }
-                /********* Show Flute/Grain Direction operation when Fluted substrate selected */
-                var fluteDirectionOp = fields.operation152;
-                if (fluteDirectionOp) {
-                    var substrateName = $('#pressSheetType select[name="PRESSSHEETTYPEDD"] option:selected').text();
-                    var hasFlutes = false;
-                    for (names in flutedSubstrateNames) {
-                        if (substrateName.indexOf(flutedSubstrateNames[names]) != -1) {
-                            hasFlutes = true;
-                        }
-                    }
-                    if (hasFlutes) {
-                        cu.showField(fluteDirectionOp);
-                        fluteDirectionOp.css('color','red');
-                    } else {
-                        cu.hideField(fluteDirectionOp);
-                        if (cu.hasValue(fluteDirectionOp)) {
-                            
-                            cu.changeField(fluteDirectionOp,'',true);
-                        }
-                    }
-                }
-
-                /********* HEAT BENDING RULES */
-                var heatBendingOp = fields.operation159;
-                if (heatBendingOp) {
-                    //Do not allwow with Post printing lam and mounting operations
-                    //var previousAllowHeatBend = allowHeatBend;
-                    var allowHeatBend = true;
-                    var heatBendMessage = '';
-                    //Do not allow with Lam or Mounting
-                    var hasNonHeatBendOpSelected = false;
-                    checkForNonHeatBendingOps([
-                            fields.operation130,  //LF Back Laminating
-                            fields.operation131,  //LF Front Laminating
-                            fields.operation135   //LF Mounting
-                        ]);
-                    //only approved materials
-                    if (!cu.isValueInSet(fields.paperType, boardTypesThatCanHeatBend)) {
-                        allowHeatBend = false; 
-                        heatBendMessage += '<p>The substrate selected is not able to Heat Bend.</p>';
-                    }
-                    //Cannot exceed 100 finished pieces.
-                    if (cu.getTotalQuantity() > 100) {
-                        allowHeatBend = false; 
-                        heatBendMessage += '<p>Heat Bending is not allowed on quantities over 100 finishing pieces.</p>';
-                    }
-                    //Neither size dimension can exceed 40"
-                    if (cu.getWidth() > 40 || cu.getHeight() > 40) {
-                        allowHeatBend = false; 
-                        heatBendMessage += '<p>Heat bending is not available for pieces with one edge longer than 40".</p>';
-                    }
-                    //must be .125 (3MM) or thinner boardWeightsThatCanHeatBend
-                    if (!cu.isValueInSet(fields.paperWeight, boardWeightsThatCanHeatBend)) {
-                        allowHeatBend = false; 
-                        heatBendMessage += '<p>The substrate weight selected is not able to Heat Bend.</p>';
-                    }
-
-                    if (cu.hasValue(heatBendingOp)) {
-                        if (!allowHeatBend) {
-                            //onQuoteUpdatedMessages += heatBendMessage;
-                            cu.alert(heatBendMessage);
-                            cu.changeField(heatBendingOp,'',true);
-                        }
-                        if (cu.isLastChangedField(updates, heatBendingOp)) {
-                            onQuoteUpdatedMessages += '<p>Because you selected the Heat Bending option you are required to provide art describing the piece and where the bend(s) goes. If you have any questions about this please speak to your training supervisor.</p>';
-                        }
-                        
-                    }
-                    if (allowHeatBend) {
-                        cu.showField(heatBendingOp);
-                    } else {
-                        cu.hideField(heatBendingOp);
-                    }
-                }
-                function checkForNonHeatBendingOps(fields) {
-                    for (var i = 0; i < fields.length; i++) {
-                        if (cu.hasValue(fields[i])) {
-                            allowHeatBend = false; 
-                            heatBendMessage += '<p>Heat Bending is not allowed with Laminating or Mounting</p>';
-                        }
-                    }
-                    return 
-                }
-                /********* ADD SIDE 2 SETUP COST WHEN 2 SIDED CHOSEN */
-                var sideTwoSetupOp = fields.operation210;
-                if (sideTwoSetupOp) {
-                    if (cu.hasValue(fields.printingS2)) {
-                        if (!cu.hasValue(sideTwoSetupOp)) {
-                            cu.changeField(sideTwoSetupOp, 1498, true);
-                            return
-                        }
-                    } else {
-                        if (cu.hasValue(sideTwoSetupOp)) {
-                            cu.changeField(sideTwoSetupOp, '', true);
-                            return
-                        }
-                    }
-                }
-
-                /********* Display Run Time information on Estimating Site for LF Board Estimating */
-                $('#runTime span').text(cu.getTotalRuntime());
-                $('#totalPressSheets span').text(cu.getTotalPressSheets());
-                var piecesOnSheet = (cu.getTotalQuantity() / cu.getTotalPressSheets());
-                piecesOnSheet = Math.ceil(piecesOnSheet);
-                $('#piecesOnSheet span').text(piecesOnSheet);
-                $('#smallFormatPrintSpecs').insertAfter('.quoteContinue');
-                $('#smallFormatPrintSpecs').show();
-                $('#pressSheetName span').text(cu.getPressSheetName()); 
-
-                /******** If device overridden fill out meta field */
-                var overrideDev = configureglobals.cdevicemgr.autoTypeSwitch;
-                if (!overrideDev) {
-                    $('.overrideDevice input').val('Device Overridden');
-                } else {
-                    $('.overrideDevice input').val('');
-                }
-
-                trimOperationItemName(opsWithSubIds,'_');
-                removeOperationItemsWithString(156,'Print');
-                removeOperationItemsWithString(133,'Other');
-
-                /******************* TEAM MARKUP OPERATIONS */
-                var teamMarkupOp = fields.operation218;
-                var teamMarkupOp_answer = fields.operation218_answer;
-                if (teamMarkupOp && teamMarkupOp_answer) {
-                    var markup = quote.markupPercent;
-                    var teamCost = getTeamPrice();
-                    var costMinusTeam = parseInt((quote.jobCostPrice + quote.operationsPrice - teamCost));
-                    if (cu.hasValue(teamMarkupOp)) {
-                        if (cu.getValue(teamMarkupOp_answer) != costMinusTeam) {
-                            cu.changeField(teamMarkupOp_answer, costMinusTeam, true);
-                            return
-                        }
-                    }
-                } 
-
-                function getTeamPrice() {
-                    var operationQuotes = quote.operationQuotes;
-                    for (var i = 0; i < operationQuotes.length; i++) {
-                        if (operationQuotes[i].data.heading == "TBG Team") {
-                            return operationQuotes[i].price
-                        }
-                    }
-                }
-
-                renderExtendedCostBreakdown();
-
-                showMessages();
-            }  // END SMALL FORMAT      
-        }
-        /**********************
-            functions called in onQuoteUpdated
-        ****************/
-        function setLamRunOperations() {
-            if (hasMount || hasFrontLam || hasBackLam || hasPremask) {
-                if (hasMount) {
-                    if (hasPremask) {
-                        if (!hasFrontLam && !hasBackLam) { // 1. Premask / Adhesive  2. Mount
-                            validateValue(laminatingRun, 1600);
-                            validateValue(laminatingRun2, 1604);
-                        } else if (hasHotFront) { //  1. Hot / Adhesive  2. Mount + Premask
-                            validateValue(laminatingRun, 1598);
-                            validateValue(laminatingRun2, 1605);
-                        } else if (hasColdFront) { //  1. Cold / Adhesive  2. Mount + Premask
-                            validateValue(laminatingRun, 1597);
-                            validateValue(laminatingRun2, 1605);
-                        } else { // 1. Premask / Adhesive  2. Mount  --CATCH ALL UNFORESEEN
-                            validateValue(laminatingRun, 1600);
-                            validateValue(laminatingRun2, 1604);
-                        } 
-                    } else {  //mounted but no premask
-                       if (!hasFrontLam && !hasBackLam) { // 1. Adhesive  2. Mount
-                            validateValue(laminatingRun, 1595);
-                            validateValue(laminatingRun2, 1604);
-                        } else if (hasHotFront) { //  1. Hot / Adhesive  2. Mount
-                            validateValue(laminatingRun, 1598);
-                            validateValue(laminatingRun2, 1604);
-                        } else if (hasColdFront) { //  1. Cold / Adhesive  2. Mount
-                            validateValue(laminatingRun, 1597);
-                            validateValue(laminatingRun2, 1604);
-                        } else if (hasAdhesiveFront || hasAdhesiveFront) { // 1. Adhesive  2. Mount
-                            validateValue(laminatingRun, 1597);
-                            validateValue(laminatingRun2, 1604);
-                        } else { // 1. Adhesive  2. Mount  --CATCH ALL UNFORESEEN
-                            validateValue(laminatingRun, 1595);
-                            validateValue(laminatingRun2, 1604);
-                        }
-                    }
-                } else {  //everything not mounted
-                    if (hasPremask) {
-                        if (hasHotFront) {
-                            if (hasAdhesiveBack) { // 1. Hot / Adhesive 2. Premask
-                                validateValue(laminatingRun, 1598);
-                                validateValue(laminatingRun2,1606);
-                            } else if (hasHotBack) { // 1. Hot / Hot 2. Premask
-                                validateValue(laminatingRun, 1529);
-                                validateValue(laminatingRun2,1606);
-                            } else { // 1. Hot / Hot 2. Premask
-                                validateValue(laminatingRun, 1529);
-                                validateValue(laminatingRun2,1606);
-                            }
-                        } else if (hasColdFront) {
-                            if (hasColdBack) {  // 1. Cold  2. Premask
-                                validateValue(laminatingRun, 777);
-                                validateValue(laminatingRun2,1606);
-                            } else if (hasAdhesiveBack) { // 1. Cold / Adhesive 2. Premask
-                                validateValue(laminatingRun, 1597);
-                                validateValue(laminatingRun2,1606);
-                            } else { // 1. Cold  2. Pre-mask
-                                validateValue(laminatingRun, 777);
-                                validateValue(laminatingRun2,1606);
-                            }
-                        } else if (hasAdhesiveBack || hasAdhesiveFront) { // 1. Adhesive  2. Premask
-                            validateValue(laminatingRun, 1595);
-                            validateValue(laminatingRun2,1606);
-                        } else { // 1. Premask
-                            validateValue(laminatingRun, 1601);
-                            validateValue(laminatingRun2,'');
-                        }
-                    } else {  // no mount, no premask
-                        if (hasHotFront) {
-                            if (hasHotBack) { // 1. Hot / Hot
-                                validateValue(laminatingRun, 1529);
-                                validateValue(laminatingRun2,'');
-                            } else if (hasAdhesiveBack) {  // 1. Hot / Adhesive
-                                validateValue(laminatingRun, 1598);
-                                validateValue(laminatingRun2,'');
-                            } else { // WARNING
-                                validateValue(laminatingRun, '');
-                                validateValue(laminatingRun2,'');
-                                message += '<p> Must have a Hot Lam, Adhesive, or Mount on back side</p>';
-                            }
-                        } else if (hasColdFront) {
-                            if (hasColdBack) {  // 1. Cold  2. Cold
-                                validateValue(laminatingRun, 777);
-                                validateValue(laminatingRun2, 1602); 
-                            } else if (hasAdhesiveBack) { // 1. Adhesive
-                                validateValue(laminatingRun, 1595);
-                                validateValue(laminatingRun2,'');
-                            } else {  // 1. Cold
-                                validateValue(laminatingRun, 777);
-                                validateValue(laminatingRun2, ''); 
-                            }
-                        } else if (hasAdhesiveBack || hasAdhesiveFront) { // 1. Adhesive
-                            validateValue(laminatingRun, 1595);
-                            validateValue(laminatingRun2,'');
-                        }
-                    }
-                }
+            if (cu.isSmallFormat(product)) {
+                var quote = configureglobals.cquote.pjQuote;
+                if (!quote) { return; }
+                var changeEventTriggered = boardCalcLogic.onQuoteUpdated_POD_SmallFormat(updates, validation, product, quote);
             } else {
-                validateValue(laminatingRun,'');
-                validateValue(laminatingRun2,'');
+                var quote = configureglobals.cquote.lpjQuote;
+                if (!quote) { return; }
+                var changeEventTriggered = boardCalcLogic.onQuoteUpdated_POD_LargeFormat(updates, validation, product, quote);
             }
         }
-        function  showMessages () {
-            // show an alert when necessary
-            if (onQuoteUpdatedMessages != '' || submessage != '') {
-                onQuoteUpdatedMessages += submessage;
-                cu.alert(onQuoteUpdatedMessages);
-                onQuoteUpdatedMessages = '';
+        console.log('onQuoteUpdated End');
+    },
+    onQuoteUpdated_POD_SmallFormat: function(updates, validation, product, quote) {
+        var changeEventTriggered = false;
+
+        /*re-init on every update*/
+        cu.initFields();
+
+        //Add properties to global objects from embedded meta 
+        setConfigGlobalProperties(quote);
+
+        //functions that can change price
+        controller.enterFullQuoteMode();
+        functionsRanInFullQuote(updates, validation, product, quote);
+        console.log('POD_SF validation finished. Pending change:', controller.fieldChangeQuotePending);
+        var requoteInProgress = controller.fieldChangeQuotePending;
+        controller.exitFullQuoteMode();
+        if (requoteInProgress) {
+            return true;
+        }
+
+        //functions that affect only UI
+        changeEventTriggered = functionsRanAfterFullQuote(updates, validation, product, quote);
+        console.log('POD_SF post-full-quote changes triggered:',changeEventTriggered);
+
+        return changeEventTriggered;
+    },
+    onQuoteUpdated_POD_LargeFormat: function(updates, validation, product, quote) {
+        var changeEventTriggered = false;
+
+        // 20171218 begin - steve moved this block from onCalcChanged
+        // 20171218 end
+
+        return changeEventTriggered;
+    }
+}
+
+function functionsRanInFullQuote(updates, validation, product, quote) {
+    checkForColorCriticalDevice(validation);
+    setInkConsumptionOps();
+    setCuttingOperations(quote);
+    edgeBandingLogic();
+    setLamOps();
+    setFluteDirectionOp();
+    heatBendingRules(updates);
+    twoSidedJobOp();
+    setTeamPrice(quote);// try running this in both full quote and after to make an attempt at eliminating a getQuote round trip 
+}
+
+function functionsRanAfterFullQuote(updates, validation, product, quote) {
+    var changeEventTriggered = setTeamPrice(quote);
+    if (changeEventTriggered) {
+        return true;
+    }
+    updateUI(quote, product);
+    return false;
+}
+
+// Functions called in Full Quote
+function setConfigGlobalProperties(quote) {
+    addOperationChoiceProperties();
+    setCustomProperties(quote.pressSheetQuote.pressSheet,"description","customProperties");
+}
+
+function checkForColorCriticalDevice(validation) {
+    //If color cricital operation selected, toggle off Auto Device and select device
+    var colorCriticalOp = fields.operation205;
+    var colorCriticalDevice = fields.operation206;
+    if (colorCriticalOp && colorCriticalDevice) {
+        var hasQtyError = false;
+        if (cu.hasValue(colorCriticalOp)) {
+            //Show special message if quantity of device not hit
+            if (calcValidation.hasErrorForField(validation, fields.quantity)) {
+                hasQtyError = true;
+            }
+            cu.showField(colorCriticalDevice);
+            cu.setLabel(colorCriticalOp,"Color Critical - please indicate job # below");
+            if (cu.hasValue(colorCriticalDevice)) {
+                if (configureglobals.cdevicemgr.autoDeviceSwitch) {
+                    toggleAutoDeviceTypeButton();
+                    $('select[name="DEVICEDD"]').trigger('focus').trigger('change');
+                }
+                var criticalDeviceId = getCriticalDeviceId[cu.getValue(colorCriticalDevice)] ? getCriticalDeviceId[cu.getValue(colorCriticalDevice)] : null;
+                if (criticalDeviceId && !hasQtyError) {
+                    if (cu.getDeviceType() != criticalDeviceId) {
+                        setDevice(criticalDeviceId);
+                    }
+                }
+            }
+            if (hasQtyError) {
+                cu.alert('<p>The default settings for this device cannot run with these specifications. Resubmit the specs with your Color Critical requirements, but do not select a device. Instead, enter a press note with the device required</p>');
+            }
+        } else {
+            if (cu.hasValue(colorCriticalDevice)) {
+                var changeEventTriggered = cu.changeField(colorCriticalDevice,'',true);
+                if (changeEventTriggered) {
+                    return true;
+                }
+            }
+            cu.hideField(colorCriticalDevice);
+            cu.setSelectedOptionText(colorCriticalOp,'No');
+             {
+                if (!configureglobals.cdevicemgr.autoDeviceSwitch) {
+                    toggleAutoDeviceTypeButton();
+                }
             }
         }
     }
 }
+
+function setInkConsumptionOps() {
+    /********* Align Ink to Color in Operations */
+    var sideOneInk = cu.getValue(fields.printingS1);
+    var sideTwoInk = cu.getValue(fields.printingS2);
+    var sideOneInkId = configureglobals.cquote.pjQuote.side1Ink.id;
+    var sideTwoInkId = null;
+    if (cu.hasValue(fields.printingS2)) {
+        sideTwoInkId = configureglobals.cquote.pjQuote.side2Ink.id;
+    }
+    var sideOneInkOp = fields.operation98;
+    var sideTwoInkOp = fields.operation99;
+    var shrinkOpTest = fields.operation143;  
+
+    //Change Ink to Full Color - Backlit if Backlit Film or translucent styrene is Selected
+    if (cu.isValueInSet(fields.paperType, substratesForceCMYKBacklit)) {
+        console.log('trigger backlit logic');
+        if (cu.getValue(fields.printingS1) != 55) {
+            cu.changeField(fields.printingS1, 55, true);
+        }
+        //No printing on back side
+        if (cu.hasValue(fields.printingS2)) {
+            cu.changeField(fields.printingS2, '', true);
+            onQuoteUpdatedMessages += '<p>Backlit Film cannot be printed on the back side.</p>';
+        }
+    }
+    //NEW
+    if (sideOneInkId) {
+        var sideOneInkOpId = side1InkMap[sideOneInkId] ? side1InkMap[sideOneInkId] : null;
+        if (sideOneInkOpId) {
+            if (cu.getValue(sideOneInkOp) != sideOneInkOpId) {
+                cu.changeField(sideOneInkOp, sideOneInkOpId, true);
+            }
+        } else {
+            console.log('Side 1 ink operation not mapping for ink ' + sideOneInkId);
+        }
+    }
+    if (sideTwoInkOp) {
+        if (sideTwoInkId) {
+            var sideTwoInkOpId = side2InkMap[sideTwoInkId] ? side2InkMap[sideTwoInkId] : null;
+            if (sideTwoInkOpId) {
+                if (cu.getValue(sideTwoInkOp) != sideTwoInkOpId) {
+                    cu.changeField(sideTwoInkOp, sideTwoInkOpId, true);
+                }
+            } else {
+                if (cu.hasValue(sideTwoInkOp)) {
+                    cu.changeField(sideTwoInkOp,'', true);
+                }
+            }
+        } else {
+            if (cu.hasValue(sideTwoInkOp)) {
+                cu.changeField(sideTwoInkOp,'', true);
+            }
+        }
+    }
+}
+
+function setCuttingOperations(quote) {
+    /********* CUTTING LOGIC */
+    var cuttingOp = fields.operation170;
+    if (cu.hasValue(cuttingOp)) {
+        cutMethod = cutMethodId[cu.getValue(cuttingOp)];
+    } else {
+        cutMethod = 'zund'
+    }
+    var zundCuttingOp = fields.operation102;
+    var zundLoadingOp = fields.operation104;
+    var zundUnloadingOp = fields.operation105;
+    var noCutOp = fields.operation168;
+    var outsourceCutOp = fields.operation156;
+    var guillotineCutOp = fields.operation154;
+    var fabCutOp = fields.operation174;
+    //zund Cutting
+    if (cutMethod == 'zund') {
+        //default zundFactor to K1, and check materials for largest index
+        var zundChoice = zundFactors.K1;
+        //check print substrate A and Mount for highest ranked factor
+        if (quote.pressSheetQuote.pressSheet.zundFactor) {
+            zundChoice = zundFactors[quote.pressSheetQuote.pressSheet.zundFactor];
+        }
+        validateValue(zundLoadingOp, zundChoice.loadingOpItem);
+        validateValue(zundUnloadingOp, zundChoice.unloadingOpItem);
+        validateValue(zundCuttingOp, zundChoice.runOpItem)
+
+    } else {
+        validateValue(zundLoadingOp,'');
+        validateValue(zundCuttingOp,'');
+        validateValue(zundUnloadingOp,'');
+    }
+    //no cutting -- ENTER IN NO CUT FOR noCut AND fabCut
+    if (cutMethod == 'noCut') {
+        validateValue(noCutOp, 1076);
+    } else {
+        validateValue(noCutOp,'');
+    }
+    //Fab cut
+    if (cutMethod == 'fabCut') {
+        if (!cu.hasValue(fabCutOp)) {cu.changeField(fabCutOp, 1108, true); }
+        removeClassFromOp(174, 'planning');
+        //if Fab Laser Cut is chosen, force Pre-mask 2 sides=
+        if (cu.getValue(fabCutOp) == 1162) {
+            if (cu.getValue(fields.operation133) != 761) {
+                cu.changeField(fields.operation133, 761, true);
+                onQuoteUpdatedMessages += '<p>Fab Laser Cut requires Premask on both sides.  This has been chosen on your behalf.</p>';
+            }
+        }
+    } else {
+        validateValue(fabCutOp,'');
+    }
+    //outsourced
+    if (cutMethod == 'outsourceCut' || cutMethod == 'outsourceDieCut') {
+        if (cutMethod == 'outsourceCut') {
+            validateValue(outsourceCutOp, 911);
+        }
+        if (cutMethod == 'outsourceDieCut') {
+            validateValue(outsourceCutOp, 1096);
+            validateValue(guillotineCutOp, 907);
+        } else {
+            validateValue(guillotineCutOp, '');
+        }
+    } else {
+        if (cu.getSelectedOptionText(outsourceCutOp).indexOf('Cut') != -1) {
+            if (cu.hasValue(outsourceCutOp)) {
+                cu.changeField(outsourceCutOp,'',true);
+            }
+        }
+        removeOperationItemsWithString(156,'Cut');
+    }
+}
+
+function edgeBandingLogic() {
+    /********* Disallow Edge Banding for incorrect sizes */
+    var edgeBanding = fields.operation119;
+    if (edgeBanding) {
+        //disable field unless 1/2" or 1" substrate selected
+        if (cu.getValue(fields.paperWeight) == 52 || cu.getValue(fields.paperWeight) == 53) {   
+            cu.enableField(edgeBanding);
+        }
+        else {
+            cu.disableField(edgeBanding);
+            cu.setSelectedOptionText(edgeBanding,'Must Select 1" or 1/2" Substrate');
+        }
+        if (cu.hasValue(edgeBanding)) {
+            // .5" options
+            if (cu.getValue(edgeBanding) == 692 || cu.getValue(edgeBanding) == 693) {
+                if (cu.getValue(fields.paperWeight) != 52) {
+                    cu.changeField(edgeBanding, '', true);
+                    onQuoteUpdatedMessages += '<p>1/2" Edgebanding requires a 1/2" substrate.  Please choose an appropriate substrate and then add Edgebanding.</p>';
+                }
+            }
+            // 1" options
+            if (cu.getValue(edgeBanding) == 694 || cu.getValue(edgeBanding) == 695) {
+                if (cu.getValue(fields.paperWeight) != 53) {
+                    cu.changeField(edgeBanding, '', true);
+                    onQuoteUpdatedMessages += '<p>1/2" Edgebanding requires a 1/2" substrate.  Please choose an appropriate substrate and then add Edgebanding.</p>';
+                }
+            }
+        }
+    }
+}
+
+function setLamOps() {
+    /************************* ADD LAMINATING RUN 1 AND 2 FOR LAMINATING, MOUNTING, AND PREMASK */
+    var frontLamOp = fields.operation131;
+    var backLamOp = fields.operation130;
+    var mountOp = fields.operation139;
+    var premaskOp = fields.operation133;
+    var hasFrontLam = cu.hasValue(frontLamOp);
+    var hasBackLam = cu.hasValue(backLamOp);
+    var hasMount = cu.hasValue(mountOp);
+    var hasPremask = cu.hasValue(premaskOp);
+
+    if (frontLamOp) {
+        var hasColdFront = fields.operation131.choice ? fields.operation131.choice.frontLamType == 'Cold' : false;
+        var hasHotFront = fields.operation131.choice ? fields.operation131.choice.frontLamType == 'Hot' : false;
+        var hasAdhesiveFront = fields.operation131.choice ? fields.operation131.choice.frontLamType == 'Adhesive' : false;
+    }
+    if (backLamOp) {
+        var hasColdBack = fields.operation130.choice ? fields.operation130.choice.backLamType == 'Cold' : false;
+        var hasHotBack = fields.operation130.choice ? fields.operation130.choice.backLamType == 'Hot' : false;
+        var hasAdhesiveBack = fields.operation130.choice ? fields.operation130.choice.backLamType == 'Adhesive' : false;
+    }
+    var laminatingRun = fields.operation135;
+    var laminatingRun2 = fields.operation221;
+    if (laminatingRun && laminatingRun2) {
+        setLamRunOperations();
+    }
+    /************************* ADD PRE- PRINTING LAMINATING SETUP FEE AND RUN WHEN FRONT AND/OR BACK LAM CHOSEN */
+    var sfPreLaminating = cu.findOperationFromSet(sfPrePrintLamOps);
+    if (cu.hasValue(sfPreLaminating)) {
+        validateValue(fields.operation151, 898);
+    } else {
+        validateValue(fields.operation151,'');
+    }
+
+    function setLamRunOperations() {
+        if (hasMount || hasFrontLam || hasBackLam || hasPremask) {
+            if (hasMount) {
+                if (hasPremask) {
+                    if (!hasFrontLam && !hasBackLam) { // 1. Premask / Adhesive  2. Mount
+                        validateValue(laminatingRun, 1600);
+                        validateValue(laminatingRun2, 1604);
+                    } else if (hasHotFront) { //  1. Hot / Adhesive  2. Mount + Premask
+                        validateValue(laminatingRun, 1598);
+                        validateValue(laminatingRun2, 1605);
+                    } else if (hasColdFront) { //  1. Cold / Adhesive  2. Mount + Premask
+                        validateValue(laminatingRun, 1597);
+                        validateValue(laminatingRun2, 1605);
+                    } else { // 1. Premask / Adhesive  2. Mount  --CATCH ALL UNFORESEEN
+                        validateValue(laminatingRun, 1600);
+                        validateValue(laminatingRun2, 1604);
+                    } 
+                } else {  //mounted but no premask
+                   if (!hasFrontLam && !hasBackLam) { // 1. Adhesive  2. Mount
+                        validateValue(laminatingRun, 1595);
+                        validateValue(laminatingRun2, 1604);
+                    } else if (hasHotFront) { //  1. Hot / Adhesive  2. Mount
+                        validateValue(laminatingRun, 1598);
+                        validateValue(laminatingRun2, 1604);
+                    } else if (hasColdFront) { //  1. Cold / Adhesive  2. Mount
+                        validateValue(laminatingRun, 1597);
+                        validateValue(laminatingRun2, 1604);
+                    } else if (hasAdhesiveFront || hasAdhesiveFront) { // 1. Adhesive  2. Mount
+                        validateValue(laminatingRun, 1597);
+                        validateValue(laminatingRun2, 1604);
+                    } else { // 1. Adhesive  2. Mount  --CATCH ALL UNFORESEEN
+                        validateValue(laminatingRun, 1595);
+                        validateValue(laminatingRun2, 1604);
+                    }
+                }
+            } else {  //everything not mounted
+                if (hasPremask) {
+                    if (hasHotFront) {
+                        if (hasAdhesiveBack) { // 1. Hot / Adhesive 2. Premask
+                            validateValue(laminatingRun, 1598);
+                            validateValue(laminatingRun2,1606);
+                        } else if (hasHotBack) { // 1. Hot / Hot 2. Premask
+                            validateValue(laminatingRun, 1529);
+                            validateValue(laminatingRun2,1606);
+                        } else { // 1. Hot / Hot 2. Premask
+                            validateValue(laminatingRun, 1529);
+                            validateValue(laminatingRun2,1606);
+                        }
+                    } else if (hasColdFront) {
+                        if (hasColdBack) {  // 1. Cold  2. Premask
+                            validateValue(laminatingRun, 777);
+                            validateValue(laminatingRun2,1606);
+                        } else if (hasAdhesiveBack) { // 1. Cold / Adhesive 2. Premask
+                            validateValue(laminatingRun, 1597);
+                            validateValue(laminatingRun2,1606);
+                        } else { // 1. Cold  2. Pre-mask
+                            validateValue(laminatingRun, 777);
+                            validateValue(laminatingRun2,1606);
+                        }
+                    } else if (hasAdhesiveBack || hasAdhesiveFront) { // 1. Adhesive  2. Premask
+                        validateValue(laminatingRun, 1595);
+                        validateValue(laminatingRun2,1606);
+                    } else { // 1. Premask
+                        validateValue(laminatingRun, 1601);
+                        validateValue(laminatingRun2,'');
+                    }
+                } else {  // no mount, no premask
+                    if (hasHotFront) {
+                        if (hasHotBack) { // 1. Hot / Hot
+                            validateValue(laminatingRun, 1529);
+                            validateValue(laminatingRun2,'');
+                        } else if (hasAdhesiveBack) {  // 1. Hot / Adhesive
+                            validateValue(laminatingRun, 1598);
+                            validateValue(laminatingRun2,'');
+                        } else { // WARNING
+                            validateValue(laminatingRun, '');
+                            validateValue(laminatingRun2,'');
+                            message += '<p> Must have a Hot Lam, Adhesive, or Mount on back side</p>';
+                        }
+                    } else if (hasColdFront) {
+                        if (hasColdBack) {  // 1. Cold  2. Cold
+                            validateValue(laminatingRun, 777);
+                            validateValue(laminatingRun2, 1602); 
+                        } else if (hasAdhesiveBack) { // 1. Adhesive
+                            validateValue(laminatingRun, 1595);
+                            validateValue(laminatingRun2,'');
+                        } else {  // 1. Cold
+                            validateValue(laminatingRun, 777);
+                            validateValue(laminatingRun2, ''); 
+                        }
+                    } else if (hasAdhesiveBack || hasAdhesiveFront) { // 1. Adhesive
+                        validateValue(laminatingRun, 1595);
+                        validateValue(laminatingRun2,'');
+                    }
+                }
+            }
+        } else {
+            validateValue(laminatingRun,'');
+            validateValue(laminatingRun2,'');
+        }
+    }
+}
+
+function setFluteDirectionOp() {
+    /********* Show Flute/Grain Direction operation when Fluted substrate selected */
+    var fluteDirectionOp = fields.operation152;
+    var flutedSubstrateNames = [
+        'Coroplast',
+        'Flute'
+    ];
+    if (fluteDirectionOp) {
+        var substrateName = $('#pressSheetType select[name="PRESSSHEETTYPEDD"] option:selected').text();
+        var hasFlutes = false;
+        for (names in flutedSubstrateNames) {
+            if (substrateName.indexOf(flutedSubstrateNames[names]) != -1) {
+                hasFlutes = true;
+            }
+        }
+        if (hasFlutes) {
+            cu.showField(fluteDirectionOp);
+            fluteDirectionOp.css('color','red');
+        } else {
+            cu.hideField(fluteDirectionOp);
+            if (cu.hasValue(fluteDirectionOp)) {
+                
+                cu.changeField(fluteDirectionOp,'',true);
+            }
+        }
+    }
+}
+
+function heatBendingRules(updates) {
+    /********* HEAT BENDING RULES */
+    var heatBendingOp = fields.operation159;
+    var boardTypesThatCanHeatBend = [
+        '173',   // Styrene
+        '189',   // Styrene - white
+        '190',   // Styrene - black
+        '193',   // Styrene - translucent
+        '182',   // PETG
+        '228',   // PETG Non-Glare
+        '262',   // PETG Transilwrap
+        '183',   // Sintra Expanded PVC - white
+        '197',   // Sintra Expanded PVC - black
+        '231',   // Komatex Expanded PVC - White
+        '232',   // Komatex Expanded PVC - Black
+        '301',    //EPVC Komatex - White
+        '302',    //EPVC Komatex - Black
+        '303',    //EPVC Sintra - Black
+        '304',    //EPVC Sintra - White
+        '138',   // Acrylic - non TBG*
+        '185',   // Optix DA Digital Acrylic
+        '253',   // Acrylic P95 Frosted 1 Side
+        '255',   // Acrylic - White 3015
+        '259',   // Acrylic DP95 Frosted 2 Sides
+        '261',   // Acrylic Clear Extruded
+        '263',   // Acrylic Extruded
+        '264',   // Acrylic Black Extruded
+        '268',   // Acrylic Black Cast
+        '278',   // Acrylic White Extruded
+        '283'    // Acrylic Clear Cast
+    ];
+    var boardWeightsThatCanHeatBend = [
+        '63',   // 1MM
+        '64',   // 2MM
+        '65',   // 3MM
+        '55',   // .015
+        '56',   // .020
+        '57',   // .030
+        '58',   // .040
+        '59',   // .060
+        '60',   // .080
+        '61',   // .125
+        '62',   // .118
+        '77',   // .065
+        '77',   // .065
+        '79'    // .010
+    ];
+    if (heatBendingOp) {
+        //Do not allwow with Post printing lam and mounting operations
+        //var previousAllowHeatBend = allowHeatBend;
+        var allowHeatBend = true;
+        var heatBendMessage = '';
+        //Do not allow with Lam or Mounting
+        var hasNonHeatBendOpSelected = false;
+        checkForNonHeatBendingOps([
+                fields.operation130,  //LF Back Laminating
+                fields.operation131,  //LF Front Laminating
+                fields.operation135   //LF Mounting
+            ]);
+        //only approved materials
+        if (!cu.isValueInSet(fields.paperType, boardTypesThatCanHeatBend)) {
+            allowHeatBend = false; 
+            heatBendMessage += '<p>The substrate selected is not able to Heat Bend.</p>';
+        }
+        //Cannot exceed 100 finished pieces.
+        if (cu.getTotalQuantity() > 100) {
+            allowHeatBend = false; 
+            heatBendMessage += '<p>Heat Bending is not allowed on quantities over 100 finishing pieces.</p>';
+        }
+        //Neither size dimension can exceed 40"
+        if (cu.getWidth() > 40 || cu.getHeight() > 40) {
+            allowHeatBend = false; 
+            heatBendMessage += '<p>Heat bending is not available for pieces with one edge longer than 40".</p>';
+        }
+        //must be .125 (3MM) or thinner boardWeightsThatCanHeatBend
+        if (!cu.isValueInSet(fields.paperWeight, boardWeightsThatCanHeatBend)) {
+            allowHeatBend = false; 
+            heatBendMessage += '<p>The substrate weight selected is not able to Heat Bend.</p>';
+        }
+
+        if (cu.hasValue(heatBendingOp)) {
+            if (!allowHeatBend) {
+                //onQuoteUpdatedMessages += heatBendMessage;
+                cu.alert(heatBendMessage);
+                cu.changeField(heatBendingOp,'',true);
+            }
+            if (cu.isLastChangedField(updates, heatBendingOp)) {
+                onQuoteUpdatedMessages += '<p>Because you selected the Heat Bending option you are required to provide art describing the piece and where the bend(s) goes. If you have any questions about this please speak to your training supervisor.</p>';
+            }
+            
+        }
+        if (allowHeatBend) {
+            cu.showField(heatBendingOp);
+        } else {
+            cu.hideField(heatBendingOp);
+        }
+    }
+    function checkForNonHeatBendingOps(fields) {
+        for (var i = 0; i < fields.length; i++) {
+            if (cu.hasValue(fields[i])) {
+                allowHeatBend = false; 
+                heatBendMessage += '<p>Heat Bending is not allowed with Laminating or Mounting</p>';
+            }
+        }
+    }
+}
+
+function twoSidedJobOp() {
+    /********* ADD SIDE 2 SETUP COST WHEN 2 SIDED CHOSEN */
+    var sideTwoSetupOp = fields.operation210;
+    if (sideTwoSetupOp) {
+        if (cu.hasValue(fields.printingS2)) {
+            validateValue(sideTwoSetupOp, 1498);
+        } else {
+            validateValue(sideTwoSetupOp,'');
+        }
+    }
+}
+
+//functions ran after completed full quote
+function setTeamPrice(quote) {
+    /******************* TEAM MARKUP OPERATIONS */
+    var teamMarkupOp = fields.operation218;
+    var teamMarkupOp_answer = fields.operation218_answer;
+    if (teamMarkupOp && teamMarkupOp_answer) {
+        var markup = quote.markupPercent;
+        var teamCost = getTeamPrice(quote);
+        var costMinusTeam = parseInt((quote.jobCostPrice + quote.operationsPrice - teamCost));
+        if (cu.hasValue(teamMarkupOp)) {
+            if (cu.getValue(teamMarkupOp_answer) != costMinusTeam) {
+                var changeEventTriggered = cu.changeField(teamMarkupOp_answer, costMinusTeam, true);
+                if (changeEventTriggered) {
+                    return true;
+                }
+            }
+        }
+    }
+}
+function getTeamPrice(quote) {
+    var operationQuotes = quote.operationQuotes;
+    for (var i = 0; i < operationQuotes.length; i++) {
+        if (operationQuotes[i].data.heading == "TBG Team") {
+            return operationQuotes[i].price
+        }
+    }
+    return 0;
+}
+
+//UI Updates
+function updateUI(quote, product) {
+    updateLabels();
+    updateClasses();
+    updateOpItems();
+    metaFieldsActions.onQuoteUpdated(product);
+    updateOpQuestions();
+    addBasicDetailsToPage();
+    checkForHardProofRequired();
+    showMessages();
+    renderExtendedCostBreakdown();
+}
+function updateLabels() {
+    cu.setLabel(fields.paperType,'Substrate');
+    cu.setLabel(fields.paperWeight,'Thickness');
+}
+function updateClasses() {
+    addClassToOperation(planningOnlyOperations,'planning');
+    addClassToOperation(estimstingOnlyOperations,'estimating');
+    addClassToOperation(trainingOps,'training');
+    addOtherOpClass(opsWithOther);
+    removeClassFromOp(170,'costingOnly');
+    removeClassFromOp(205,'costingOnly');
+}
+function updateOpItems() {
+    trimOperationItemName(opsWithSubIds,'_');
+    removeOperationItemsWithString(156,'Print');
+    removeOperationItemsWithString(133,'Other');
+}
+function updateOpQuestions() {
+    hideOperationQuestion('133');
+}
+function addBasicDetailsToPage() {
+   $('#runTime span').text(cu.getTotalRuntime());
+    $('#totalPressSheets span').text(cu.getTotalPressSheets());
+    var piecesOnSheet = (cu.getTotalQuantity() / cu.getTotalPressSheets());
+    piecesOnSheet = Math.ceil(piecesOnSheet);
+    $('#piecesOnSheet span').text(piecesOnSheet);
+    $('#smallFormatPrintSpecs').insertAfter('.quoteContinue');
+    $('#smallFormatPrintSpecs').show();
+    $('#pressSheetName span').text(cu.getPressSheetName()); 
+}
+
+function checkForHardProofRequired() {
+    // SHOW HARD PROOF MESSAGE ON THROUGHPUT THRESHOLDS 
+    if (pmPortal) {
+        var $ps = $('#print-specifications-detail');
+        var boardThroughput = cu.getTotalPressSheets();
+        var proofOp = fields.proof;
+        var proofSelection = cu.getValue(proofOp);
+        if (boardThroughput >= 20) {
+            if (hardProofMessageCount == 0) {
+                if (proofSelection != 40 && proofSelection != 43) {
+                    onQuoteUpdatedMessages += '<p>Jobs with a throughput of 20 boards require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
+                    hardProofMessageCount = 1;
+                    cu.changeField(proofOp, 40, true);
+                }
+            } 
+        }
+    }
+}
+function  showMessages () {
+    // show an alert when necessary
+    if (onQuoteUpdatedMessages != '') {
+        cu.alert(onQuoteUpdatedMessages);
+        onQuoteUpdatedMessages = '';
+    }
+}
+
+
+
+
+
 
 /******* remove size and substrate ID from operation items.  Searches for "_" in label */
 function trimOperationItemName(opList, deliminater) {

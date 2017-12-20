@@ -264,10 +264,10 @@ var rollCalcLogic = {
                     if (printConfig.aPrintSubstrate || printConfig.bPrintSubstrate) {
                         var waste = 0;
                         if (printConfig.aPrintSubstrate) {
-                            waste += printConfig.aPrintSubstrate.totalCost - quote.aPrintSubstratePrice;
+                            waste += printConfig.aPrintSubstrate.totalRollMatCost - quote.aPrintSubstratePrice;
                         }
                         if (printConfig.bPrintSubstrate) {
-                            waste += printConfig.bPrintSubstrate.totalCost - quote.bPrintSubstratePrice;
+                            waste += printConfig.bPrintSubstrate.totalRollMatCost - quote.bPrintSubstratePrice;
                         }
                         waste = roundTo(waste,2);
                         if (!isNaN(waste)) {

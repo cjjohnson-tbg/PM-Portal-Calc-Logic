@@ -264,10 +264,10 @@ var rollCalcLogic = {
                     if (printConfig.aPrintSubstrate || printConfig.bPrintSubstrate) {
                         var waste = 0;
                         if (printConfig.aPrintSubstrate) {
-                            waste += printConfig.aPrintSubstrate.totalCost - quote.aPrintSubstratePrice;
+                            waste += printConfig.aPrintSubstrate.totalRollMatCost - quote.aPrintSubstratePrice;
                         }
                         if (printConfig.bPrintSubstrate) {
-                            waste += printConfig.bPrintSubstrate.totalCost - quote.bPrintSubstratePrice;
+                            waste += printConfig.bPrintSubstrate.totalRollMatCost - quote.bPrintSubstratePrice;
                         }
                         waste = roundTo(waste,2);
                         if (!isNaN(waste)) {
@@ -598,9 +598,8 @@ var rollCalcLogic = {
                 if (inkConfigOpSide2) {
                     if (cu.getValue(fields.sides) == "2") {
                         //default if sides was last changed
-                        if (cu.isLastChangedField(updates, fields.sides)) {
-                            cu.changeField(inkConfigOpSide2, defaultInkConfigSide2OpItem, true);
-                            return
+                        if (cu.getValue(inkConfigOpSide2) != defaultInkConfigSide2OpItem) {
+                            cu.changeField(inkConfigOpSide2, defaultInkConfigSide2OpItem, true)
                         }
                         cu.showField(inkConfigOpSide2);
                         if (operationItemKeys.inkMatOpItemSide2) {

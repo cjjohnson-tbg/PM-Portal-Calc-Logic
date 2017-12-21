@@ -598,9 +598,8 @@ var rollCalcLogic = {
                 if (inkConfigOpSide2) {
                     if (cu.getValue(fields.sides) == "2") {
                         //default if sides was last changed
-                        if (cu.isLastChangedField(updates, fields.sides)) {
-                            cu.changeField(inkConfigOpSide2, defaultInkConfigSide2OpItem, true);
-                            return
+                        if (cu.getValue(inkConfigOpSide2) != defaultInkConfigSide2OpItem) {
+                            cu.changeField(inkConfigOpSide2, defaultInkConfigSide2OpItem, true)
                         }
                         cu.showField(inkConfigOpSide2);
                         if (operationItemKeys.inkMatOpItemSide2) {

@@ -111,9 +111,9 @@ var calcConfig = {
 			//if piece > 200 then maxFormLF = 
 			config.formLengthMax = roll.width == 126 ? Math.max(pieceHeight, 200) : Math.max(pieceHeight, 120);
 			//if limited by substrates, update formLength
-			var minMatLength = getSignatureDim(materials, 'length');
+			config.minMatLength = getSignatureDim(materials, 'length');
 			if (config.minMatLength < config.formLengthMax) {
-				config.formLengthMax = minMatLength;
+				config.formLengthMax = config.minMatLength;
 			}
 
 			config.printableLength = config.formLengthMax - (2 * devMargin);

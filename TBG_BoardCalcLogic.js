@@ -245,8 +245,6 @@ var boardCalcLogic = {
     onCalcChanged: function(updates, product) {
         console.log('onCalcChanged Start');
         if (cu.isPOD(product)) {
-            //IDENTIFY CHANGED OPERATION
-            console.log('calc changed. logic list: ', opChangeList);
 
             //Change Ink to Full Color - Backlit if Backlit Film or translucent styrene is Selected
             if (cu.isValueInSet(fields.paperType, substratesForceCMYKBacklit)) {
@@ -266,11 +264,6 @@ var boardCalcLogic = {
                     }
                 }
             }
-
-            opChangeList = [];
-            // while (opChangeList.length) {
-            //     opChangeList.pop();
-            //}
         }
         console.log('onCalcChanged End');
     },
@@ -308,6 +301,7 @@ var boardCalcLogic = {
         controller.enterFullQuoteMode();
         functionsRanInFullQuote(updates, validation, product, quote);
         console.log('POD_SF validation finished. Pending change:', controller.fieldChangeQuotePending);
+        showMessages();
         var requoteInProgress = controller.fieldChangeQuotePending;
         controller.exitFullQuoteMode();
         if (requoteInProgress) {
@@ -323,9 +317,6 @@ var boardCalcLogic = {
     onQuoteUpdated_POD_LargeFormat: function(updates, validation, product, quote) {
         var changeEventTriggered = false;
 
-        // 20171218 begin - steve moved this block from onCalcChanged
-        // 20171218 end
-
         return changeEventTriggered;
     }
 }
@@ -339,7 +330,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     setFluteDirectionOp();
     heatBendingRules(updates);
     twoSidedJobOp();
-    setTeamPrice(quote);// try running this in both full quote and after to make an attempt at eliminating a getQuote round trip 
+    setTopAndBottomPieceOps();
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
@@ -674,7 +665,7 @@ function setLamOps() {
                         } else { // WARNING
                             validateValue(laminatingRun, '');
                             validateValue(laminatingRun2,'');
-                            message += '<p> Must have a Hot Lam, Adhesive, or Mount on back side</p>';
+                            onQuoteUpdatedMessages += '<p> Must have a Hot Lam, Adhesive, or Mount on back side</p>';
                         }
                     } else if (hasColdFront) {
                         if (hasColdBack) {  // 1. Cold  2. Cold
@@ -847,6 +838,21 @@ function twoSidedJobOp() {
     }
 }
 
+function setTopAndBottomPieceOps() {
+    var topInchIncreaserAnswer = fields.operation121_answer;
+    var topInchDecreaserAnswer = fields.operation123_answer;
+    var topLinInch = cu.getWidth();
+    topLinInch = parseInt(topLinInch);
+    if (topInchIncreaserAnswer && topInchDecreaserAnswer) {
+        if (cu.getValue(topInchIncreaserAnswer) != topLinInch) {
+            cu.changeField(topInchIncreaserAnswer, topLinInch, true);
+        }
+        if (cu.getValue(topInchDecreaserAnswer) != topLinInch) {
+            cu.changeField(topInchDecreaserAnswer, topLinInch, true);
+        }
+    } 
+}
+
 //functions ran after completed full quote
 function setTeamPrice(quote) {
     /******************* TEAM MARKUP OPERATIONS */
@@ -937,7 +943,7 @@ function checkForHardProofRequired() {
         }
     }
 }
-function  showMessages () {
+function showMessages  () {
     // show an alert when necessary
     if (onQuoteUpdatedMessages != '') {
         cu.alert(onQuoteUpdatedMessages);

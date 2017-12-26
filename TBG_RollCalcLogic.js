@@ -119,8 +119,6 @@ var utrlaCanvasBacklitInks = [
     '239'   //W + CMYK (Flood / First Surface)
 ]
 
-
-
 var calcCount = 0;
 
 var pmPortal = ((location.hostname.indexOf("tbg-pm.collaterate.com") != -1) || (location.hostname.indexOf("tbghub.com") != -1));
@@ -135,7 +133,6 @@ var operationItemKeys = new Object();
 
 // Object for Lam and Mount choices
 var printConfig = {};
-var lc = new Object();
 
 var cu = calcUtil;
 var cc = calcConfig;
@@ -285,7 +282,7 @@ function setWasteOperationCosts(quote) {
 
     // Roll Substrate Waste
     var calcPrintSubCost = (printConfig.aPrintSubstrate ? printConfig.aPrintSubstrate.totalRollMatCost : 0) + (printConfig.bPrintSubstrate ? printConfig.bPrintSubstrate.totalRollMatCost : 0);
-    var printSubCost = (quote.aPrintSubstratePrice ? quote.aPrintSubstratePrice : 0) + (quote.aPrintSubstratePrice ? quote.aPrintSubstratePrice : 0);
+    var printSubCost = (quote.aPrintSubstratePrice ? quote.aPrintSubstratePrice : 0) + (quote.bPrintSubstratePrice ? quote.bPrintSubstratePrice : 0);
     setWasteOperationAnswer(fields.operation135_answer, calcPrintSubCost, printSubCost);
 
     var calcLamCost = (printConfig.frontLaminate ? printConfig.frontLaminate.totalCost : 0) + (printConfig.backLaminate ? printConfig.backLaminate.totalCost : 0);
@@ -333,7 +330,6 @@ function setRollChangeCost() {
             if (rollChangeOpAnswer) {
                 if (cu.getValue(rollChangeOpAnswer) != rollChangeMins) {
                     cu.changeField(rollChangeOpAnswer, rollChangeMins, true);
-                    return
                 }
             }
         }

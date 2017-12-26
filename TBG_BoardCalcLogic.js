@@ -210,7 +210,7 @@ var getCriticalDeviceId = {
     1469 : 22  //Vutek HS125
 }
 
-var pmPortal = (location.hostname.indexOf("tbghub.com") != -1);
+var pmPortal = (location.hostname.indexOf("tbghub.com") != -1 || location.hostname.indexOf("tbg-pm") != -1);
 var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") != -1);
 
 var onQuoteUpdatedMessages = '';
@@ -308,7 +308,7 @@ var boardCalcLogic = {
             return true;
         }
 
-        //functions that affect only UI
+        //functions that need results back from full quote and UI updates
         changeEventTriggered = functionsRanAfterFullQuote(updates, validation, product, quote);
         console.log('POD_SF post-full-quote changes triggered:',changeEventTriggered);
 
@@ -335,6 +335,8 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
     var changeEventTriggered = setTeamPrice(quote);
+    //changeEventTriggered = changeEventTriggered ? true : checkForHardProofRequired();  --check with steve about best way to run Fn's in fieldquote and why use changeEvent
+    checkForHardProofRequired();
     if (changeEventTriggered) {
         return true;
     }
@@ -890,7 +892,6 @@ function updateUI(quote, product) {
     metaFieldsActions.onQuoteUpdated(product);
     updateOpQuestions();
     addBasicDetailsToPage();
-    checkForHardProofRequired();
     showMessages();
     renderExtendedCostBreakdown();
 }
@@ -924,11 +925,9 @@ function addBasicDetailsToPage() {
     $('#smallFormatPrintSpecs').show();
     $('#pressSheetName span').text(cu.getPressSheetName()); 
 }
-
 function checkForHardProofRequired() {
     // SHOW HARD PROOF MESSAGE ON THROUGHPUT THRESHOLDS 
     if (pmPortal) {
-        var $ps = $('#print-specifications-detail');
         var boardThroughput = cu.getTotalPressSheets();
         var proofOp = fields.proof;
         var proofSelection = cu.getValue(proofOp);
@@ -937,12 +936,14 @@ function checkForHardProofRequired() {
                 if (proofSelection != 40 && proofSelection != 43) {
                     onQuoteUpdatedMessages += '<p>Jobs with a throughput of 20 boards require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
                     hardProofMessageCount = 1;
+                    showMessages();
                     cu.changeField(proofOp, 40, true);
                 }
             } 
         }
     }
 }
+
 function showMessages  () {
     // show an alert when necessary
     if (onQuoteUpdatedMessages != '') {

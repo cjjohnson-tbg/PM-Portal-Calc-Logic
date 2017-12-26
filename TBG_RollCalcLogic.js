@@ -234,6 +234,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     //setWasteOperationCosts(quote);
     //setCuttingOps(quote, product);
     //setInkMaterialCosts();
+    //setLamRunOps();
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
@@ -241,6 +242,7 @@ function functionsRanAfterFullQuote(updates, validation, product, quote) {
     setWasteOperationCosts(quote);
     setCuttingOps(quote, product);
     setInkMaterialCosts();
+    setLamRunOps(quote);
 }
 
 function createOperationItemKey(quote) {
@@ -541,7 +543,7 @@ function setNoCutOp(cutMethod) {
 /*** END CUTTING */
 
 function setInkMaterialCosts() {
-/************************ ALIGN INK MATERIAL COSTS WITH DEVICE RUN*/
+    /************************ ALIGN INK MATERIAL COSTS WITH DEVICE RUN*/
     var deviceId = configureglobals.cquotedata.device.id ? configureglobals.cquotedata.device.id : null;
     var lfDeviceInk = {
         45 : {
@@ -591,6 +593,160 @@ function setInkMaterialCosts() {
     }
 }
 
+function setLamRunOps(quote) {
+    var hasFrontLam = cu.hasValue(fields.frontLaminate);
+    var hasBackLam = cu.hasValue(fields.backLaminate);
+    var hasMount = cu.hasValue(fields.mountSubstrate);
+
+    var laminatingRun = fields.operation96;
+    var laminatingRunAnswer = fields.operation96_answer;
+    var laminatingRun2 = fields.operation141;
+    var laminatingRunAnswer2 = fields.operation141_answer;
+    var premask = fields.operation78;
+    var premaskRunAnswer = fields.operation78_answer;
+
+    var frontLamType = (hasFrontLam && quote.piece.frontLaminate) ? quote.piece.frontLaminate.type.name : null;
+    var backLamType = (hasBackLam && quote.piece.backLaminate) ? quote.piece.backLaminate.type.name : null;
+
+    var hasColdFront = frontLamType == 'Cold';
+    var hasColdBack = backLamType == 'Cold';
+    var hasHotFront = frontLamType == 'Hot';
+    var hasHotBack = backLamType == 'Hot';
+    var hasAdhesiveBack = cu.getValue(fields.backLaminate) == 38;
+    var hasAdhesiveFront = cu.getValue(fields.frontLaminate) == 38;
+    var hasPremask = cu.hasValue(fields.operation78);
+    var selfAdhesive = configureglobals.cprintsubstratesmgr.choice ? configureglobals.cprintsubstratesmgr.choice.selfAdhesive : false;
+
+    var invalidLamMessage = '<p>The mounting and laminating choices in this job is not valid.  If you need this configuration please consult Estimating and/or Planning</p>';
+    if (hasMount || hasFrontLam || hasBackLam) {
+        if (hasMount) {
+            if (hasPremask) {
+                if (!hasFrontLam && !hasBackLam) { 
+                    if (selfAdhesive) {  // 1. Mount + Premask 
+                        validateValue(laminatingRun, 711);
+                        validateValue(laminatingRun2,'');
+                    } else { // 1. Adhesive  2. Mount + Premask
+                        validateValue(laminatingRun, 706);
+                        validateValue(laminatingRun2, 717);
+                    }
+                } else if (hasHotFront) { 
+                    if (selfAdhesive) { // 1. Mount  2. Hot  3. Premask
+                        validateValue(laminatingRun, 710);
+                        validateValue(laminatingRun2, 718);
+                    }
+                    else { //  1. Hot / Adhesive  2. Mount + Premask
+                        validateValue(laminatingRun, 709);
+                        validateValue(laminatingRun2, 717);
+                    }
+                } else if (hasColdFront) {
+                    if (selfAdhesive) { // 1. Cold / Adhesive  2.  Mount + Premask
+                        validateValue(laminatingRun, 708);
+                        validateValue(laminatingRun2, 717);
+                    }
+                    else { //  1. Cold / Adhesive  2. Mount + Premask
+                        validateValue(laminatingRun, 708);
+                        validateValue(laminatingRun2, 717);
+                    }
+                }
+            } else {  //mounted but no premask
+               if (!hasFrontLam && !hasBackLam) { 
+                    if (selfAdhesive) {  // 1. Mount 
+                        validateValue(laminatingRun, 710);
+                        validateValue(laminatingRun2,'');
+                    } else { // 1. Adhesive  2. Mount
+                        validateValue(laminatingRun, 706);
+                        validateValue(laminatingRun2, 716);
+                    }
+                } else if (hasHotFront) { 
+                    if (selfAdhesive) { // 1. Mount  2. Hot 
+                        validateValue(laminatingRun, 710);
+                        validateValue(laminatingRun2, 715);
+                    }
+                    else { //  1. Hot / Adhesive  2. Mount
+                        validateValue(laminatingRun, 709);
+                        validateValue(laminatingRun2, 716);
+                    }
+                } else if (hasColdFront) {
+                    if (selfAdhesive) { // 1. Mount  2. Cold 
+                        validateValue(laminatingRun, 710);
+                        validateValue(laminatingRun2, 714);
+                    }
+                    else { //  1. Cold / Adhesive  2. Mount
+                        validateValue(laminatingRun, 708);
+                        validateValue(laminatingRun2, 716);
+                    }
+                }
+            }
+        } else {  //everything not mounted
+            if (hasPremask) {
+                if (hasHotFront) {
+                    if (hasAdhesiveBack) { // 1. Hot / Adhesive 2. Premask
+                        validateValue(laminatingRun, 709);
+                        validateValue(laminatingRun2,718);
+                    } else if (hasHotBack) { // 1. Hot / Hot 2. Premask
+                        validateValue(laminatingRun, 364);
+                        validateValue(laminatingRun2,718);
+                    }
+                } else if (hasColdFront) {
+                    if (hasColdBack) {  // 1. Cold  2. Premask
+                        validateValue(laminatingRun, 363);
+                        validateValue(laminatingRun2,718);
+                    } else if (hasAdhesiveBack) { // 1. Cold / Adhesive 2. Premask
+                        validateValue(laminatingRun, 708);
+                        validateValue(laminatingRun2,718);
+                    } else { // 1. Cold  2. Pre-mask
+                        validateValue(laminatingRun, 363);
+                        validateValue(laminatingRun2,718);
+                    }
+                } else if (hasAdhesiveBack) { // 1. Adhesive  2. Premask
+                    validateValue(laminatingRun, 706);
+                    validateValue(laminatingRun2,718);
+                } else { // 1. Premask
+                    validateValue(laminatingRun, 712);
+                    validateValue(laminatingRun2,'');
+                }
+            } else {  // no mount, no premask
+                if (hasHotFront) {
+                    if (hasHotBack) { // 1. Hot / Hot
+                        validateValue(laminatingRun, 364);
+                        validateValue(laminatingRun2,'');
+                    } else if (hasAdhesiveBack) {  // 1. Hot / Adhesive
+                        validateValue(laminatingRun, 709);
+                        validateValue(laminatingRun2,'');
+                    } else {
+                        message += invalidLamMessage;
+                    }
+                } else if (hasColdFront) {
+                    if (hasColdBack) {  // 1. Cold / Adhesive
+                        validateValue(laminatingRun, 708);
+                        validateValue(laminatingRun2,'');
+                    } else if (hasAdhesiveBack) {  // 1. Cold / Adhesive
+                        validateValue(laminatingRun, 708);
+                        validateValue(laminatingRun2,'');
+                    } else {  // 1. Cold
+                        validateValue(laminatingRun, 363);
+                        validateValue(laminatingRun2,'');
+                    }
+                } else if (hasAdhesiveBack) { // 1. Adhesive
+                    validateValue(laminatingRun, 706);
+                    validateValue(laminatingRun2,'');
+                }
+            }
+        }
+        
+        if (printConfig.lamLfWithSpoilage) {
+            if (cu.hasValue(laminatingRun)) {
+                validateValue(laminatingRunAnswer, printConfig.lamLfWithSpoilage);
+            }
+            if (cu.hasValue(laminatingRun2)) {
+                validateValue(laminatingRunAnswer2, printConfig.lamLfWithSpoilage);
+            }
+        }
+    } else {
+        validateValue(laminatingRun, '');
+        validateValue(laminatingRun2,'');
+    }
+}
 
 //simplifies changing values of operation items
 function validateValue(field, value) {

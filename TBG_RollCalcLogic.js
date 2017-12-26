@@ -119,23 +119,7 @@ var utrlaCanvasBacklitInks = [
     '239'   //W + CMYK (Flood / First Surface)
 ]
 
-var lfDeviceInk = {
-    45 : {
-        'inkMaterialOpId' : 132,
-        'inkMaterialOpIdSide2' : 136,
-        'inkConfigOpSide2' : 137,
-        'defaultOpItem' : 608, //TBG Vutek HS125
-        'defaultInkConfigSide2OpItem' : 641 //TBG Vutek HS125
-    },
-    46 : {
-        'inkMaterialOpId' : 133,
-        'defaultOpItem' : 622 //CMYK
-    },
-    54 : {
-        'inkMaterialOpId' : 143,
-        'defaultOpItem' : 720 //CMYK
-    }
-}
+
 
 var calcCount = 0;
 
@@ -218,7 +202,6 @@ var rollCalcLogic = {
         if (requoteInProgress) {
             return true;
         }
-        setWasteOperationCosts(quote);
 
         //functions needing price results and UI changes
         changeEventTriggered = functionsRanAfterFullQuote(updates, validation, product, quote);
@@ -248,10 +231,16 @@ function addJobMaterialProperties(quote) {
 
 function functionsRanInFullQuote(updates, validation, product, quote) {
     createOperationItemKey(quote);
-    setCuttingOps(quote, product);
+    //setWasteOperationCosts(quote);
+    //setCuttingOps(quote, product);
+    //setInkMaterialCosts();
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
+    //TEMP IN FIElD QUOTE MODE.  NOT WORKING IN FULL QUOTE
+    setWasteOperationCosts(quote);
+    setCuttingOps(quote, product);
+    setInkMaterialCosts();
 }
 
 function createOperationItemKey(quote) {
@@ -280,7 +269,7 @@ function createOperationItemKey(quote) {
         });
     }
 }
-
+/**** WASTE CALCULATTONS */
 function setWasteOperationCosts(quote) {
     //Compares Coll Calculated material costs against PrintConfig costs (Roll Impo calc) and inserts difference into operation answers
     if (!printConfig) { 
@@ -348,23 +337,14 @@ function setRollChangeCost() {
         }
     }
 }
+/**** END WASTE */
+/**** CUTTING */
 function setCuttingOps(quote, product) {
-
-    var noCutOp = fields.operation110;
-    var fabCutOp = fields.operation116;
-
     var cutMethod = getCutMethod();
-    //no cut
-    if (cutMethod == 'noCutting') {
-        validateValue(noCutOp,448);
-    } else {
-        validateValue(noCutOp,'');
-    }
-    //zund
     setZundOps(quote, cutMethod);
     setOutsourceCutOps(cutMethod);
     setMCTCutOp(cutMethod, product);
-
+    setNoCutOp(cutMethod);
 }
 function getCutMethod() {
     var userDeclareCutOp = fields.operation111;
@@ -389,7 +369,6 @@ function getCutMethod() {
     }
     return result
 }
-
 function setZundOps(quote, cutMethod) {
     var zundLoading = fields.operation53;
     var zundCutting = fields.operation55;
@@ -410,14 +389,14 @@ function setZundOps(quote, cutMethod) {
             validateValue(zundUnloading,zundChoice.unloadingOpItem);
         }
         //INTERNAL CUTTING - map to choice item and enter answer 
-        if (cu.hasValue(userItCutOpAnswer)) {
+        /*if (userItCutOpAnswer) {
             var intCutInches = cu.getValue(userItCutOpAnswer);
             //must run 2 times: 1 to set operation, 2 to set answer value
-            validateValue(fields.operation179, zundChoice.intCutOpItem);
+            //validateValue(fields.operation179, zundChoice.intCutOpItem);
             if (fields.operation179_answer) {
                 validateValue(fields.operation179_answer, intCutInches);
             }
-        }
+        } */
     } else {
         validateValue(zundLoading,'');
         validateValue(zundCutting,'');
@@ -425,29 +404,38 @@ function setZundOps(quote, cutMethod) {
         validateValue(fields.operation179,'');
     }
     //Interior cut operations soon to be re-org
-    setZundInCutOp(zundChoice);
+    //setZundInCutOp(cutMethod, zundChoice);
 }
 function getZundChoice(quote) {
-    //default to K1
-    result = zundFactors.K1;
     //check print substrate A and Mount for highest ranked factor
-    setZundFactor('aPrintSubstrate');
-    setZundFactor('mountSubstrate');
-    //insert zund into printConfig to display on page for estimators
-    function setZundFactor (substrate) {
-        var mat = quote.piece[substrate];
-        if (mat) {
-            if (mat.zundFactor) {
-                var matZundFactor = zundFactors[mat.zundFactor];
-                if (matZundFactor.rank > result.rank) {
-                    result = matZundFactor;
-                } else {
-                    console.log('no zundfactor assigned on ' + mat.name);
-                }
-            }
+    var printSubFactor = getMaterialZundFactor(quote, 'aPrintSubstrate');
+    var mountSubFactor = getMaterialZundFactor(quote, 'mountSubstrate');
+    var result = getMaxZundRank(zundFactors.K1, printSubFactor, mountSubFactor);
+    printConfig.zundFactor = result;
+    return result
+}
+function getMaterialZundFactor(quote, substrate) {
+    var result;
+    var mat = quote.piece[substrate];
+    if (mat) {
+        if (mat.zundFactor) {
+            result = zundFactors[mat.zundFactor];
         }
     }
-    printConfig.zundFactor = result;
+    return result
+}
+function getMaxZundRank(defaultFactor, printSubFactor, mountSubFactor) {
+    var result = defaultFactor;
+    if (printSubFactor) {
+        if (printSubFactor.rank > result.rank) {
+            result = printSubFactor;
+        }
+    }
+    if (mountSubFactor) {
+        if (mountSubFactor.rank > result.rank) {
+            result = mountSubFactor;
+        }
+    }
     return result
 }
 function setZundInCutOp(cutMethod, zundChoice) {
@@ -467,7 +455,7 @@ function setZundInCutOp(cutMethod, zundChoice) {
     }
     //trim and only show option for current zund factor
     trimOperationItemName(112, '_');
-    if (zundChoice.rank.indexOf('k') != -1){
+    if (zundChoice.rank > 3){
         hideOperationItems(intCutRouteOptions);
     } else {
         hideOperationItems(intCutBladeOptions);
@@ -475,7 +463,7 @@ function setZundInCutOp(cutMethod, zundChoice) {
     if (cu.hasValue(intCutOp) && cutMethod == 'zund') {
         var intCutItem = cu.getValue(intCutOp);
         //blade cut
-        if (zundChoice.rank.indexOf('k') != -1) {
+        if (zundChoice.rank > 3) {
             if (!(intCutItem in intCutSetting)) {
                 for (var key in intCutSetting) {
                     if (intCutSetting[key] == intCutItem) {
@@ -496,7 +484,6 @@ function setZundInCutOp(cutMethod, zundChoice) {
         }
     }
 }
-
 function setOutsourceCutOps(cutMethod) {
     var outsourceCutOp = fields.operation104;
     if (cutMethod =='outsourcedCut') {
@@ -520,6 +507,7 @@ function setMCTCutOp(cutMethod) {
     }
 }
 function setFabCutOp(cutMethod, product) {
+    var fabCutOp = fields.operation116;
     if (cutMethod == 'fabCut') {
         //show TBG Fab Cut and Turn on Premask when Laser selected
         if (cu.getPjcId(product) == 389) {
@@ -542,7 +530,66 @@ function setFabCutOp(cutMethod, product) {
         cu.changeField(fabCutOp, '', true);
     }
 }
+function setNoCutOp(cutMethod) {
+    var noCutOp = fields.operation110;
+    if (cutMethod == 'noCutting') {
+        validateValue(noCutOp,448);
+    } else {
+        validateValue(noCutOp,'');
+    }
+}
+/*** END CUTTING */
 
+function setInkMaterialCosts() {
+/************************ ALIGN INK MATERIAL COSTS WITH DEVICE RUN*/
+    var deviceId = configureglobals.cquotedata.device.id ? configureglobals.cquotedata.device.id : null;
+    var lfDeviceInk = {
+        45 : {
+            'inkMaterialOpId' : 132,
+            'inkMaterialOpIdSide2' : 136,
+            'inkConfigOpSide2' : 137,
+            'defaultOpItem' : 608, //TBG Vutek HS125
+            'defaultInkConfigSide2OpItem' : 641 //TBG Vutek HS125
+        },
+        46 : {
+            'inkMaterialOpId' : 133,
+            'defaultOpItem' : 622 //CMYK
+        },
+        54 : {
+            'inkMaterialOpId' : 143,
+            'defaultOpItem' : 720 //CMYK
+        }
+    }
+    var devRunConfig = lfDeviceInk[deviceId];
+    if (devRunConfig) {
+        var inkMatOp = fields['operation' + devRunConfig.inkMaterialOpId];
+        var defaultInkOpItem = lfDeviceInk[deviceId].defaultOpItem ? lfDeviceInk[deviceId].defaultOpItem : null;
+        var inkMatOpSide2 = fields['operation' + devRunConfig.inkMaterialOpIdSide2];
+        var inkConfigOpSide2 = fields['operation' + devRunConfig.inkConfigOpSide2];
+        var defaultInkConfigSide2OpItem = lfDeviceInk[deviceId].defaultInkConfigSide2OpItem ? lfDeviceInk[deviceId].defaultInkConfigSide2OpItem : null;
+        //Grab op item id from operation Item Keys object. If nothing, then use default
+        var inkMatOpItemId = operationItemKeys.inkMatOpItem ? operationItemKeys.inkMatOpItem : defaultInkOpItem;
+        var inkMatOpSide2ItemId = operationItemKeys.inkMatOpItemSide2 ? operationItemKeys.inkMatOpItemSide2 : '';
+        if (cu.getValue(inkMatOp) != inkMatOpItemId) {
+            cu.changeField(inkMatOp, inkMatOpItemId, true);
+        }
+        //side 2
+        if (inkConfigOpSide2) {
+            if (cu.getValue(fields.sides) == "2") {
+                //default if sides was last changed
+                validateValue(inkConfigOpSide2, defaultInkConfigSide2OpItem)
+                if (operationItemKeys.inkMatOpItemSide2) {
+                    validateValue(inkMatOpSide2,inkMatOpSide2ItemId);
+                }
+                cu.showField(inkConfigOpSide2);
+            } else {
+                validateValue(inkConfigOpSide2, ''); 
+                validateValue(inkMatOpSide2, ''); 
+                cu.hideField(inkConfigOpSide2);
+            }
+        }
+    }
+}
 
 
 //simplifies changing values of operation items

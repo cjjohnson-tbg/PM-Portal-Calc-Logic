@@ -1,32 +1,4 @@
-var planningOnlyOps = [
-    99,  //TBGCutting
-    55,  //TBGZundCutting
-    102,  //TBGGuillotineCutting
-    103,  //TBGFotobaCutting
-    88,  //DyeSubTransferPaper
-    100,  //TBGMountingRun
-    112,  //TBGInternalCuts
-    110,  //TBGNoCutting
-    115,  //TBGPre-cut
-    109,  //TBGPre-Sheet
-    108,  //TBGPre-Slit
-    116,  //TBGTBG-FabCut
-    125,  //TBGBucketJob
-    127,  //TBGMCTCutting
-    134    //TBG Gutter
-]
-var estimatingOnlyOps = [
-    139     //TBG Team Factor
-]
-var inkOpsWithDPI = [
-    52  //TBG Ink Configuration - Vutek HS100
-]
-var opsToTrimWithUnderscore = [
-    67,  //Pre-Printing Front Laminate
-    84,  //Pre-Printing Back Laminate
-    58,   //TBG Tape, Mag, Velcro
-    78  //LF Premask
-]
+
 
 var zundFactors = {
     "K1" : {"name" : "Knife 1", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 195, "intCutOpItem": 773, "rank" : 1},
@@ -100,22 +72,25 @@ var rollCalcLogic = {
             }
             console.log('onQuoteUpdated End');
         }
+        //run meta field action
+        metaFieldsActions.onCalcLoaded();
     },
     onQuoteUpdated_POD_LargeFormat: function(updates, validation, product, quote) {
         var changeEventTriggered = false;
 
-        /*re-init on every update*/
+        //re-init Fields 
         cu.initFields();
 
         //Add properties to global objects from embedded meta 
         setConfigGlobalProperties(quote);
         //Run Roll Imposition Engine
         calcConfig.getUpdatedConfig(quote);
+        //run meta field action
+        metaFieldsActions.onQuoteUpdated(product);
 
         //Functions that are not inter-dependent
         controller.enterFullQuoteMode();
         functionsRanInFullQuote(updates, validation, product, quote);
-        
         console.log('POD_SF validation finished. Pending change:', controller.fieldChangeQuotePending);
         var requoteInProgress = controller.fieldChangeQuotePending;
         controller.exitFullQuoteMode();
@@ -173,6 +148,8 @@ function functionsRanAfterFullQuote(updates, validation, product, quote) {
     canvasOperationDisplay();
     bannerFinishingOperationDisplay(product);
     bannerStandLogic();
+
+    uiUpdates();
 
     renderExtendedCostBreakdown();
     showMessages();
@@ -271,7 +248,7 @@ function setRollChangeCost() {
         }
     }
 }
-/**** END WASTE */
+
 /**** CUTTING */
 function setCuttingOps(quote, product) {
     var cutMethod = getCutMethod();
@@ -475,7 +452,7 @@ function setNoCutOp(cutMethod) {
 /*** END CUTTING */
 
 function setInkMaterialCosts() {
-    /************************ ALIGN INK MATERIAL COSTS WITH DEVICE RUN*/
+    // ALIGN INK MATERIAL COSTS WITH DEVICE RUN
     var deviceId = configureglobals.cquotedata.device.id ? configureglobals.cquotedata.device.id : null;
     var lfDeviceInk = {
         45 : {
@@ -988,6 +965,7 @@ function colorCritical() {
     }
 }
 
+
 function setTeamPrice(quote) {
     var teamMarkupOp = fields.operation139;
     var teamMarkupOp_answer = fields.operation139_answer;
@@ -1012,6 +990,44 @@ function getTeamPrice(quote) {
         }
     }
     return 0;
+}
+
+function uiUpdates() {
+    var planningOnlyOps = [
+        99,  //TBGCutting
+        55,  //TBGZundCutting
+        102,  //TBGGuillotineCutting
+        103,  //TBGFotobaCutting
+        88,  //DyeSubTransferPaper
+        100,  //TBGMountingRun
+        112,  //TBGInternalCuts
+        110,  //TBGNoCutting
+        115,  //TBGPre-cut
+        109,  //TBGPre-Sheet
+        108,  //TBGPre-Slit
+        116,  //TBGTBG-FabCut
+        125,  //TBGBucketJob
+        127,  //TBGMCTCutting
+        134    //TBG Gutter
+    ]
+    var estimatingOnlyOps = [
+        139     //TBG Team Factor
+    ]
+    var inkOpsWithDPI = [
+        52  //TBG Ink Configuration - Vutek HS100
+    ]
+    var opsToTrimWithUnderscore = [
+        67,  //Pre-Printing Front Laminate
+        84,  //Pre-Printing Back Laminate
+        58,   //TBG Tape, Mag, Velcro
+        78  //LF Premask
+    ]
+    trimOperationItemName(inkOpsWithDPI, ' - ');
+    trimOperationItemName(opsToTrimWithUnderscore, '_');
+    removeOperationItemsWithString(104,'Print');
+    removeClassFromOp(111,'costingOnly');
+    addClassToOperation(planningOnlyOps, 'planning');
+    addClassToOperation(estimatingOnlyOps,'estimating');
 }
 
 

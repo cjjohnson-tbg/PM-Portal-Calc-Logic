@@ -123,13 +123,12 @@ function functionsRanAfterFullQuote(updates, validation, product, quote) {
     heatBendingRules();
     fabrivuLogic(product);
     colorCritical();
+
+    //require results from Quote update
+    hardProofCheck();
     setTeamPrice(quote);
 
     //UI changes
-    canvasOperationDisplay();
-    bannerFinishingOperationDisplay(product);
-    bannerStandLogic();
-
     uiUpdates(product);
 
     renderExtendedCostBreakdown();
@@ -256,6 +255,11 @@ function getCutMethod() {
     if (cu.hasValue(fields.operation127)) {
         result = 'mct';
         return result;
+    }
+    //If Suma cut selected, set to No Cutting
+    if (cu.hasValue(fields.operation82)) {
+        result = 'suma';
+        return result
     }
     if (cu.hasValue(userDeclareCutOp)) {
         userDeclaredCutMethod = cutMethodId[cu.getValue(fields.operation111)];
@@ -438,7 +442,9 @@ function setFabCutOp(cutMethod, product) {
 }
 function setNoCutOp(cutMethod) {
     var noCutOp = fields.operation110;
-    if (cutMethod == 'noCutting') {
+    if (cutMethod == 'noCutting' || cutMethod == 'suma') {
+        //validate user Declare cut operation set to No Cutting
+        validateValue(fields.operation11,450);
         validateValue(noCutOp,448);
     } else {
         validateValue(noCutOp,'');
@@ -960,6 +966,21 @@ function colorCritical() {
     }
 }
 
+function hardProofCheck() {
+    var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
+    var proofOp = fields.proof;
+    var proofSelection = configureglobals.cquotedata.proof.name;
+    if (totalSquareFeet >= 700) {
+        if (hardProofMessageCount == 0) {
+            if (proofSelection.indexOf('Hard') == -1) {
+                onQuoteUpdatedMessages += '<p>Jobs with a printable area over 700 square feet require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
+                showMessages();
+                hardProofMessageCount = 1;
+                cu.changeField(proofOp, 40, true);
+            }
+        } 
+    }
+}
 
 function setTeamPrice(quote) {
     var teamMarkupOp = fields.operation139;
@@ -1026,6 +1047,7 @@ function uiUpdates(product) {
 
     canvasOperationDisplay();
     bannerFinishingOperationDisplay(product);
+    bannerStandLogic();
 }
 
 

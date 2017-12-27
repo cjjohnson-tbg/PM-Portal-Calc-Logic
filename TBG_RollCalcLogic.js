@@ -26,49 +26,7 @@ var zundFactors = {
     "R3" : {"name" : "Router 3", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 199, "intCutOpItem": 777, "rank" : 5},
     "R4" : {"name" : "Router 4", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 200, "intCutOpItem": 778, "rank" : 6}
 }
-var canvasSubstrates = [
-'144',  //6.5oz. Ultraflex Mult-tex Canvas
-'83'   //Canvas - Matte Finish
-]
-var canvasOperations = [
-65, //TBG Canvas Frame Assembly
-66  //TBG Canvas Stretching
-]
-var pjcsWithBannerMaterial = [
-'76',  // TBG HP 30000 Roll
-'337'  // TBG Vutek HS 100 Roll
-]
-var substratesWithBannerFinishing = [
-    '23',    //13 oz. Scrim Vinyl Matte (for outdoor use)
-    '26',    //13 oz. Smooth Vinyl - Opaque Matte (for indoor use)
-    '73',    //18 oz. Smooth Vinyl - Opaque Matte (for heavy duty outdoor use)
-    '114',   //8 oz. Mesh
-    '167',     //15 oz. Smooth Vinyl Banner
-    '146',      //Berger Samba Fabric 6.87oz.
-    '210',  //SBR-DURA-WHT-BLKBK-13OZ-126X164
-    '100',  //Ultraflex Poplin 7oz.
-    '177',   //Verseidag Nightdrop 10oz.
-    '125',   //ULTRAFLEX-MULTITEX 220-6.5OZ CANVAS-122"X164'-3257
-    '175',   //3.4oz. Aberdeen Soft Flag
-    '171',   //4.5oz. Aberdeen Simplicity
-    '170',   //Aberdeen Outdoor Flag
-    '173',   //Aberdeen Luminary 9111
-    '174',   //Aberdeen Trinity
-    '172',   //Top Value Heavy Knit
-    '270'   //Heavy Kit Fabric - Top Value 7.3oz
-]
-var bannerStandMaterial = [
-    '23',    //13 oz. Scrim Vinyl Matte (for outdoor use)
-    '26',    //13 oz. Smooth Vinyl - Opaque Matte (for indoor use)
-    '73'    //18 oz. Smooth Vinyl - Opaque Matte (for heavy duty outdoor use)
-]
-var bannerFinishingOperations = [
-    '60',   //TBG Grommets
-    '61',   //TBG Hemming
-    '62',   //TBG Pole Pockets
-    '63',   //TBG Keder Sewing
-    '73'    //TBG Grommet Color
-]
+
 var cuttingDesc = {
     302: 356 , //simple
     355: 357,  //Complex
@@ -119,6 +77,7 @@ var utrlaCanvasBacklitInks = [
     '239'   //W + CMYK (Flood / First Surface)
 ]
 
+
 var calcCount = 0;
 
 var pmPortal = ((location.hostname.indexOf("tbg-pm.collaterate.com") != -1) || (location.hostname.indexOf("tbghub.com") != -1));
@@ -137,10 +96,15 @@ var printConfig = {};
 var cu = calcUtil;
 var cc = calcConfig;
 
+var onQuoteUpdatedMessages = '';
 
 var rollCalcLogic = {
     onCalcLoaded: function(product) {
-        hideCanvasOperations();  
+        cu.initFields();
+
+        canvasOperationDisplay();
+        bannerFinishingOperationDisplay(product);
+
         trimOperationItemName(inkOpsWithDPI, ' - ');
         trimOperationItemName(opsToTrimWithUnderscore, '_');
         if (cu.getPjcId(product) != 389) {
@@ -240,6 +204,13 @@ function functionsRanAfterFullQuote(updates, validation, product, quote) {
     setCuttingOps(quote, product);
     setInkMaterialCosts();
     setLamRunOps(quote);
+    canonBacklitLogic(updates, product);
+    showMessages();
+
+    //UI changes
+    canvasOperationDisplay();
+    bannerFinishingOperationDisplay(product);
+    bannerStandLogic();
 }
 
 function createOperationItemKey(quote) {
@@ -511,11 +482,11 @@ function setFabCutOp(cutMethod, product) {
         if (cu.getPjcId(product) == 389) {
             removeClassFromOp(116, 'planning');
             if (!cu.hasValue(fabCutOp)) {
-                message += '<p>Please select a Cutting Option in the TBG-Fab Cut operation.</p>'
+                onQuoteUpdatedMessages+= '<p>Please select a Cutting Option in the TBG-Fab Cut operation.</p>'
             }
             if (cu.getValue(fabCutOp) == 508) {
                 if (!cu.hasValue(fields.operation78)) {
-                    message += '<p>Fab Laser Cut requires a Premask.  This has been chosen on your behalf.</p>';
+                    onQuoteUpdatedMessages += '<p>Fab Laser Cut requires a Premask.  This has been chosen on your behalf.</p>';
                     cu.changeField(fields.operation78, 291, true);
                 }
             }
@@ -710,7 +681,7 @@ function setLamRunOps(quote) {
                         validateValue(laminatingRun, 709);
                         validateValue(laminatingRun2,'');
                     } else {
-                        message += invalidLamMessage;
+                        onQuoteUpdatedMessages += invalidLamMessage;
                     }
                 } else if (hasColdFront) {
                     if (hasColdBack) {  // 1. Cold / Adhesive
@@ -743,6 +714,115 @@ function setLamRunOps(quote) {
         validateValue(laminatingRun2,'');
     }
 }
+
+function canonBacklitLogic(updates, product) {
+    if (cu.getPjcId(product) == 94) {
+        // add Ink Configuration and Lam for Kodak Backlit
+        var inkConfig = fields.operation72;
+        if (cu.getValue(fields.printSubstrate) == 131) {
+            if (cu.isLastChangedField(updates, fields.printSubstrate)) { 
+                if (!cu.hasValue(fields.frontLaminate) || !cu.getValue(fields.frontLaminate)) {
+                    onQuoteUpdatedMessages += '<p>Front and Back Laminating is suggested for Kodak Backlit Graphics.  Please add Laminating options.</p>';
+                }
+            }
+            if (cu.getValue(inkConfig) != 264) {
+                cu.changeField(inkConfig, 264, true);
+            }
+            cu.disableField(inkConfig);
+        }
+        else if (cu.getValue(inkConfig) == 264) {
+            cu.enableField(inkConfig);
+            cu.changeField(inkConfig, '', true);
+        }
+    }
+}
+
+function canvasOperationDisplay() {
+    var canvasSubstrates = [
+        '144',  //6.5oz. Ultraflex Mult-tex Canvas
+        '83'   //Canvas - Matte Finish
+    ]
+    var canvasOperations = [
+        65, //TBG Canvas Frame Assembly
+        66  //TBG Canvas Stretching
+    ]
+    //hide operations only pertaining to canvas substrates
+    if (!cu.isValueInSet(fields.printSubstrate, canvasSubstrates)) {
+        addClassToOperation(canvasOperations, 'planning');
+        validateValue(fields.operation65,'');
+        validateValue(fields.operation66,'');
+    }
+}
+
+function bannerFinishingOperationDisplay(product) {
+    var substratesWithBannerFinishing = [
+        '23',    //13 oz. Scrim Vinyl Matte (for outdoor use)
+        '26',    //13 oz. Smooth Vinyl - Opaque Matte (for indoor use)
+        '73',    //18 oz. Smooth Vinyl - Opaque Matte (for heavy duty outdoor use)
+        '114',   //8 oz. Mesh
+        '167',    //15 oz. Smooth Vinyl Banner
+        '146',     //Berger Samba Fabric 6.87oz.
+        '210',  //SBR-DURA-WHT-BLKBK-13OZ-126X164
+        '100',  //Ultraflex Poplin 7oz.
+        '177',   //Verseidag Nightdrop 10oz.
+        '125',   //ULTRAFLEX-MULTITEX 220-6.5OZ CANVAS-122"X164'-3257
+        '175',   //3.4oz. Aberdeen Soft Flag
+        '171',   //4.5oz. Aberdeen Simplicity
+        '170',   //Aberdeen Outdoor Flag
+        '173',   //Aberdeen Luminary 9111
+        '174',   //Aberdeen Trinity
+        '172',   //Top Value Heavy Knit
+        '270'   //Heavy Kit Fabric - Top Value 7.3oz
+    ]
+    var bannerFinishingOperations = [
+        60,   //TBG Grommets
+        61,   //TBG Hemming
+        62,   //TBG Pole Pockets
+        63,   //TBG Keder Sewing
+        73    //TBG Grommet Color
+    ]
+    //always show with Dye Sub materials
+    if (cu.getPjcId(product) == 392) {
+        return;
+    }
+    //hide operstions if substrate not in list
+    if (!cu.isValueInSet(fields.printSubstrate, substratesWithBannerFinishing)) {
+        addClassToOperation(bannerFinishingOperations, 'planning');
+    }
+    //clearOperations(bannerFinishingOperations)  --FUTURE PM CALCUTILS
+}
+function bannerStandLogic() {
+    //Only show Banner stands with 13 oz scrim or smooth
+    var bannerStandMaterial = [
+        '23',    //13 oz. Scrim Vinyl Matte (for outdoor use)
+        '26',    //13 oz. Smooth Vinyl - Opaque Matte (for indoor use)
+        '73'    //18 oz. Smooth Vinyl - Opaque Matte (for heavy duty outdoor use)
+    ]
+    var bannerStandOp = fields.operation75;
+    if (bannerStandOp) {
+        if (!cu.isValueInSet(fields.printSubstrate, bannerStandMaterial)) {
+            //cu.hideField(bannerStandOp);
+            addClassToOperation(75,'planning');
+            if (cu.hasValue(bannerStandOp)) {
+                onQuoteUpdatedMessages += '<p>Banners stands can only be ordered with 13 oz Vinyl.</p>';
+                cu.changeField(bannerStandOp,'',true);
+            }
+        }
+    }
+}
+
+
+
+
+
+function showMessages () {
+    // show an alert when necessary
+    if (onQuoteUpdatedMessages != '') {
+        cu.alert(onQuoteUpdatedMessages);
+        onQuoteUpdatedMessages = '';
+    }
+}
+
 
 //simplifies changing values of operation items
 function validateValue(field, value) {
@@ -782,26 +862,6 @@ function enableCheckoutButton() {
     $('button.continueButton').attr('onclick', 'common.continueClicked();');
 }
 
-function hideCanvasOperations() {
-    $.each(canvasOperations, function() {
-        $('#operation' + this).hide();
-    });
-}
-function showCanvasOperations() {
-    $.each(canvasOperations, function() {
-        $('#operation' + this).show();
-    });
-}
-function hideBannerOperations() {
-    $.each(bannerFinishingOperations, function() {
-        $('#operation' + this).hide();
-    });
-}
-function showBannerOperations() {
-    $.each(bannerFinishingOperations, function() {
-        $('#operation' + this).show();
-    });
-}
 function trimOperationItemName(opList, deliminater) {
     //change single operation to array
     if (!(Array.isArray(opList))) {
@@ -870,16 +930,15 @@ function validateSidesNotTheSame(opDetails, op1, op2) {
     var object1 = opDetails['op' + op1];
     var object2 = opDetails['op' + op2];
     var sidesMatch = [];
-    var message = '';
     for (var key in object1) {
         if (object1[key] == true && object2[key] == true) {
             sidesMatch.push(key);
         }
     }
     if (sidesMatch.length > 0) {
-        message += '<p>The following sides match for operations ' + object1['name'] + ' and ' + object2['name'] + ' : ' + sidesMatch.join(', ') + '.</p><p>Please make adjustments as these operations cannot be done on the same sides.</p>';
+        onQuoteUpdatedMessages += '<p>The following sides match for operations ' + object1['name'] + ' and ' + object2['name'] + ' : ' 
+        + sidesMatch.join(', ') + '.</p><p>Please make adjustments as these operations cannot be done on the same sides.</p>';
     }
-    return message
 }
 
 /*

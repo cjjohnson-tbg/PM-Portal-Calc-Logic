@@ -211,6 +211,7 @@ function functionsRanAfterFullQuote(updates, validation, product, quote) {
     canvasOperationDisplay();
     bannerFinishingOperationDisplay(product);
     bannerStandLogic();
+    checkSidesOpConflicts(quote);
 }
 
 function createOperationItemKey(quote) {
@@ -788,7 +789,10 @@ function bannerFinishingOperationDisplay(product) {
     //hide operstions if substrate not in list
     if (!cu.isValueInSet(fields.printSubstrate, substratesWithBannerFinishing)) {
         addClassToOperation(bannerFinishingOperations, 'planning');
+    } else {
+        removeClassFromOp(bannerFinishingOperations, 'planning');
     }
+
     //clearOperations(bannerFinishingOperations)  --FUTURE PM CALCUTILS
 }
 function bannerStandLogic() {
@@ -811,7 +815,48 @@ function bannerStandLogic() {
     }
 }
 
-
+function checkSidesOpConflicts(quote) {
+    /*** NOT FULLY BUILT OUT.  JUST SUPPORTS BANNER HEMS AND POLE POCKETS*/
+    if (cu.hasValue(fields.operation61) && cu.hasValue(fields.operation62)) {
+        var operationDetails = getSideOperationDetails(quote);   //Building inside validation function.... can't figure out why not working
+        var sameSideMessage = validateOpSidesNotTheSame(operationDetails,61,62);
+        if (sameSideMessage != '') {
+            onQuoteUpdatedMessages += sameSideMessage;
+        }
+    }
+}
+function getSideOperationDetails(quote) {
+    var ops = quote.operationQuotes;
+    var result = {};
+    for (var i = 0; i < ops.length; i++) {
+        var opId = ops[i].operation.id;
+        var data = ops[i].data;
+        result['op' + opId] = {
+            'id' : opId,
+            'name' : ops[i].operation.heading,
+            'left' : data.leftSide,
+            'right' : data.rightSide,
+            'bottom' : data.bottomSide,
+            'top' : data.topSide
+        }
+    } 
+    return result
+}
+function validateOpSidesNotTheSame(opDetails, op1, op2) {
+    var object1 = opDetails['op' + op1];
+    var object2 = opDetails['op' + op2];
+    var sidesMatch = [];
+    var message = '';
+    for (var key in object1) {
+        if (object1[key] == true && object2[key] == true) {
+            sidesMatch.push(key);
+        }
+    }
+    if (sidesMatch.length > 0) {
+        message += '<p>The following sides match for operations ' + object1['name'] + ' and ' + object2['name'] + ' : ' + sidesMatch.join(', ') + '.</p><p>Please make adjustments as these operations cannot be done on the same sides.</p>';
+    }
+    return message
+}
 
 
 
@@ -908,38 +953,6 @@ function removeOperationItemsWithString(op, string) {
     });
 }
 
-function getOperationDetails() {
-    var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
-    var operations = quote.operationQuotes;
-    var ops = { };
-    for (var i = 0; i < operations.length; i++) {
-        var opId = operations[i].operation.id;
-        var data = operations[i].data;
-        ops['op' + opId] = {
-            'id' : opId,
-            'name' : operations[i].operation.heading,
-            'left' : data.leftSide,
-            'right' : data.rightSide,
-            'bottom' : data.bottomSide,
-            'top' : data.topSide
-        }
-        return ops
-    } return false
-}
-function validateSidesNotTheSame(opDetails, op1, op2) {
-    var object1 = opDetails['op' + op1];
-    var object2 = opDetails['op' + op2];
-    var sidesMatch = [];
-    for (var key in object1) {
-        if (object1[key] == true && object2[key] == true) {
-            sidesMatch.push(key);
-        }
-    }
-    if (sidesMatch.length > 0) {
-        onQuoteUpdatedMessages += '<p>The following sides match for operations ' + object1['name'] + ' and ' + object2['name'] + ' : ' 
-        + sidesMatch.join(', ') + '.</p><p>Please make adjustments as these operations cannot be done on the same sides.</p>';
-    }
-}
 
 /*
 sends in text from a text block to search for a Json object

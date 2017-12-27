@@ -21,8 +21,8 @@ var calcConfig = {
 		var productionQty = Math.ceil(pieceQty * (1 + deviceDefaults.attrition));
 		
 		var totalSubCost = quote.aPrintSubstratePrice;
-		var totalSquareFeet = quote.piece.totalSquareFeet;
-		var subSqFtCost = totalSubCost / totalSquareFeet / pieceQty;
+		var totalSquareFeet = quote.piece.totalSquareFeet * pieceQty;
+		var subSqFtCost = totalSubCost / totalSquareFeet;
 
 		var bleed = deviceDefaults.bleed;
 		var devMargin = deviceDefaults.margin;

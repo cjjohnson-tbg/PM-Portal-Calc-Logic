@@ -111,6 +111,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
     //TEMP IN FIElD QUOTE MODE.  NOT WORKING IN FULL QUOTE
     setWasteOperationCosts(quote);
+    setRollChangeCost();
     setCuttingOps(quote, product);
     setInkMaterialCosts();
     setLamRunOps(quote);
@@ -179,7 +180,7 @@ function setWasteOperationCosts(quote) {
     setWasteOperationAnswer(fields.operation135_answer, calcPrintSubCost, printSubCost);
 
     var calcLamCost = (printConfig.frontLaminate ? printConfig.frontLaminate.totalCost : 0) + (printConfig.backLaminate ? printConfig.backLaminate.totalCost : 0);
-    var lamSubCost = (quote.frontLaminatePrice ? quote.frontLaminatePrice : 0) + (quote.frontLaminatePrice ? quote.frontLaminatePrice : 0);
+    var lamSubCost = (quote.frontLaminatePrice ? quote.frontLaminatePrice : 0) + (quote.backLaminatePrice ? quote.backLaminatePrice : 0);
     setWasteOperationAnswer(fields.operation146_answer, calcLamCost, lamSubCost);
 
     var calcMountCost = printConfig.mountSubstrate ? printConfig.mountSubstrate.totalCost : 0;

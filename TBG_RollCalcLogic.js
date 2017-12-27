@@ -1,12 +1,6 @@
 
-var calcCount = 0;
-
-var pmPortal = ((location.hostname.indexOf("tbg-pm.collaterate.com") != -1) || (location.hostname.indexOf("tbghub.com") != -1));
-var estimatingSite = (location.hostname.indexOf("estimating.collaterate.com") != -1);
-
-// Message Counts
-var hardProofMessageCount = 0;
-var sameSideMessage = '';
+// Message holder
+var onQuoteUpdatedMessages = '';
 
 // Operation Item Keys object - in window for testing
 var operationItemKeys = new Object();  
@@ -17,7 +11,7 @@ var printConfig = {};
 var cu = calcUtil;
 var cc = calcConfig;
 
-var onQuoteUpdatedMessages = '';
+var calcCount = 0;
 
 var rollCalcLogic = {
     onCalcLoaded: function(product) {
@@ -759,6 +753,7 @@ function bannerStandLogic() {
 
 function checkSidesOpConflicts(quote) {
     /*** NOT FULLY BUILT OUT.  JUST SUPPORTS BANNER HEMS AND POLE POCKETS*/
+    var sameSideMessage = '';
     if (cu.hasValue(fields.operation61) && cu.hasValue(fields.operation62)) {
         var operationDetails = getSideOperationDetails(quote);   //Building inside validation function.... can't figure out why not working
         var sameSideMessage = validateOpSidesNotTheSame(operationDetails,61,62);
@@ -967,6 +962,9 @@ function colorCritical() {
 }
 
 function hardProofCheck() {
+    if (!window.hardProofMessageCount) {
+        window.hardProofMessageCount = 0
+    }
     var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
     var proofOp = fields.proof;
     var proofSelection = configureglobals.cquotedata.proof.name;

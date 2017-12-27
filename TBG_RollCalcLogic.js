@@ -18,18 +18,6 @@ var planningOnlyOps = [
 var estimatingOnlyOps = [
     139     //TBG Team Factor
 ]
-var zundFactors = {
-    "K1" : {"name" : "Knife 1", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 195, "intCutOpItem": 773, "rank" : 1},
-    "K2" : {"name" : "Knife 2", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 196, "intCutOpItem": 774, "rank" : 2},
-    "R1" : {"name" : "Router 1", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 197, "intCutOpItem": 775, "rank" : 3},
-    "R2" : {"name" : "Router 2", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 198, "intCutOpItem": 776, "rank" : 4},
-    "R3" : {"name" : "Router 3", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 199, "intCutOpItem": 777, "rank" : 5},
-    "R4" : {"name" : "Router 4", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 200, "intCutOpItem": 778, "rank" : 6}
-}
-var flutedSubstrateNames = [
-    'Coroplast',
-    'Flute'
-]
 var inkOpsWithDPI = [
     52  //TBG Ink Configuration - Vutek HS100
 ]
@@ -40,11 +28,14 @@ var opsToTrimWithUnderscore = [
     78  //LF Premask
 ]
 
-var fabrivuDirectMaterials = [
-    '398'   //Berger Flag Fabric White 4oz
-]
-
-
+var zundFactors = {
+    "K1" : {"name" : "Knife 1", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 195, "intCutOpItem": 773, "rank" : 1},
+    "K2" : {"name" : "Knife 2", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 196, "intCutOpItem": 774, "rank" : 2},
+    "R1" : {"name" : "Router 1", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 197, "intCutOpItem": 775, "rank" : 3},
+    "R2" : {"name" : "Router 2", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 198, "intCutOpItem": 776, "rank" : 4},
+    "R3" : {"name" : "Router 3", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 199, "intCutOpItem": 777, "rank" : 5},
+    "R4" : {"name" : "Router 4", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 200, "intCutOpItem": 778, "rank" : 6}
+}
 
 var calcCount = 0;
 
@@ -160,10 +151,6 @@ function addJobMaterialProperties(quote) {
 
 function functionsRanInFullQuote(updates, validation, product, quote) {
     createOperationItemKey(quote);
-    //setWasteOperationCosts(quote);
-    //setCuttingOps(quote, product);
-    //setInkMaterialCosts();
-    //setLamRunOps();
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
@@ -182,13 +169,13 @@ function functionsRanAfterFullQuote(updates, validation, product, quote) {
     colorCritical();
     setTeamPrice(quote);
 
-    showMessages();
-
     //UI changes
     canvasOperationDisplay();
     bannerFinishingOperationDisplay(product);
     bannerStandLogic();
-    
+
+    renderExtendedCostBreakdown();
+    showMessages();
 }
 
 function createOperationItemKey(quote) {
@@ -867,6 +854,10 @@ function setVinylCuttingRules() {
 
 function fluteDirectionRules() {
     var fluteDirectionOp = fields.operation101;
+    var flutedSubstrateNames = [
+        'Coroplast',
+        'Flute'
+    ]
     if (fluteDirectionOp) {
         var hasFlutes = false;
         var mountSubstrateName = $('#mountSubstrates select[name="MOUNTSUBSTRATEDD"] option:selected').text();

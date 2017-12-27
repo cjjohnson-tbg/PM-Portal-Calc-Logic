@@ -21,8 +21,8 @@ var calcConfig = {
 		var productionQty = Math.ceil(pieceQty * (1 + deviceDefaults.attrition));
 		
 		var totalSubCost = quote.aPrintSubstratePrice;
-		var totalSquareFeet = quote.piece.totalSquareFeet;
-		var subSqFtCost = totalSubCost / totalSquareFeet / pieceQty;
+		var totalSquareFeet = quote.piece.totalSquareFeet * pieceQty;
+		var subSqFtCost = totalSubCost / totalSquareFeet;
 
 		var bleed = deviceDefaults.bleed;
 		var devMargin = deviceDefaults.margin;
@@ -111,9 +111,9 @@ var calcConfig = {
 			//if piece > 200 then maxFormLF = 
 			config.formLengthMax = roll.width == 126 ? Math.max(pieceHeight, 200) : Math.max(pieceHeight, 120);
 			//if limited by substrates, update formLength
-			var minMatLength = getSignatureDim(materials, 'length');
+			config.minMatLength = getSignatureDim(materials, 'length');
 			if (config.minMatLength < config.formLengthMax) {
-				config.formLengthMax = minMatLength;
+				config.formLengthMax = config.minMatLength;
 			}
 
 			config.printableLength = config.formLengthMax - (2 * devMargin);

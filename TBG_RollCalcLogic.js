@@ -39,31 +39,11 @@ var opsToTrimWithUnderscore = [
     58,   //TBG Tape, Mag, Velcro
     78  //LF Premask
 ]
-var substratesThatCanHeatBend =[
-    '4',     //Styrene 020
-    '5',     //Styrene 030
-    '178',   //Styrene 015
-    '59',    //Expanded PVC Foamboard - .125in-3mm - White
-    '188',   //Expanded PVC Foamboard 2 MM - White
-    '113',   //Expanded PVC Foamboard 1 MM - White
-    '117',   //Expanded PVC Foamboard - .125in-3mm - Black
-    '354',   //Acrylic Clear Extruded .118
-    '417',   //Acrylic Black Extruded .118"
-    '39',   //PETG .020
-    '158',   //PETG .030
-    '40',   //PETG .040
-    '199',   //PETG .040 Non-Glare
-    '41',   //PETG .060
-    '69',   //PETG .080
-    '159'   //PETG .118
-]
+
 var fabrivuDirectMaterials = [
     '398'   //Berger Flag Fabric White 4oz
 ]
-var utrlaCanvasBacklitInks = [
-    '241',  //Backlit (Double Strike)
-    '239'   //W + CMYK (Flood / First Surface)
-]
+
 
 
 var calcCount = 0;
@@ -193,15 +173,20 @@ function functionsRanAfterFullQuote(updates, validation, product, quote) {
     setInkMaterialCosts();
     setLamRunOps(quote);
     canonBacklitLogic(updates, product);
+    checkSidesOpConflicts(quote);
+    setVinylCuttingRules();
+    fluteDirectionRules();
+    backlitDoubleStike();
+    heatBendingRules();
+    fabrivuLogic(product);
+
     showMessages();
 
     //UI changes
     canvasOperationDisplay();
     bannerFinishingOperationDisplay(product);
     bannerStandLogic();
-    checkSidesOpConflicts(quote);
-    setVinylCuttingRules();
-    fluteDirectionRules();
+    
 }
 
 function createOperationItemKey(quote) {
@@ -901,6 +886,91 @@ function fluteDirectionRules() {
                 cu.changeField(fluteDirectionOp,'',true);
                 return
             }
+        }
+    }
+}
+
+function backlitDoubleStike() {
+    var vutekInks = fields.operation52;
+    var utrlaCanvasBacklitInks = [
+        '241',  //Backlit (Double Strike)
+        '239'   //W + CMYK (Flood / First Surface)
+    ]
+    if (vutekInks) {
+        if (cu.getValue(fields.printSubstrate) == 308) {
+            if (!cu.isValueInSet(vutekInks, utrlaCanvasBacklitInks)) {
+                cu.changeField(vutekInks, utrlaCanvasBacklitInks[0], true);
+            }
+        } else {
+            if (cu.isValueInSet(vutekInks, utrlaCanvasBacklitInks)) {
+                onQuoteUpdatedMessages += '<p>Double Strike backlit ink is only available on the Ultra Canvas Backlit.</p>';
+                cu.changeField(vutekInks,261, true);
+            }
+        }
+    }
+}
+
+function heatBendingRules() {
+    var heatBendingOp = fields.operation117;
+    var substratesThatCanHeatBend =[
+        '4',     //Styrene 020
+        '5',     //Styrene 030
+        '178',   //Styrene 015
+        '59',    //Expanded PVC Foamboard - .125in-3mm - White
+        '188',   //Expanded PVC Foamboard 2 MM - White
+        '113',   //Expanded PVC Foamboard 1 MM - White
+        '117',   //Expanded PVC Foamboard - .125in-3mm - Black
+        '354',   //Acrylic Clear Extruded .118
+        '417',   //Acrylic Black Extruded .118"
+        '39',   //PETG .020
+        '158',   //PETG .030
+        '40',   //PETG .040
+        '199',   //PETG .040 Non-Glare
+        '41',   //PETG .060
+        '69',   //PETG .080
+        '159'   //PETG .118
+    ]
+    if (heatBendingOp) {
+        if (cu.hasValue(heatBendingOp)) {
+            //cannot exceed 100 pieces
+            if (cu.getTotalQuantity() > 100) {
+                onQuoteUpdatedMessages += '<p>Heat Bending is limited to 100 pieces.  This option has been removed from your selects.</p>';
+                cu.changeField(heatBendingOp,'', true);
+            }
+            //No PreLam, Lam, Mount or Adhesive can be applied
+            if (hasFrontLam || hasBackLam || cu.hasValue(fields.mountSubstrate)) {
+                onQuoteUpdatedMessages += '<p>Heat Bending cannot be chosen with Laminating or mounting</p>';
+                cu.changeField(heatBendingOp,'',true);
+            }
+            if (cu.hasValue(fields.operation84) || cu.hasValue(fields.operation67)) {
+                onQuoteUpdatedMessages += '<p>Heat Bending cannot be chosen with Laminating or mounting</p>';
+                cu.changeField(heatBendingOp,'',true);
+            }
+            //Neight side can be lower than 36"
+            if (cu.getWidth() > 36 || cu.getHeight() > 36) {
+                onQuoteUpdatedMessages += '<p>Heat Bending cannot be chosen with either side longer than 36"</p>';
+                cu.changeField(heatBendingOp,'',true);
+            }
+            //
+            if (substratesThatCanHeatBend.indexOf(cu.getValue(fields.printSubstrate)) == -1) {
+                onQuoteUpdatedMessages += '<p>Heat Bending can only be chosen for Styrene, EPVC, Acrylic, or PETG in calipers less than .125" (3MM).</p>';
+                cu.changeField(heatBendingOp,'',true);
+            }
+        }
+    }
+}
+
+function fabrivuLogic(product) {
+    var fabrivuDirectMaterials = [
+        '398'   //Berger Flag Fabric White 4oz
+    ]
+    var dyeSubTransferOp = fields.operation88;
+    if (cu.getPjcId(product) == 450) {
+        //Choose none option for dye sub transfer material if substrate in list
+        if (cu.isValueInSet(fields.printSubstrate,fabrivuDirectMaterials)) {
+                validateValue(dyeSubTransferOp, 442, true);
+        } else {
+            validateValue(dyeSubTransferOp, 428, true);
         }
     }
 }

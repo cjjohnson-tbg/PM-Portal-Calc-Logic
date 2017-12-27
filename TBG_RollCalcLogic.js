@@ -9,6 +9,7 @@ var operationItemKeys = new Object();
 var printConfig = {};
 
 var cu = calcUtil;
+var pu = pmCalcUtil;
 var cc = calcConfig;
 
 var calcCount = 0;
@@ -84,14 +85,14 @@ var rollCalcLogic = {
 
 // Functions called in Full Quote
 function setConfigGlobalProperties(quote) {
-    setCustomProperties(quote.device,"description","customProperties");
+    pu.setCustomProperties(quote.device,"description","customProperties");
     addJobMaterialProperties(quote);
 }
 function addJobMaterialProperties(quote) {
     var jobMaterials = quote.piece;
     for (prop in jobMaterials) {
         if (jobMaterials.hasOwnProperty(prop)) {
-            setCustomProperties(jobMaterials[prop], "notes","customProperties")
+            pu.setCustomProperties(jobMaterials[prop], "notes","customProperties")
         }
     }
 }
@@ -126,7 +127,7 @@ function functionsRanAfterFullQuote(updates, validation, product, quote) {
     uiUpdates(product);
 
     renderExtendedCostBreakdown();
-    showMessages();
+    pu.showMessages();
 }
 
 function createOperationItemKey(quote) {
@@ -141,7 +142,7 @@ function createOperationItemKey(quote) {
             var opItemDescription = operationQuote.operationItem.description;
             var opItemKeyText = /\{(.*?)\}/.exec(opItemDescription);
             if (opItemKeyText) {
-                var opItemJSON = getJsonFromString(opItemKeyText[0]);
+                var opItemJSON = pu.getJsonFromString(opItemKeyText[0]);
                 if (opItemJSON) {
                     for (prop in opItemJSON) {
                         if (opItemJSON.hasOwnProperty(prop)) {
@@ -197,7 +198,7 @@ function setWasteOperationAnswer(opAnswer, calcCost, cost) {
         console.log('currentValue for Wastage not a number ' + opAnswer);
         return
     }
-    var waste = roundTo((calcCost - cost), 2);
+    var waste = pu.roundTo((calcCost - cost), 2);
     //if not cost, waste set waste to 0
     if (isNaN(waste)) { 
         waste = 0;
@@ -284,28 +285,28 @@ function setZundOps(quote, cutMethod) {
 
     if (cutMethod == 'zund') {
         if (zundLoading) {
-            validateValue(zundLoading, zundChoice.loadingOpItem);
+            pu.validateValue(zundLoading, zundChoice.loadingOpItem);
         }
         if (zundCutting) {
-            validateValue(zundCutting, zundChoice.runOpItem);
+            pu.validateValue(zundCutting, zundChoice.runOpItem);
         }
         if (zundUnloading) {
-            validateValue(zundUnloading,zundChoice.unloadingOpItem);
+            pu.validateValue(zundUnloading,zundChoice.unloadingOpItem);
         }
         //INTERNAL CUTTING - map to choice item and enter answer 
         /*if (userItCutOpAnswer) {
             var intCutInches = cu.getValue(userItCutOpAnswer);
             //must run 2 times: 1 to set operation, 2 to set answer value
-            //validateValue(fields.operation179, zundChoice.intCutOpItem);
+            //pu.validateValue(fields.operation179, zundChoice.intCutOpItem);
             if (fields.operation179_answer) {
-                validateValue(fields.operation179_answer, intCutInches);
+                pu.validateValue(fields.operation179_answer, intCutInches);
             }
         } */
     } else {
-        validateValue(zundLoading,'');
-        validateValue(zundCutting,'');
-        validateValue(zundUnloading,'');
-        validateValue(fields.operation179,'');
+        pu.validateValue(zundLoading,'');
+        pu.validateValue(zundCutting,'');
+        pu.validateValue(zundUnloading,'');
+        pu.validateValue(fields.operation179,'');
     }
     //Interior cut operations soon to be re-org
     //setZundInCutOp(cutMethod, zundChoice);
@@ -358,11 +359,11 @@ function setZundInCutOp(cutMethod, zundChoice) {
         455 : 456
     }
     //trim and only show option for current zund factor
-    trimOperationItemName(112, '_');
+    pu.trimOperationItemNames(112, '_');
     if (zundChoice.rank > 3){
-        hideOperationItems(intCutRouteOptions);
+        pu.hideFieldOptions(intCutRouteOptions);
     } else {
-        hideOperationItems(intCutBladeOptions);
+        pu.hideFieldOptions(intCutBladeOptions);
     }
     if (cu.hasValue(intCutOp) && cutMethod == 'zund') {
         var intCutItem = cu.getValue(intCutOp);
@@ -396,7 +397,7 @@ function setOutsourceCutOps(cutMethod) {
             cu.changeField(outsourceCutOp,412,true);
         }
     } else {
-        removeOperationItemsWithString(104,'Cut');
+        pu.removeOperationItemsWithString(104,'Cut');
         if (cu.getSelectedOptionText(outsourceCutOp).indexOf('Cut') != -1) {
             cu.changeField(outsourceCutOp,'', true);
         }
@@ -407,7 +408,7 @@ function setMCTCutOp(cutMethod) {
     var mctLoading = fields.operation128;
     var mctUnloading = fields.operation129;
     if (cutMethod != 'mct') {
-        validateValue(mctCutting,'');
+        pu.validateValue(mctCutting,'');
     }
 }
 function setFabCutOp(cutMethod, product) {
@@ -415,7 +416,7 @@ function setFabCutOp(cutMethod, product) {
     if (cutMethod == 'fabCut') {
         //show TBG Fab Cut and Turn on Premask when Laser selected
         if (cu.getPjcId(product) == 389) {
-            removeClassFromOp(116, 'planning');
+            pu.removeClassFromOperation(116, 'planning');
             if (!cu.hasValue(fabCutOp)) {
                 onQuoteUpdatedMessages+= '<p>Please select a Cutting Option in the TBG-Fab Cut operation.</p>'
             }
@@ -438,10 +439,10 @@ function setNoCutOp(cutMethod) {
     var noCutOp = fields.operation110;
     if (cutMethod == 'noCutting' || cutMethod == 'suma') {
         //validate user Declare cut operation set to No Cutting
-        validateValue(fields.operation11,450);
-        validateValue(noCutOp,448);
+        pu.validateValue(fields.operation11,450);
+        pu.validateValue(noCutOp,448);
     } else {
-        validateValue(noCutOp,'');
+        pu.validateValue(noCutOp,'');
     }
 }
 /*** END CUTTING */
@@ -483,14 +484,14 @@ function setInkMaterialCosts() {
         if (inkConfigOpSide2) {
             if (cu.getValue(fields.sides) == "2") {
                 //default if sides was last changed
-                validateValue(inkConfigOpSide2, defaultInkConfigSide2OpItem)
+                pu.validateValue(inkConfigOpSide2, defaultInkConfigSide2OpItem)
                 if (operationItemKeys.inkMatOpItemSide2) {
-                    validateValue(inkMatOpSide2,inkMatOpSide2ItemId);
+                    pu.validateValue(inkMatOpSide2,inkMatOpSide2ItemId);
                 }
                 cu.showField(inkConfigOpSide2);
             } else {
-                validateValue(inkConfigOpSide2, ''); 
-                validateValue(inkMatOpSide2, ''); 
+                pu.validateValue(inkConfigOpSide2, ''); 
+                pu.validateValue(inkMatOpSide2, ''); 
                 cu.hideField(inkConfigOpSide2);
             }
         }
@@ -527,57 +528,57 @@ function setLamRunOps(quote) {
             if (hasPremask) {
                 if (!hasFrontLam && !hasBackLam) { 
                     if (selfAdhesive) {  // 1. Mount + Premask 
-                        validateValue(laminatingRun, 711);
-                        validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun, 711);
+                        pu.validateValue(laminatingRun2,'');
                     } else { // 1. Adhesive  2. Mount + Premask
-                        validateValue(laminatingRun, 706);
-                        validateValue(laminatingRun2, 717);
+                        pu.validateValue(laminatingRun, 706);
+                        pu.validateValue(laminatingRun2, 717);
                     }
                 } else if (hasHotFront) { 
                     if (selfAdhesive) { // 1. Mount  2. Hot  3. Premask
-                        validateValue(laminatingRun, 710);
-                        validateValue(laminatingRun2, 718);
+                        pu.validateValue(laminatingRun, 710);
+                        pu.validateValue(laminatingRun2, 718);
                     }
                     else { //  1. Hot / Adhesive  2. Mount + Premask
-                        validateValue(laminatingRun, 709);
-                        validateValue(laminatingRun2, 717);
+                        pu.validateValue(laminatingRun, 709);
+                        pu.validateValue(laminatingRun2, 717);
                     }
                 } else if (hasColdFront) {
                     if (selfAdhesive) { // 1. Cold / Adhesive  2.  Mount + Premask
-                        validateValue(laminatingRun, 708);
-                        validateValue(laminatingRun2, 717);
+                        pu.validateValue(laminatingRun, 708);
+                        pu.validateValue(laminatingRun2, 717);
                     }
                     else { //  1. Cold / Adhesive  2. Mount + Premask
-                        validateValue(laminatingRun, 708);
-                        validateValue(laminatingRun2, 717);
+                        pu.validateValue(laminatingRun, 708);
+                        pu.validateValue(laminatingRun2, 717);
                     }
                 }
             } else {  //mounted but no premask
                if (!hasFrontLam && !hasBackLam) { 
                     if (selfAdhesive) {  // 1. Mount 
-                        validateValue(laminatingRun, 710);
-                        validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun, 710);
+                        pu.validateValue(laminatingRun2,'');
                     } else { // 1. Adhesive  2. Mount
-                        validateValue(laminatingRun, 706);
-                        validateValue(laminatingRun2, 716);
+                        pu.validateValue(laminatingRun, 706);
+                        pu.validateValue(laminatingRun2, 716);
                     }
                 } else if (hasHotFront) { 
                     if (selfAdhesive) { // 1. Mount  2. Hot 
-                        validateValue(laminatingRun, 710);
-                        validateValue(laminatingRun2, 715);
+                        pu.validateValue(laminatingRun, 710);
+                        pu.validateValue(laminatingRun2, 715);
                     }
                     else { //  1. Hot / Adhesive  2. Mount
-                        validateValue(laminatingRun, 709);
-                        validateValue(laminatingRun2, 716);
+                        pu.validateValue(laminatingRun, 709);
+                        pu.validateValue(laminatingRun2, 716);
                     }
                 } else if (hasColdFront) {
                     if (selfAdhesive) { // 1. Mount  2. Cold 
-                        validateValue(laminatingRun, 710);
-                        validateValue(laminatingRun2, 714);
+                        pu.validateValue(laminatingRun, 710);
+                        pu.validateValue(laminatingRun2, 714);
                     }
                     else { //  1. Cold / Adhesive  2. Mount
-                        validateValue(laminatingRun, 708);
-                        validateValue(laminatingRun2, 716);
+                        pu.validateValue(laminatingRun, 708);
+                        pu.validateValue(laminatingRun2, 716);
                     }
                 }
             }
@@ -585,70 +586,70 @@ function setLamRunOps(quote) {
             if (hasPremask) {
                 if (hasHotFront) {
                     if (hasAdhesiveBack) { // 1. Hot / Adhesive 2. Premask
-                        validateValue(laminatingRun, 709);
-                        validateValue(laminatingRun2,718);
+                        pu.validateValue(laminatingRun, 709);
+                        pu.validateValue(laminatingRun2,718);
                     } else if (hasHotBack) { // 1. Hot / Hot 2. Premask
-                        validateValue(laminatingRun, 364);
-                        validateValue(laminatingRun2,718);
+                        pu.validateValue(laminatingRun, 364);
+                        pu.validateValue(laminatingRun2,718);
                     }
                 } else if (hasColdFront) {
                     if (hasColdBack) {  // 1. Cold  2. Premask
-                        validateValue(laminatingRun, 363);
-                        validateValue(laminatingRun2,718);
+                        pu.validateValue(laminatingRun, 363);
+                        pu.validateValue(laminatingRun2,718);
                     } else if (hasAdhesiveBack) { // 1. Cold / Adhesive 2. Premask
-                        validateValue(laminatingRun, 708);
-                        validateValue(laminatingRun2,718);
+                        pu.validateValue(laminatingRun, 708);
+                        pu.validateValue(laminatingRun2,718);
                     } else { // 1. Cold  2. Pre-mask
-                        validateValue(laminatingRun, 363);
-                        validateValue(laminatingRun2,718);
+                        pu.validateValue(laminatingRun, 363);
+                        pu.validateValue(laminatingRun2,718);
                     }
                 } else if (hasAdhesiveBack) { // 1. Adhesive  2. Premask
-                    validateValue(laminatingRun, 706);
-                    validateValue(laminatingRun2,718);
+                    pu.validateValue(laminatingRun, 706);
+                    pu.validateValue(laminatingRun2,718);
                 } else { // 1. Premask
-                    validateValue(laminatingRun, 712);
-                    validateValue(laminatingRun2,'');
+                    pu.validateValue(laminatingRun, 712);
+                    pu.validateValue(laminatingRun2,'');
                 }
             } else {  // no mount, no premask
                 if (hasHotFront) {
                     if (hasHotBack) { // 1. Hot / Hot
-                        validateValue(laminatingRun, 364);
-                        validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun, 364);
+                        pu.validateValue(laminatingRun2,'');
                     } else if (hasAdhesiveBack) {  // 1. Hot / Adhesive
-                        validateValue(laminatingRun, 709);
-                        validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun, 709);
+                        pu.validateValue(laminatingRun2,'');
                     } else {
                         onQuoteUpdatedMessages += invalidLamMessage;
                     }
                 } else if (hasColdFront) {
                     if (hasColdBack) {  // 1. Cold / Adhesive
-                        validateValue(laminatingRun, 708);
-                        validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun, 708);
+                        pu.validateValue(laminatingRun2,'');
                     } else if (hasAdhesiveBack) {  // 1. Cold / Adhesive
-                        validateValue(laminatingRun, 708);
-                        validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun, 708);
+                        pu.validateValue(laminatingRun2,'');
                     } else {  // 1. Cold
-                        validateValue(laminatingRun, 363);
-                        validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun, 363);
+                        pu.validateValue(laminatingRun2,'');
                     }
                 } else if (hasAdhesiveBack) { // 1. Adhesive
-                    validateValue(laminatingRun, 706);
-                    validateValue(laminatingRun2,'');
+                    pu.validateValue(laminatingRun, 706);
+                    pu.validateValue(laminatingRun2,'');
                 }
             }
         }
         
         if (printConfig.lamLfWithSpoilage) {
             if (cu.hasValue(laminatingRun)) {
-                validateValue(laminatingRunAnswer, printConfig.lamLfWithSpoilage);
+                pu.validateValue(laminatingRunAnswer, printConfig.lamLfWithSpoilage);
             }
             if (cu.hasValue(laminatingRun2)) {
-                validateValue(laminatingRunAnswer2, printConfig.lamLfWithSpoilage);
+                pu.validateValue(laminatingRunAnswer2, printConfig.lamLfWithSpoilage);
             }
         }
     } else {
-        validateValue(laminatingRun, '');
-        validateValue(laminatingRun2,'');
+        pu.validateValue(laminatingRun, '');
+        pu.validateValue(laminatingRun2,'');
     }
 }
 
@@ -685,9 +686,9 @@ function canvasOperationDisplay() {
     ]
     //hide operations only pertaining to canvas substrates
     if (!cu.isValueInSet(fields.printSubstrate, canvasSubstrates)) {
-        addClassToOperation(canvasOperations, 'planning');
-        validateValue(fields.operation65,'');
-        validateValue(fields.operation66,'');
+        pu.addClassToOperation(canvasOperations, 'planning');
+        pu.validateValue(fields.operation65,'');
+        pu.validateValue(fields.operation66,'');
     }
 }
 
@@ -724,9 +725,9 @@ function bannerFinishingOperationDisplay(product) {
     }
     //hide operstions if substrate not in list
     if (!cu.isValueInSet(fields.printSubstrate, substratesWithBannerFinishing)) {
-        addClassToOperation(bannerFinishingOperations, 'planning');
+        pu.addClassToOperation(bannerFinishingOperations, 'planning');
     } else {
-        removeClassFromOp(bannerFinishingOperations, 'planning');
+        pu.removeClassFromOperation(bannerFinishingOperations, 'planning');
     }
 
     //clearOperations(bannerFinishingOperations)  --FUTURE PM CALCUTILS
@@ -742,7 +743,7 @@ function bannerStandLogic() {
     if (bannerStandOp) {
         if (!cu.isValueInSet(fields.printSubstrate, bannerStandMaterial)) {
             //cu.hideField(bannerStandOp);
-            addClassToOperation(75,'planning');
+            pu.addClassToOperation(75,'planning');
             if (cu.hasValue(bannerStandOp)) {
                 onQuoteUpdatedMessages += '<p>Banners stands can only be ordered with 13 oz Vinyl.</p>';
                 cu.changeField(bannerStandOp,'',true);
@@ -934,9 +935,9 @@ function fabrivuLogic(product) {
     if (cu.getPjcId(product) == 450) {
         //Choose none option for dye sub transfer material if substrate in list
         if (cu.isValueInSet(fields.printSubstrate,fabrivuDirectMaterials)) {
-                validateValue(dyeSubTransferOp, 442, true);
+                pu.validateValue(dyeSubTransferOp, 442, true);
         } else {
-            validateValue(dyeSubTransferOp, 428, true);
+            pu.validateValue(dyeSubTransferOp, 428, true);
         }
     }
 }
@@ -972,7 +973,7 @@ function hardProofCheck() {
         if (hardProofMessageCount == 0) {
             if (proofSelection.indexOf('Hard') == -1) {
                 onQuoteUpdatedMessages += '<p>Jobs with a printable area over 700 square feet require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
-                showMessages();
+                pu.showMessages();
                 hardProofMessageCount = 1;
                 cu.changeField(proofOp, 40, true);
             }
@@ -1018,7 +1019,7 @@ function uiUpdates(product) {
         110,  //TBGNoCutting
         115,  //TBGPre-cut
         109,  //TBGPre-Sheet
-        108,  //TBGPre-Slit
+        108,  //TBGPre-Sl
         116,  //TBGTBG-FabCut
         125,  //TBGBucketJob
         127,  //TBGMCTCutting
@@ -1036,12 +1037,12 @@ function uiUpdates(product) {
         58,   //TBG Tape, Mag, Velcro
         78  //LF Premask
     ]
-    trimOperationItemName(inkOpsWithDPI, ' - ');
-    trimOperationItemName(opsToTrimWithUnderscore, '_');
-    removeOperationItemsWithString(104,'Print');
-    removeClassFromOp(111,'costingOnly');
-    addClassToOperation(planningOnlyOps, 'planning');
-    addClassToOperation(estimatingOnlyOps,'estimating');
+    pu.trimOperationItemNames(inkOpsWithDPI, ' - ');
+    pu.trimOperationItemNames(opsToTrimWithUnderscore, '_');
+    pu.removeOperationItemsWithString(104,'Print');
+    pu.removeClassFromOperation(111,'costingOnly');
+    pu.addClassToOperation(planningOnlyOps, 'planning');
+    pu.addClassToOperation(estimatingOnlyOps,'estimating');
 
     canvasOperationDisplay();
     bannerFinishingOperationDisplay(product);
@@ -1049,190 +1050,6 @@ function uiUpdates(product) {
 }
 
 
-
-function showMessages () {
-    // show an alert when necessary
-    if (onQuoteUpdatedMessages != '') {
-        cu.alert(onQuoteUpdatedMessages);
-        onQuoteUpdatedMessages = '';
-    }
-}
-
-
-
-
-//simplifies changing values of operation items
-function validateValue(field, value) {
-    if (field) {
-        if (cu.getValue(field) != value) {
-            cu.changeField(field, value, true);
-        }
-    }
-}
-function createStyleBlock(elements, styleText) {
-    var x = '<style type="text/css">' + elements.join(", ") + ' {' + styleText + '}</style>';
-    return x
-}
-function addClassToList(elements, newClassName) {
-    for (var i = 0; i < elements.length; i++) {
-        $(elements[i]).addClass('newClassName');
-    }
-}
-function addClassToOperation(opList, className) {
-    if (!(Array.isArray(opList))) {
-        opList = [opList];
-    }
-    for (var i = 0; i < opList.length; i++) {
-        $('#operation' + opList[i]).addClass(className);
-    }
-}
-function disableCheckoutButton(disableCheckoutText) {
-    $('button.continueButton').removeAttr('onclick');
-    $('button.continueButton').bind('click', function(event) {
-        if (disableCheckoutText != '') {
-            cu.alert('<h3>These issues must be resolved before continuing</h3>' + disableCheckoutText);
-        }
-    });
-}
-function enableCheckoutButton() {
-    $('button.continueButton').unbind('click');
-    $('button.continueButton').attr('onclick', 'common.continueClicked();');
-}
-
-function trimOperationItemName(opList, deliminater) {
-    //change single operation to array
-    if (!(Array.isArray(opList))) {
-        opList = [opList];
-    }
-    for (var i = 0; i < opList.length; i++) {
-        $('select#operation' + opList[i] + ' option').each(function() {
-            //var label = $(this).text;
-            var label = this.text;
-            var index = label.indexOf(deliminater);
-            if (index != -1) {
-                var newLabel = label.substring(0,index);
-                $(this).text(newLabel);
-            }
-        });
-    }
-}
-function hideOperationItems(itemList, operation) {
-    //change single operation to array
-    if (!(Array.isArray(itemList))) {
-        itemList = [itemList];
-    }
-    for (var i = 0; i < itemList.length; i++) {
-        $('option[value="' + itemList[i] + '"]').hide();
-    }
-}
-function removeClassFromOp(opList, className) {
-    if (!(Array.isArray(opList))) {
-        opList = [opList];
-    }
-    for (var i = 0; i < opList.length; i++) {
-        $('#operation' + opList[i] + '').each(function() {
-            $(this).removeClass('' + className + '');
-        });
-    }
-}
-function removeOperationItemsWithString(op, string) {
-    $('select#operation' + op +' option').each(function() {
-        var item = this.text;
-        var index = item.indexOf(string);
-        if (index != -1) {
-            $(this).hide();
-        }
-    });
-}
-
-
-/*
-sends in text from a text block to search for a Json object
-convert to json object
-add properties to target window object for 
-*/
-
-function setPropertyFromTextJson(text, targetObj) {
-    if (!text) {
-        console.log('no text to search for property');
-        return
-    }
-    var jsonBlock = /\{(.*?)\}/.exec(text);
-    if (jsonBlock) {
-        var jsonStr = getJsonFromString(jsonBlock[0]);
-        if (jsonStr) {
-            //create objects and properties if not exists on window
-            if (!window.targetObj) {
-                window[targetObj] = {};
-            }
-            if (!targetObj.property) {
-                target.property;
-            }
-            for (prop in jsonStr) {
-                targetObj[prop] = jsonStr[prop];
-            }
-        } else {
-            console.log('invalid json string ' + opItemKeyText);
-        }
-    }
-}
-
-// for each property in object search for text property for JSON written text and insert into customProperties properties, if designated
-function setCustomProperties (obj, textProp, newProp) {
-    if (!obj) {
-        return
-    }
-    if (!obj[textProp]) {
-        return
-    }
-    //create new property if newProp defined
-    if (newProp) {
-        obj[newProp] = {};
-    }
-    var text = obj[textProp];
-    // remove line breaks 
-    text = text.replace(/[\n\r]/g, '');
-    //Json properties must be property formed and wrapped in "[[{ }]]"
-    var taggedBlock = /\[{2}(.*?)\]{2}/.exec(text);
-    if (taggedBlock) {
-        var jsonBlock = taggedBlock[0].slice(2,-2);
-        var jsonStr = getJsonFromString(jsonBlock);
-        for (property in jsonStr) {
-            //if new property inputted insert there otherwise AND on original object (make querying results easier)
-            if (newProp) {
-                obj[newProp][property] = jsonStr[property];
-            } 
-            obj[property] = jsonStr[property]; 
-        }
-    }
-}
-
-function getJsonFromString (str) {
-    try {
-        return JSON.parse(str);
-    } catch (e) {
-        return false;
-    }
-}
-
-function roundTo(n, digits) {
-    var negative = false;
-    if (digits === undefined) {
-        digits = 0;
-    }
-    if( n < 0) {
-        negative = true;
-      n = n * -1;
-    }
-    var multiplicator = Math.pow(10, digits);
-    n = parseFloat((n * multiplicator).toFixed(11));
-    n = (Math.round(n) / multiplicator).toFixed(2);
-    if( negative ) {    
-        n = (n * -1).toFixed(2);
-    }
-    n = Number(n);
-    return n;
-}
 
 configureEvents.registerOnCalcLoadedListener(rollCalcLogic);
 configureEvents.registerOnCalcChangedListener(rollCalcLogic);

@@ -26,18 +26,6 @@ var zundFactors = {
     "R3" : {"name" : "Router 3", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 199, "intCutOpItem": 777, "rank" : 5},
     "R4" : {"name" : "Router 4", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 200, "intCutOpItem": 778, "rank" : 6}
 }
-
-var cuttingDesc = {
-    302: 356 , //simple
-    355: 357,  //Complex
-    '' : ''
-}
-var cutMethodId = {
-    450 : 'noCutting',
-    451 : 'zund',
-    452 : 'outsourcedCut',
-    495 : 'fabCut'
-}
 var flutedSubstrateNames = [
     'Coroplast',
     'Flute'
@@ -212,6 +200,8 @@ function functionsRanAfterFullQuote(updates, validation, product, quote) {
     bannerFinishingOperationDisplay(product);
     bannerStandLogic();
     checkSidesOpConflicts(quote);
+    setVinylCuttingRules();
+    fluteDirectionRules();
 }
 
 function createOperationItemKey(quote) {
@@ -853,9 +843,66 @@ function validateOpSidesNotTheSame(opDetails, op1, op2) {
         }
     }
     if (sidesMatch.length > 0) {
-        message += '<p>The following sides match for operations ' + object1['name'] + ' and ' + object2['name'] + ' : ' + sidesMatch.join(', ') + '.</p><p>Please make adjustments as these operations cannot be done on the same sides.</p>';
+        message += '<p>The following sides match for operations ' + object1['name'] + ' and ' + object2['name'] + ' : ' 
+            + sidesMatch.join(', ') + '.</p><p>Please make adjustments as these operations cannot be done on the same sides.</p>';
     }
     return message
+}
+
+function setVinylCuttingRules() {
+    var sumaCuttingOp = fields.operation82;
+    var weedingOp = fields.operation94;
+    var premaskOp = fields.operation78;
+    var cuttingDesc = {
+        302: 356 , //simple
+        355: 357,  //Complex
+        '' : ''
+    }
+    if (sumaCuttingOp && weedingOp) {
+        var cuttingChoice = cu.getValue(sumaCuttingOp);
+        var weedingResult = cuttingDesc[cuttingChoice];
+        if (cu.getValue(weedingOp) != weedingResult) {
+            cu.changeField(weedingOp, weedingResult, true);
+        }
+        if (premaskOp) {
+            if (cu.hasValue(sumaCuttingOp)) {
+                if (cu.getValue(premaskOp) != 361) {
+                    cu.changeField(premaskOp,361,true);
+                }
+                cu.disableField(premaskOp);
+            } else {
+                cu.enableField(premaskOp);
+            }
+        }
+        cu.disableField(weedingOp);
+    }
+}
+
+function fluteDirectionRules() {
+    var fluteDirectionOp = fields.operation101;
+    if (fluteDirectionOp) {
+        var hasFlutes = false;
+        var mountSubstrateName = $('#mountSubstrates select[name="MOUNTSUBSTRATEDD"] option:selected').text();
+        var printSubstrateName = $('#printSubstrates select[name="PRINTSUBSTRATEDD"] option:selected').text();
+        for (names in flutedSubstrateNames) {
+            if (printSubstrateName.indexOf(flutedSubstrateNames[names]) != -1) {
+                hasFlutes = true;
+            }
+            if (mountSubstrateName.indexOf(flutedSubstrateNames[names]) != -1) {
+                hasFlutes = true;
+            }
+        }
+        if (hasFlutes) {
+            cu.showField(fluteDirectionOp);
+            fluteDirectionOp.css('color','red');
+        } else {
+            cu.hideField(fluteDirectionOp);
+            if (cu.hasValue(fluteDirectionOp)) {
+                cu.changeField(fluteDirectionOp,'',true);
+                return
+            }
+        }
+    }
 }
 
 

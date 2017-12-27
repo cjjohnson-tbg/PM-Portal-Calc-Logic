@@ -22,6 +22,19 @@ var pmCalcUtil = {
             $('#operation' + opList[i]).addClass(className);
         }
     },
+    addClassToOperationItemsWithString: function (opList, className, string) {
+        if (!(Array.isArray(opList))) {
+            opList = [opList];
+        }
+        for (var i = 0; i < opList.length; i++) {
+            //$('#operation' + opList[i]).addClass('otherOp');
+            $('select#operation' + opList[i] + ' option').each(function() {
+                if ($(this).text().indexOf(string) != -1) {
+                    $(this).addClass(className);
+                }
+            });
+        }
+    },
     trimOperationItemNames: function(opList, deliminater) {
         //change single operation to array
         if (!(Array.isArray(opList))) {
@@ -66,6 +79,19 @@ var pmCalcUtil = {
                 $(this).hide();
             }
         });
+    },
+    hideOperationQuestion: function (opList) {
+        if (!(Array.isArray(opList))) {
+            opList = [opList];
+        }
+        for (var i = 0; i < opList.length; i++) {
+            var opQuestion = $('#operation' + opList[i] + ' div.op');
+            if (opQuestion) {
+                opQuestion.hide()
+            } else {
+                console.log('operation question does not exist for ' + operation);
+            }
+        }
     },
     roundTo: function (n, digits) {
         var negative = false;
@@ -142,42 +168,6 @@ var pmCalcUtil = {
             return JSON.parse(str);
         } catch (e) {
             return false;
-        }
-    },
-
-    //end of RollCalcLogic 
-    
-    addClassToFields: function (fieldList, className) {
-        if (!(Array.isArray(fieldList))) {
-            fieldList = [fieldList];
-        }
-        for (var i = 0; i < fieldList.length; i++) {
-            $('#operation' + fieldList[i]).addClass(className);
-        }
-    },
-    removeClassFromFields: function (fieldList, className) {
-        if (!(Array.isArray(fieldList))) {
-            fieldList = [fieldList];
-        }
-        for (var i = 0; i < fieldList.length; i++) {
-            $('#operation' + fieldList[i] + '').each(function() {
-                $(this).removeClass('' + className + '');
-            });
-        }
-    },
-    removeFieldItemsWithString: function(fieldList, string) {
-        //change single operation to array
-        if (!(Array.isArray(fieldList))) {
-            fieldList = [fieldList];
-        }
-        for (var i = 0; i < fieldList.length; i++) {
-            $('select#operation' + op +' option').each(function() {
-                var item = this.text;
-                var index = item.indexOf(string);
-                if (index != -1) {
-                    $(this).hide();
-                }
-            });
         }
     }
 }

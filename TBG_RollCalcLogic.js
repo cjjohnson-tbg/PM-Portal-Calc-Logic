@@ -179,6 +179,8 @@ function functionsRanAfterFullQuote(updates, validation, product, quote) {
     backlitDoubleStike();
     heatBendingRules();
     fabrivuLogic(product);
+    colorCritical();
+    setTeamPrice(quote);
 
     showMessages();
 
@@ -973,6 +975,52 @@ function fabrivuLogic(product) {
             validateValue(dyeSubTransferOp, 428, true);
         }
     }
+}
+
+function colorCritical() {
+    var colorCriticalOp = fields.operation130;
+    var colorCriticalDevice = fields.operation131;
+    if (colorCriticalOp && colorCriticalDevice) {
+        if (cu.hasValue(colorCriticalOp)) {
+            cu.showField(colorCriticalDevice);
+            cu.setLabel(colorCriticalOp,"Color Critical - please indicate job # below");
+            if (cu.getValue(colorCriticalOp) == 592) {
+                cu.setLabel(colorCriticalOp,"Color Critical (Enter in Job # To Match Below)");
+            }
+        } else {
+            if (cu.hasValue(colorCriticalDevice)) {
+                cu.changeField(colorCriticalDevice,'',true);
+            }
+            cu.hideField(colorCriticalDevice);
+            cu.setSelectedOptionText(colorCriticalOp,'No');
+        }
+    }
+}
+
+function setTeamPrice(quote) {
+    var teamMarkupOp = fields.operation139;
+    var teamMarkupOp_answer = fields.operation139_answer;
+    if (teamMarkupOp && teamMarkupOp_answer) {
+        var teamCost = getTeamPrice(quote);
+        var costMinusTeam = parseInt((quote.jobCostPrice + quote.operationsPrice - teamCost));
+        if (cu.hasValue(teamMarkupOp)) {
+            if (cu.getValue(teamMarkupOp_answer) != costMinusTeam) {
+                var changeEventTriggered = cu.changeField(teamMarkupOp_answer, costMinusTeam, true);
+                if (changeEventTriggered) {
+                    return true;
+                }
+            }
+        }
+    }
+}
+function getTeamPrice(quote) {
+    var operationQuotes = quote.operationQuotes;
+    for (var i = 0; i < operationQuotes.length; i++) {
+        if (operationQuotes[i].data.heading == "TBG Team") {
+            return operationQuotes[i].price
+        }
+    }
+    return 0;
 }
 
 

@@ -1,14 +1,4 @@
 
-
-var zundFactors = {
-    "K1" : {"name" : "Knife 1", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 195, "intCutOpItem": 773, "rank" : 1},
-    "K2" : {"name" : "Knife 2", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 196, "intCutOpItem": 774, "rank" : 2},
-    "R1" : {"name" : "Router 1", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 197, "intCutOpItem": 775, "rank" : 3},
-    "R2" : {"name" : "Router 2", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 198, "intCutOpItem": 776, "rank" : 4},
-    "R3" : {"name" : "Router 3", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 199, "intCutOpItem": 777, "rank" : 5},
-    "R4" : {"name" : "Router 4", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 200, "intCutOpItem": 778, "rank" : 6}
-}
-
 var calcCount = 0;
 
 var pmPortal = ((location.hostname.indexOf("tbg-pm.collaterate.com") != -1) || (location.hostname.indexOf("tbghub.com") != -1));
@@ -32,23 +22,11 @@ var onQuoteUpdatedMessages = '';
 var rollCalcLogic = {
     onCalcLoaded: function(product) {
         cu.initFields();
-
-        canvasOperationDisplay();
-        bannerFinishingOperationDisplay(product);
-
-        trimOperationItemName(inkOpsWithDPI, ' - ');
-        trimOperationItemName(opsToTrimWithUnderscore, '_');
-        if (cu.getPjcId(product) != 389) {
-            removeOperationItemsWithString(104,'Print');
-        }
-        removeClassFromOp(111,'costingOnly');
-        addClassToOperation(planningOnlyOps,'planning');
-        addClassToOperation(estimatingOnlyOps,'estimating');
+        uiUpdates(product);
         //run meta field action
         metaFieldsActions.onCalcLoaded();
     },
     onCalcChanged: function(updates, product) {
-
     },
     onQuoteUpdated: function(updates, validation, product) {
         if (!cu.isSmallFormat(product)) {
@@ -72,6 +50,7 @@ var rollCalcLogic = {
             }
             console.log('onQuoteUpdated End');
         }
+        uiUpdates(product);
         //run meta field action
         metaFieldsActions.onCalcLoaded();
     },
@@ -126,6 +105,7 @@ function addJobMaterialProperties(quote) {
 
 function functionsRanInFullQuote(updates, validation, product, quote) {
     createOperationItemKey(quote);
+
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
@@ -149,7 +129,7 @@ function functionsRanAfterFullQuote(updates, validation, product, quote) {
     bannerFinishingOperationDisplay(product);
     bannerStandLogic();
 
-    uiUpdates();
+    uiUpdates(product);
 
     renderExtendedCostBreakdown();
     showMessages();
@@ -217,13 +197,18 @@ function setWasteOperationAnswer(opAnswer, calcCost, cost) {
         console.log('waste operation answer not loaded');
         return
     }
-    
-    var waste = roundTo(calcCost - cost);
+    //convert from text to number
+    currentValue = Number(cu.getValue(opAnswer));
+    if (isNaN(currentValue)) {
+        console.log('currentValue for Wastage not a number ' + opAnswer);
+        return
+    }
+    var waste = roundTo((calcCost - cost), 2);
     //if not cost, waste set waste to 0
     if (isNaN(waste)) { 
         waste = 0;
     }
-    if (cu.getValue(opAnswer) != waste) {
+    if (currentValue != waste) {
         cu.changeField(opAnswer, waste, true);
     }
 }
@@ -281,13 +266,22 @@ function getCutMethod() {
     return result
 }
 function setZundOps(quote, cutMethod) {
+    var zundFactors = {
+        "K1" : {"name" : "Knife 1", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 195, "intCutOpItem": 773, "rank" : 1},
+        "K2" : {"name" : "Knife 2", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 196, "intCutOpItem": 774, "rank" : 2},
+        "R1" : {"name" : "Router 1", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 197, "intCutOpItem": 775, "rank" : 3},
+        "R2" : {"name" : "Router 2", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 198, "intCutOpItem": 776, "rank" : 4},
+        "R3" : {"name" : "Router 3", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 199, "intCutOpItem": 777, "rank" : 5},
+        "R4" : {"name" : "Router 4", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 200, "intCutOpItem": 778, "rank" : 6}
+    }
+
     var zundLoading = fields.operation53;
     var zundCutting = fields.operation55;
     var zundUnloading = fields.operation56;
     var intCutOp = fields.operation112;
     var userItCutOpAnswer = fields.operation180_answer;
 
-    var zundChoice = getZundChoice(quote);
+    var zundChoice = getZundChoice(quote, zundFactors);
 
     if (cutMethod == 'zund') {
         if (zundLoading) {
@@ -317,15 +311,15 @@ function setZundOps(quote, cutMethod) {
     //Interior cut operations soon to be re-org
     //setZundInCutOp(cutMethod, zundChoice);
 }
-function getZundChoice(quote) {
+function getZundChoice(quote, zundFactors) {
     //check print substrate A and Mount for highest ranked factor
-    var printSubFactor = getMaterialZundFactor(quote, 'aPrintSubstrate');
-    var mountSubFactor = getMaterialZundFactor(quote, 'mountSubstrate');
-    var result = getMaxZundRank(zundFactors.K1, printSubFactor, mountSubFactor);
+    var printSubFactor = getMaterialZundFactor(zundFactors, quote, 'aPrintSubstrate');
+    var mountSubFactor = getMaterialZundFactor(zundFactors, quote, 'mountSubstrate');
+    var result = getMaxZundRank(zundFactors, zundFactors.K1, printSubFactor, mountSubFactor);
     printConfig.zundFactor = result;
     return result
 }
-function getMaterialZundFactor(quote, substrate) {
+function getMaterialZundFactor(zundFactors, quote, substrate) {
     var result;
     var mat = quote.piece[substrate];
     if (mat) {
@@ -335,7 +329,7 @@ function getMaterialZundFactor(quote, substrate) {
     }
     return result
 }
-function getMaxZundRank(defaultFactor, printSubFactor, mountSubFactor) {
+function getMaxZundRank(zundFactors, defaultFactor, printSubFactor, mountSubFactor) {
     var result = defaultFactor;
     if (printSubFactor) {
         if (printSubFactor.rank > result.rank) {
@@ -985,14 +979,14 @@ function setTeamPrice(quote) {
 function getTeamPrice(quote) {
     var operationQuotes = quote.operationQuotes;
     for (var i = 0; i < operationQuotes.length; i++) {
-        if (operationQuotes[i].data.heading == "TBG Team") {
+        if (operationQuotes[i].operation.id == 139) {
             return operationQuotes[i].price
         }
     }
     return 0;
 }
 
-function uiUpdates() {
+function uiUpdates(product) {
     var planningOnlyOps = [
         99,  //TBGCutting
         55,  //TBGZundCutting
@@ -1028,6 +1022,9 @@ function uiUpdates() {
     removeClassFromOp(111,'costingOnly');
     addClassToOperation(planningOnlyOps, 'planning');
     addClassToOperation(estimatingOnlyOps,'estimating');
+
+    canvasOperationDisplay();
+    bannerFinishingOperationDisplay(product);
 }
 
 
@@ -1039,6 +1036,8 @@ function showMessages () {
         onQuoteUpdatedMessages = '';
     }
 }
+
+
 
 
 //simplifies changing values of operation items
@@ -1210,6 +1209,7 @@ function roundTo(n, digits) {
     if( negative ) {    
         n = (n * -1).toFixed(2);
     }
+    n = Number(n);
     return n;
 }
 

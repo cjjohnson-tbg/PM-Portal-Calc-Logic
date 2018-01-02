@@ -748,6 +748,8 @@ function bannerStandLogic() {
                 onQuoteUpdatedMessages += '<p>Banners stands can only be ordered with 13 oz Vinyl.</p>';
                 cu.changeField(bannerStandOp,'',true);
             }
+        } else {
+            pu.removeClassFromOperation(75,'planning');
         }
     }
 }

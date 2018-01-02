@@ -484,7 +484,9 @@ function setInkMaterialCosts() {
         if (inkConfigOpSide2) {
             if (cu.getValue(fields.sides) == "2") {
                 //default if sides was last changed
-                pu.validateValue(inkConfigOpSide2, defaultInkConfigSide2OpItem)
+                if (!cu.hasValue(inkConfigOpSide2)) {
+                    pu.validateValue(inkConfigOpSide2, defaultInkConfigSide2OpItem);
+                }
                 if (operationItemKeys.inkMatOpItemSide2) {
                     pu.validateValue(inkMatOpSide2,inkMatOpSide2ItemId);
                 }

@@ -17,8 +17,7 @@ var metaFieldsActions = {
             ['Color Critical', 'colorCritical'],
             ['Hard Proof', 'hardProof'],
             ['Kitting Code','kittingCode'],
-            ['Shipping Due Date','shipDate'],
-            ['Planning', 'planning']
+            ['Shipping Due Date','shipDate']
         ]
         $.each(metaFieldClass , function (i, val) {
             $('#additionalProductFields .additionalInformation div label:contains("' + val[0] + '")').parent().addClass(val[1]);
@@ -115,6 +114,7 @@ var metaFieldsActions = {
                 hasBuyout = true;
             }
         } else {  //LF calculator
+            console.log("LF calc");
             if (cu.getValue(fields.printSubstrate) == 207) {
                 hasBuyout = true;
                 cu.setLabel(fields.printSubstrate,'Substrate (Enter Desc and Size below)');
@@ -271,6 +271,7 @@ var metaFieldsActions = {
             }
         }
         if (cu.getPjcId(product) != 458) { //Temp remove for bucket
+            console.log(disableCheckoutText);
             if (disableCheckoutCount > 0) {
                 disableCheckoutButton(disableCheckoutText);
             } else {

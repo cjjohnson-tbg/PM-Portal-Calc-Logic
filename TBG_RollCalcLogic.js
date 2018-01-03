@@ -595,9 +595,9 @@ function setLamRunOps(quote) {
                         pu.validateValue(laminatingRun2,718);
                     }
                 } else if (hasColdFront) {
-                    if (hasColdBack) {  // 1. Cold  2. Premask
+                    if (hasColdBack) {  // 1. Cold  2. Cold
                         pu.validateValue(laminatingRun, 363);
-                        pu.validateValue(laminatingRun2,718);
+                        pu.validateValue(laminatingRun2,714);
                     } else if (hasAdhesiveBack) { // 1. Cold / Adhesive 2. Premask
                         pu.validateValue(laminatingRun, 708);
                         pu.validateValue(laminatingRun2,718);
@@ -624,9 +624,9 @@ function setLamRunOps(quote) {
                         onQuoteUpdatedMessages += invalidLamMessage;
                     }
                 } else if (hasColdFront) {
-                    if (hasColdBack) {  // 1. Cold / Adhesive
-                        pu.validateValue(laminatingRun, 708);
-                        pu.validateValue(laminatingRun2,'');
+                    if (hasColdBack) {  // 1. Cold  2. Cold
+                        pu.validateValue(laminatingRun, 363);
+                        pu.validateValue(laminatingRun2, 714);
                     } else if (hasAdhesiveBack) {  // 1. Cold / Adhesive
                         pu.validateValue(laminatingRun, 708);
                         pu.validateValue(laminatingRun2,'');

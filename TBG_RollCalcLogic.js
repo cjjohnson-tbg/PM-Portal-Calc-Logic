@@ -722,7 +722,7 @@ function bannerFinishingOperationDisplay(product) {
         73    //TBG Grommet Color
     ]
     //always show with Dye Sub materials
-    if (cu.getPjcId(product) == 392) {
+    if (cu.getPjcId(product) == 450) {
         return;
     }
     //hide operstions if substrate not in list

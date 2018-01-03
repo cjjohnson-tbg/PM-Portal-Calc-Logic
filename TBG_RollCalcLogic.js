@@ -864,8 +864,7 @@ function fluteDirectionRules() {
 function backlitDoubleStike() {
     var vutekInks = fields.operation52;
     var utrlaCanvasBacklitInks = [
-        '241',  //Backlit (Double Strike)
-        '239'   //W + CMYK (Flood / First Surface)
+        '241'  //Backlit (Double Strike)
     ]
     if (vutekInks) {
         if (cu.getValue(fields.printSubstrate) == 308) {

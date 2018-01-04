@@ -986,13 +986,13 @@ function hardProofCheck() {
 function setSpecialMarkupOps(quote) {
     //calculates job costs and inserts into special costing operation answers
     var teamCost = getOperationPrice(quote, 139);
-    var specCustCost = getOperationPrice(quote, 184);
+    var specCustCost = getOperationPrice(quote, 152);
     var jobCost = parseInt((quote.jobCostPrice + quote.operationsPrice - teamCost - specCustCost));
     if (cu.hasValue(fields.operation139)) {
         pu.validateValue(fields.operation139_answer, jobCost);
     }
-    if (cu.hasValue(fields.operation184)) {
-        pu.validateValue(fields.operation184_answer, jobCost);
+    if (cu.hasValue(fields.operation152)) {
+        pu.validateValue(fields.operation152_answer, jobCost);
     }
 }
 function getOperationPrice(quote, opId) {

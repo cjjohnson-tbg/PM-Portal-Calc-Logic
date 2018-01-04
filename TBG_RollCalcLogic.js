@@ -123,7 +123,7 @@ function functionsRanAfterFullQuote(updates, validation, product, quote) {
 
     //require results from Quote update
     hardProofCheck();
-    setTeamPrice(quote);
+    setSpecialMarkupOps(quote);
 
     //UI changes
     uiUpdates(product);
@@ -989,27 +989,22 @@ function hardProofCheck() {
         } 
     }
 }
-
-function setTeamPrice(quote) {
-    var teamMarkupOp = fields.operation139;
-    var teamMarkupOp_answer = fields.operation139_answer;
-    if (teamMarkupOp && teamMarkupOp_answer) {
-        var teamCost = getTeamPrice(quote);
-        var costMinusTeam = parseInt((quote.jobCostPrice + quote.operationsPrice - teamCost));
-        if (cu.hasValue(teamMarkupOp)) {
-            if (cu.getValue(teamMarkupOp_answer) != costMinusTeam) {
-                var changeEventTriggered = cu.changeField(teamMarkupOp_answer, costMinusTeam, true);
-                if (changeEventTriggered) {
-                    return true;
-                }
-            }
-        }
+function setSpecialMarkupOps(quote) {
+    //calculates job costs and inserts into special costing operation answers
+    var teamCost = getOperationPrice(quote, 139);
+    var specCustCost = getOperationPrice(quote, 184);
+    var jobCost = parseInt((quote.jobCostPrice + quote.operationsPrice - teamCost - specCustCost));
+    if (cu.hasValue(fields.operation139)) {
+        pu.validateValue(fields.operation139_answer, jobCost);
+    }
+    if (cu.hasValue(fields.operation184)) {
+        pu.validateValue(fields.operation184_answer, jobCost);
     }
 }
-function getTeamPrice(quote) {
+function getOperationPrice(quote, opId) {
     var operationQuotes = quote.operationQuotes;
     for (var i = 0; i < operationQuotes.length; i++) {
-        if (operationQuotes[i].operation.id == 139) {
+        if (operationQuotes[i].operation.id == opId) {
             return operationQuotes[i].price
         }
     }

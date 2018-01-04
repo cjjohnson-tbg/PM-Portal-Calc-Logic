@@ -87,7 +87,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
-    var changeEventTriggered = setTeamPrice(quote);
+    var changeEventTriggered = setSpecialMarkupOps(quote);
     //changeEventTriggered = changeEventTriggered ? true : checkForHardProofRequired();  --check with steve about best way to run Fn's in fieldquote and why use changeEvent
     checkForHardProofRequired();
     if (changeEventTriggered) {
@@ -809,28 +809,22 @@ function setTopAndBottomPieceOps() {
 }
 
 //functions ran after completed full quote
-function setTeamPrice(quote) {
-    /******************* TEAM MARKUP OPERATIONS */
-    var teamMarkupOp = fields.operation218;
-    var teamMarkupOp_answer = fields.operation218_answer;
-    if (teamMarkupOp && teamMarkupOp_answer) {
-        var markup = quote.markupPercent;
-        var teamCost = getTeamPrice(quote);
-        var costMinusTeam = parseInt((quote.jobCostPrice + quote.operationsPrice - teamCost));
-        if (cu.hasValue(teamMarkupOp)) {
-            if (cu.getValue(teamMarkupOp_answer) != costMinusTeam) {
-                var changeEventTriggered = cu.changeField(teamMarkupOp_answer, costMinusTeam, true);
-                if (changeEventTriggered) {
-                    return true;
-                }
-            }
-        }
+function setSpecialMarkupOps(quote) {
+    //calculates job costs and inserts into special costing operation answers
+    var teamCost = getOperationPrice(quote, "TBG Team");
+    var specCustCost = getOperationPrice(quote, "TBG Special Customer");
+    var jobCost = parseInt((quote.jobCostPrice + quote.operationsPrice - teamCost - specCustCost));
+    if (cu.hasValue(fields.operation218)) {
+        pu.validateValue(fields.operation218_answer, jobCost);
+    }
+    if (cu.hasValue(fields.operation257)) {
+        pu.validateValue(fields.operation257_answer, jobCost);
     }
 }
-function getTeamPrice(quote) {
+function getOperationPrice(quote, opHeader) {
     var operationQuotes = quote.operationQuotes;
     for (var i = 0; i < operationQuotes.length; i++) {
-        if (operationQuotes[i].data.heading == "TBG Team") {
+        if (operationQuotes[i].data.heading == opHeader) {
             return operationQuotes[i].price
         }
     }

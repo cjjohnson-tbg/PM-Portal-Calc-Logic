@@ -1,4 +1,3 @@
-
 // Message holder
 var onQuoteUpdatedMessages = '';
 
@@ -24,30 +23,25 @@ var rollCalcLogic = {
     onCalcChanged: function(updates, product) {
     },
     onQuoteUpdated: function(updates, validation, product) {
-        if (!cu.isSmallFormat(product)) {
-            calcCount++;
-            console.log('count is ' + calcCount);
+        if (cu.isPOD(product)) {
+            //STOP IF CALCULATOR NOT RETURNING QUOTE
+            if (!configureglobals.cquote) { return; }
+            if (!configureglobals.cquote.success) { return; }
 
-            if (cu.isPOD(product)) {
-                //STOP IF CALCULATOR NOT RETURNING QUOTE
-                if (!configureglobals.cquote) { return; }
-                if (!configureglobals.cquote.success) { return; }
+            if (cu.isSmallFormat(product)) {
+                var quote = configureglobals.cquote.pjQuote;
+                if (!quote) { return; }
+                rollCalcLogic.onQuoteUpdated_POD_SmallFormat(updates, validation, product, quote);
+            } else {
+                var quote = configureglobals.cquote.lpjQuote;
+                if (!quote) { return; }
 
-                if (cu.isSmallFormat(product)) {
-                    var quote = configureglobals.cquote.pjQuote;
-                    if (!quote) { return; }
-                    var changeEventTriggered = rollCalcLogic.onQuoteUpdated_POD_SmallFormat(updates, validation, product, quote);
-                } else {
-                    var quote = configureglobals.cquote.lpjQuote;
-                    if (!quote) { return; }
-                    var changeEventTriggered = rollCalcLogic.onQuoteUpdated_POD_LargeFormat(updates, validation, product, quote);
-                }
+                calcCount++;
+                console.log('onQuoteUpdated', calcCount, 'POD_LF Begin', updates);
+                rollCalcLogic.onQuoteUpdated_POD_LargeFormat(updates, validation, product, quote);
+                console.log('onQuoteUpdated', calcCount, 'POD_LF End');
             }
-            console.log('onQuoteUpdated End');
         }
-        uiUpdates(product);
-        //run meta field action
-        metaFieldsActions.onCalcLoaded();
     },
     onQuoteUpdated_POD_LargeFormat: function(updates, validation, product, quote) {
         var changeEventTriggered = false;
@@ -73,8 +67,15 @@ var rollCalcLogic = {
         }
 
         //functions needing price results and UI changes
-        changeEventTriggered = functionsRanAfterFullQuote(updates, validation, product, quote);
-        console.log('POD_LF post-full-quote changes triggered:',changeEventTriggered);
+        /*changeEventTriggered = */
+        functionsRanAfterFullQuote(updates, validation, product, quote);
+        //console.log('POD_LF post-full-quote changes triggered:',changeEventTriggered);
+        
+        uiUpdates(product);
+
+        //run meta field action
+        metaFieldsActions.onCalcLoaded();
+
         return changeEventTriggered;
 
     }, 
@@ -100,11 +101,6 @@ function addJobMaterialProperties(quote) {
 
 function functionsRanInFullQuote(updates, validation, product, quote) {
     createOperationItemKey(quote);
-
-}
-
-function functionsRanAfterFullQuote(updates, validation, product, quote) {
-    //TEMP IN FIElD QUOTE MODE.  NOT WORKING IN FULL QUOTE
     setWasteOperationCosts(quote);
     setRollChangeCost();
     setCuttingOps(quote, product);
@@ -118,6 +114,12 @@ function functionsRanAfterFullQuote(updates, validation, product, quote) {
     heatBendingRules();
     fabrivuLogic(product);
     colorCritical();
+}
+
+function functionsRanAfterFullQuote(updates, validation, product, quote) {
+    //TEMP IN FIElD QUOTE MODE.  NOT WORKING IN FULL QUOTE
+    
+    
 
     //require results from Quote update
     hardProofCheck();
@@ -643,10 +645,14 @@ function setLamRunOps(quote) {
         
         if (printConfig.lamLfWithSpoilage) {
             if (cu.hasValue(laminatingRun)) {
-                pu.validateValue(laminatingRunAnswer, printConfig.lamLfWithSpoilage);
+                if (laminatingRunAnswer) {
+                    pu.validateValue(laminatingRunAnswer, printConfig.lamLfWithSpoilage);
+                }
             }
             if (cu.hasValue(laminatingRun2)) {
-                pu.validateValue(laminatingRunAnswer2, printConfig.lamLfWithSpoilage);
+                if (laminatingRunAnswer2) {
+                    pu.validateValue(laminatingRunAnswer2, printConfig.lamLfWithSpoilage);
+                }
             }
         }
     } else {

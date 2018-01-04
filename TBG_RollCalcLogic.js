@@ -102,6 +102,11 @@ function addJobMaterialProperties(quote) {
 function functionsRanInFullQuote(updates, validation, product, quote) {
     createOperationItemKey(quote);
     setWasteOperationCosts(quote);
+
+}
+
+function functionsRanAfterFullQuote(updates, validation, product, quote) {
+    //TEMP IN FIElD QUOTE MODE.  NOT WORKING IN FULL QUOTE
     setRollChangeCost();
     setCuttingOps(quote, product);
     setInkMaterialCosts();
@@ -114,11 +119,6 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     heatBendingRules();
     fabrivuLogic(product);
     colorCritical();
-}
-
-function functionsRanAfterFullQuote(updates, validation, product, quote) {
-    //TEMP IN FIElD QUOTE MODE.  NOT WORKING IN FULL QUOTE
-    
     
 
     //require results from Quote update
@@ -441,7 +441,7 @@ function setNoCutOp(cutMethod) {
     var noCutOp = fields.operation110;
     if (cutMethod == 'noCutting' || cutMethod == 'suma') {
         //validate user Declare cut operation set to No Cutting
-        pu.validateValue(fields.operation11,450);
+        pu.validateValue(fields.operation111,450);
         pu.validateValue(noCutOp,448);
     } else {
         pu.validateValue(noCutOp,'');

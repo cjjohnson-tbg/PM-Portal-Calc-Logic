@@ -253,7 +253,8 @@ function setInkConsumptionOps() {
         125 : 749,   //Vutek HS100 - White Only (Spot / Second Surface) - 1000 DPI_HS
         133 : 1038,   //Vutek HS125 - W + W Only (Flood / First Surface) - 1000 GS-LS
         136 : 1038,   //Vutek HS125 - W + W Only (Flood / First Surface) - 600 DPI-HS
-        138  : 749,    //Vutek HS125 - White Only - 600 DPI-HS
+        138  : 749,    //Vutek HS125 - White Only (Spot / First Surface)
+        142  : 749,    //Vutek HS125 - White Only (Spot / Second Surface)
         111 : 904,    //Vutek HS125 - CMYK + W + W (Flood / Second Surface) - 600 DPI-HS
         137 : 1038,  //Vutek HS125 - W + W Only (Spot / Second Surface) - 600 DPI-HS
         136  : 890,    //Inca Q40 - W + W + CMYK (Flood / First Surface)

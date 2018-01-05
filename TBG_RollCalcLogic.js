@@ -12,6 +12,7 @@ var pu = pmCalcUtil;
 var cc = calcConfig;
 
 var calcCount = 0;
+var lastUIChangedFieldName = null;
 
 var rollCalcLogic = {
     onCalcLoaded: function(product) {
@@ -21,6 +22,10 @@ var rollCalcLogic = {
         metaFieldsActions.onCalcLoaded();
     },
     onCalcChanged: function(updates, product) {
+        if (updates) {
+            lastUIChangedFieldName = updates.fieldName;
+            // console.log('lastUIChangedFieldName', lastUIChangedFieldName);
+        }
     },
     onQuoteUpdated: function(updates, validation, product) {
         if (cu.isPOD(product)) {
@@ -37,6 +42,13 @@ var rollCalcLogic = {
                 if (!quote) { return; }
 
                 calcCount++;
+
+                //STOP IF CALCULATOR GOT INTO A LOOP
+                if (updates && updates.context && updates.context.contextLevel > 5) {
+                    console.log('onQuoteUpdated', calcCount, 'POD_LF Stuck in a loop! Stopping.', updates);
+                    return;
+                }
+
                 console.log('onQuoteUpdated', calcCount, 'POD_LF Begin', updates);
                 rollCalcLogic.onQuoteUpdated_POD_LargeFormat(updates, validation, product, quote);
                 console.log('onQuoteUpdated', calcCount, 'POD_LF End');
@@ -61,7 +73,7 @@ var rollCalcLogic = {
         functionsRanInFullQuote(updates, validation, product, quote);
         console.log('POD_SF validation finished. Pending change:', controller.fieldChangeQuotePending);
         var requoteInProgress = controller.fieldChangeQuotePending;
-        controller.exitFullQuoteMode();
+        controller.exitFullQuoteMode(updates);
         if (requoteInProgress) {
             return true;
         }
@@ -76,12 +88,18 @@ var rollCalcLogic = {
         //run meta field action
         metaFieldsActions.onCalcLoaded();
 
+        //focusLastUIChangedField();
+
         return changeEventTriggered;
 
     }, 
     onQuoteUpdated_POD_SmallFormat: function(updates, validation, product, quote) {
 
     }
+}
+
+function focusLastUIChangedField() {
+    $(getFormItem(lastUIChangedFieldName,document)).trigger('focus').triggerHandler('focus');
 }
 
 // Functions called in Full Quote
@@ -102,13 +120,10 @@ function addJobMaterialProperties(quote) {
 function functionsRanInFullQuote(updates, validation, product, quote) {
     createOperationItemKey(quote);
     setWasteOperationCosts(quote);
-
-}
-
-function functionsRanAfterFullQuote(updates, validation, product, quote) {
-    //TEMP IN FIElD QUOTE MODE.  NOT WORKING IN FULL QUOTE
-    setRollChangeCost();
     setCuttingOps(quote, product);
+
+    setRollChangeCost();
+
     setInkMaterialCosts();
     setLamRunOps(quote);
     canonBacklitLogic(updates, product);
@@ -119,6 +134,11 @@ function functionsRanAfterFullQuote(updates, validation, product, quote) {
     heatBendingRules();
     fabrivuLogic(product);
     colorCritical();
+
+}
+
+function functionsRanAfterFullQuote(updates, validation, product, quote) {
+    //TEMP IN FIElD QUOTE MODE.  NOT WORKING IN FULL QUOTE
     
 
     //require results from Quote update
@@ -250,18 +270,18 @@ function getCutMethod() {
     //default to zund
     var result = 'zund';
     if (cu.hasValue(fields.operation127)) {
-        result = 'mct';
+        var result = 'mct';
         return result;
     }
     //If Suma cut selected, set to No Cutting
     if (cu.hasValue(fields.operation82)) {
-        result = 'suma';
+        var result = 'suma';
         return result
     }
     if (cu.hasValue(userDeclareCutOp)) {
         userDeclaredCutMethod = cutMethodId[cu.getValue(fields.operation111)];
         if (userDeclaredCutMethod) {
-            result = userDeclaredCutMethod;
+            var result = userDeclaredCutMethod;
             return result
         }
     }
@@ -382,7 +402,7 @@ function setZundInCutOp(cutMethod, zundChoice) {
         //Route Cut
         else {
             if (intCutItem in intCutSetting) {
-                cu.changeField(intCutOp, intCutSetting[intCutItem], '');
+                cu.changeField(intCutOp, intCutSetting[intCutItem], true);
             }
         }
     } else {
@@ -474,13 +494,13 @@ function setInkMaterialCosts() {
         var inkMatOp = fields['operation' + devRunConfig.inkMaterialOpId];
         var defaultInkOpItem = lfDeviceInk[deviceId].defaultOpItem ? lfDeviceInk[deviceId].defaultOpItem : null;
         var inkMatOpSide2 = fields['operation' + devRunConfig.inkMaterialOpIdSide2];
-        var inkConfigOpSide2 = fields['operation' + devRunConfig.inkConfigOpSide2];
+        var inkConfigOpSide2 = devRunConfig.inkConfigOpSide2 ? fields['operation' + devRunConfig.inkConfigOpSide2] : null;
         var defaultInkConfigSide2OpItem = lfDeviceInk[deviceId].defaultInkConfigSide2OpItem ? lfDeviceInk[deviceId].defaultInkConfigSide2OpItem : null;
         //Grab op item id from operation Item Keys object. If nothing, then use default
         var inkMatOpItemId = operationItemKeys.inkMatOpItem ? operationItemKeys.inkMatOpItem : defaultInkOpItem;
         var inkMatOpSide2ItemId = operationItemKeys.inkMatOpItemSide2 ? operationItemKeys.inkMatOpItemSide2 : '';
         if (cu.getValue(inkMatOp) != inkMatOpItemId) {
-            cu.changeField(inkMatOp, inkMatOpItemId, true);
+            pu.validateValue(inkMatOp, inkMatOpItemId);
         }
         //side 2
         if (inkConfigOpSide2) {
@@ -498,7 +518,7 @@ function setInkMaterialCosts() {
                 pu.validateValue(inkMatOpSide2, ''); 
                 cu.hideField(inkConfigOpSide2);
             }
-        }
+        } 
     }
 }
 
@@ -989,6 +1009,7 @@ function hardProofCheck() {
         } 
     }
 }
+
 function setSpecialMarkupOps(quote) {
     //calculates job costs and inserts into special costing operation answers
     var teamCost = getOperationPrice(quote, 139);
@@ -1017,7 +1038,7 @@ function uiUpdates(product) {
         55,  //TBGZundCutting
         102,  //TBGGuillotineCutting
         103,  //TBGFotobaCutting
-        88,  //DyeSubTransferPaper
+        88,   //DyeSubTransferPaper
         100,  //TBGMountingRun
         112,  //TBGInternalCuts
         110,  //TBGNoCutting

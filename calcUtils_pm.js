@@ -2,9 +2,11 @@
 var pmCalcUtil = {
     showMessages: function() {
         // show an alert when necessary
-        if (onQuoteUpdatedMessages != '') {
-            cu.alert(onQuoteUpdatedMessages);
-            onQuoteUpdatedMessages = '';
+        if (onQuoteUpdatedMessages) {
+            if (onQuoteUpdatedMessages != '') {
+                cu.alert(onQuoteUpdatedMessages);
+                onQuoteUpdatedMessages = '';
+            }
         }
     },
     validateValue: function (field, value) {

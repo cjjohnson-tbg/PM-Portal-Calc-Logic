@@ -817,8 +817,8 @@ function setSpecialMarkupOps(quote) {
     if (cu.hasValue(fields.operation218)) {
         pu.validateValue(fields.operation218_answer, jobCost);
     }
-    if (cu.hasValue(fields.operation257)) {
-        pu.validateValue(fields.operation257_answer, jobCost);
+    if (cu.hasValue(fields.operation226)) {
+        pu.validateValue(fields.operation226_answer, jobCost);
     }
 }
 function getOperationPrice(quote, opHeader) {

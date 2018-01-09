@@ -1,4 +1,3 @@
-
 // Message holder
 var onQuoteUpdatedMessages = '';
 
@@ -13,6 +12,7 @@ var pu = pmCalcUtil;
 var cc = calcConfig;
 
 var calcCount = 0;
+var lastUIChangedFieldName = null;
 
 var rollCalcLogic = {
     onCalcLoaded: function(product) {
@@ -22,32 +22,38 @@ var rollCalcLogic = {
         metaFieldsActions.onCalcLoaded();
     },
     onCalcChanged: function(updates, product) {
+        if (updates) {
+            lastUIChangedFieldName = updates.fieldName;
+            // console.log('lastUIChangedFieldName', lastUIChangedFieldName);
+        }
     },
     onQuoteUpdated: function(updates, validation, product) {
-        if (!cu.isSmallFormat(product)) {
-            calcCount++;
-            console.log('count is ' + calcCount);
+        if (cu.isPOD(product)) {
+            //STOP IF CALCULATOR NOT RETURNING QUOTE
+            if (!configureglobals.cquote) { return; }
+            if (!configureglobals.cquote.success) { return; }
 
-            if (cu.isPOD(product)) {
-                //STOP IF CALCULATOR NOT RETURNING QUOTE
-                if (!configureglobals.cquote) { return; }
-                if (!configureglobals.cquote.success) { return; }
+            if (cu.isSmallFormat(product)) {
+                var quote = configureglobals.cquote.pjQuote;
+                if (!quote) { return; }
+                rollCalcLogic.onQuoteUpdated_POD_SmallFormat(updates, validation, product, quote);
+            } else {
+                var quote = configureglobals.cquote.lpjQuote;
+                if (!quote) { return; }
 
-                if (cu.isSmallFormat(product)) {
-                    var quote = configureglobals.cquote.pjQuote;
-                    if (!quote) { return; }
-                    var changeEventTriggered = rollCalcLogic.onQuoteUpdated_POD_SmallFormat(updates, validation, product, quote);
-                } else {
-                    var quote = configureglobals.cquote.lpjQuote;
-                    if (!quote) { return; }
-                    var changeEventTriggered = rollCalcLogic.onQuoteUpdated_POD_LargeFormat(updates, validation, product, quote);
+                calcCount++;
+
+                //STOP IF CALCULATOR GOT INTO A LOOP
+                if (updates && updates.context && updates.context.contextLevel > 5) {
+                    console.log('onQuoteUpdated', calcCount, 'POD_LF Stuck in a loop! Stopping.', updates);
+                    return;
                 }
+
+                console.log('onQuoteUpdated', calcCount, 'POD_LF Begin', updates);
+                rollCalcLogic.onQuoteUpdated_POD_LargeFormat(updates, validation, product, quote);
+                console.log('onQuoteUpdated', calcCount, 'POD_LF End');
             }
-            console.log('onQuoteUpdated End');
         }
-        uiUpdates(product);
-        //run meta field action
-        metaFieldsActions.onCalcLoaded();
     },
     onQuoteUpdated_POD_LargeFormat: function(updates, validation, product, quote) {
         var changeEventTriggered = false;
@@ -67,20 +73,33 @@ var rollCalcLogic = {
         functionsRanInFullQuote(updates, validation, product, quote);
         console.log('POD_SF validation finished. Pending change:', controller.fieldChangeQuotePending);
         var requoteInProgress = controller.fieldChangeQuotePending;
-        controller.exitFullQuoteMode();
+        controller.exitFullQuoteMode(updates);
         if (requoteInProgress) {
             return true;
         }
 
         //functions needing price results and UI changes
-        changeEventTriggered = functionsRanAfterFullQuote(updates, validation, product, quote);
-        console.log('POD_LF post-full-quote changes triggered:',changeEventTriggered);
+        /*changeEventTriggered = */
+        functionsRanAfterFullQuote(updates, validation, product, quote);
+        //console.log('POD_LF post-full-quote changes triggered:',changeEventTriggered);
+        
+        uiUpdates(product);
+
+        //run meta field action
+        metaFieldsActions.onCalcLoaded();
+
+        //focusLastUIChangedField();
+
         return changeEventTriggered;
 
     }, 
     onQuoteUpdated_POD_SmallFormat: function(updates, validation, product, quote) {
 
     }
+}
+
+function focusLastUIChangedField() {
+    $(getFormItem(lastUIChangedFieldName,document)).trigger('focus').triggerHandler('focus');
 }
 
 // Functions called in Full Quote
@@ -100,14 +119,11 @@ function addJobMaterialProperties(quote) {
 
 function functionsRanInFullQuote(updates, validation, product, quote) {
     createOperationItemKey(quote);
-
-}
-
-function functionsRanAfterFullQuote(updates, validation, product, quote) {
-    //TEMP IN FIElD QUOTE MODE.  NOT WORKING IN FULL QUOTE
     setWasteOperationCosts(quote);
-    setRollChangeCost();
     setCuttingOps(quote, product);
+
+    setRollChangeCost();
+
     setInkMaterialCosts();
     setLamRunOps(quote);
     canonBacklitLogic(updates, product);
@@ -119,13 +135,15 @@ function functionsRanAfterFullQuote(updates, validation, product, quote) {
     fabrivuLogic(product);
     colorCritical();
 
+}
+
+function functionsRanAfterFullQuote(updates, validation, product, quote) {
     //require results from Quote update
-    hardProofCheck();
+    hardProofCheck(quote);
     setSpecialMarkupOps(quote);
 
     //UI changes
     uiUpdates(product);
-
     renderExtendedCostBreakdown();
     pu.showMessages();
 }
@@ -248,49 +266,44 @@ function getCutMethod() {
     //default to zund
     var result = 'zund';
     if (cu.hasValue(fields.operation127)) {
-        result = 'mct';
+        var result = 'mct';
         return result;
     }
     //If Suma cut selected, set to No Cutting
     if (cu.hasValue(fields.operation82)) {
-        result = 'suma';
+        var result = 'suma';
         return result
     }
     if (cu.hasValue(userDeclareCutOp)) {
         userDeclaredCutMethod = cutMethodId[cu.getValue(fields.operation111)];
         if (userDeclaredCutMethod) {
-            result = userDeclaredCutMethod;
+            var result = userDeclaredCutMethod;
             return result
         }
     }
     return result
 }
 function setZundOps(quote, cutMethod) {
-    var zundFactors = {
-        "K1" : {"name" : "Knife 1", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 195, "intCutOpItem": 773, "rank" : 1},
-        "K2" : {"name" : "Knife 2", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 196, "intCutOpItem": 774, "rank" : 2},
-        "R1" : {"name" : "Router 1", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 197, "intCutOpItem": 775, "rank" : 3},
-        "R2" : {"name" : "Router 2", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 198, "intCutOpItem": 776, "rank" : 4},
-        "R3" : {"name" : "Router 3", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 199, "intCutOpItem": 777, "rank" : 5},
-        "R4" : {"name" : "Router 4", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 200, "intCutOpItem": 778, "rank" : 6}
-    }
-
     var zundLoading = fields.operation53;
     var zundCutting = fields.operation55;
     var zundUnloading = fields.operation56;
     var intCutOp = fields.operation112;
     var userItCutOpAnswer = fields.operation180_answer;
 
-    var zundChoice = getZundChoice(quote, zundFactors);
-
     if (cutMethod == 'zund') {
-        if (zundLoading) {
+        var zundFactors = {
+            "K1" : {"name" : "Knife 1", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 195, "intCutOpItem": 773, "rank" : 1},
+            "K2" : {"name" : "Knife 2", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 196, "intCutOpItem": 774, "rank" : 2},
+            "R1" : {"name" : "Router 1", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 197, "intCutOpItem": 775, "rank" : 3},
+            "R2" : {"name" : "Router 2", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 198, "intCutOpItem": 776, "rank" : 4},
+            "R3" : {"name" : "Router 3", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 199, "intCutOpItem": 777, "rank" : 5},
+            "R4" : {"name" : "Router 4", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 200, "intCutOpItem": 778, "rank" : 6}
+        }
+
+        var zundChoice = getZundChoice(quote, zundFactors);
+        if (zundChoice) {
             pu.validateValue(zundLoading, zundChoice.loadingOpItem);
-        }
-        if (zundCutting) {
             pu.validateValue(zundCutting, zundChoice.runOpItem);
-        }
-        if (zundUnloading) {
             pu.validateValue(zundUnloading,zundChoice.unloadingOpItem);
         }
         //INTERNAL CUTTING - map to choice item and enter answer 
@@ -380,7 +393,7 @@ function setZundInCutOp(cutMethod, zundChoice) {
         //Route Cut
         else {
             if (intCutItem in intCutSetting) {
-                cu.changeField(intCutOp, intCutSetting[intCutItem], '');
+                cu.changeField(intCutOp, intCutSetting[intCutItem], true);
             }
         }
     } else {
@@ -439,7 +452,7 @@ function setNoCutOp(cutMethod) {
     var noCutOp = fields.operation110;
     if (cutMethod == 'noCutting' || cutMethod == 'suma') {
         //validate user Declare cut operation set to No Cutting
-        pu.validateValue(fields.operation11,450);
+        pu.validateValue(fields.operation111,450);
         pu.validateValue(noCutOp,448);
     } else {
         pu.validateValue(noCutOp,'');
@@ -472,13 +485,13 @@ function setInkMaterialCosts() {
         var inkMatOp = fields['operation' + devRunConfig.inkMaterialOpId];
         var defaultInkOpItem = lfDeviceInk[deviceId].defaultOpItem ? lfDeviceInk[deviceId].defaultOpItem : null;
         var inkMatOpSide2 = fields['operation' + devRunConfig.inkMaterialOpIdSide2];
-        var inkConfigOpSide2 = fields['operation' + devRunConfig.inkConfigOpSide2];
+        var inkConfigOpSide2 = devRunConfig.inkConfigOpSide2 ? fields['operation' + devRunConfig.inkConfigOpSide2] : null;
         var defaultInkConfigSide2OpItem = lfDeviceInk[deviceId].defaultInkConfigSide2OpItem ? lfDeviceInk[deviceId].defaultInkConfigSide2OpItem : null;
         //Grab op item id from operation Item Keys object. If nothing, then use default
         var inkMatOpItemId = operationItemKeys.inkMatOpItem ? operationItemKeys.inkMatOpItem : defaultInkOpItem;
         var inkMatOpSide2ItemId = operationItemKeys.inkMatOpItemSide2 ? operationItemKeys.inkMatOpItemSide2 : '';
         if (cu.getValue(inkMatOp) != inkMatOpItemId) {
-            cu.changeField(inkMatOp, inkMatOpItemId, true);
+            pu.validateValue(inkMatOp, inkMatOpItemId);
         }
         //side 2
         if (inkConfigOpSide2) {
@@ -496,7 +509,7 @@ function setInkMaterialCosts() {
                 pu.validateValue(inkMatOpSide2, ''); 
                 cu.hideField(inkConfigOpSide2);
             }
-        }
+        } 
     }
 }
 
@@ -643,10 +656,14 @@ function setLamRunOps(quote) {
         
         if (printConfig.lamLfWithSpoilage) {
             if (cu.hasValue(laminatingRun)) {
-                pu.validateValue(laminatingRunAnswer, printConfig.lamLfWithSpoilage);
+                if (laminatingRunAnswer) {
+                    pu.validateValue(laminatingRunAnswer, printConfig.lamLfWithSpoilage);
+                }
             }
             if (cu.hasValue(laminatingRun2)) {
-                pu.validateValue(laminatingRunAnswer2, printConfig.lamLfWithSpoilage);
+                if (laminatingRunAnswer2) {
+                    pu.validateValue(laminatingRunAnswer2, printConfig.lamLfWithSpoilage);
+                }
             }
         }
     } else {
@@ -965,11 +982,13 @@ function colorCritical() {
     }
 }
 
-function hardProofCheck() {
+function hardProofCheck(quote) {
     if (!window.hardProofMessageCount) {
         window.hardProofMessageCount = 0
     }
-    var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
+    var pieceWidth = quote.piece.width;
+    var pieceHeight = quote.piece.height;
+    var totalSquareFeet = (pieceWidth * pieceHeight * cu.getTotalQuantity())/144;
     var proofOp = fields.proof;
     var proofSelection = configureglobals.cquotedata.proof.name;
     if (totalSquareFeet >= 700) {
@@ -983,6 +1002,7 @@ function hardProofCheck() {
         } 
     }
 }
+
 function setSpecialMarkupOps(quote) {
     //calculates job costs and inserts into special costing operation answers
     var teamCost = getOperationPrice(quote, 139);
@@ -1011,7 +1031,7 @@ function uiUpdates(product) {
         55,  //TBGZundCutting
         102,  //TBGGuillotineCutting
         103,  //TBGFotobaCutting
-        88,  //DyeSubTransferPaper
+        88,   //DyeSubTransferPaper
         100,  //TBGMountingRun
         112,  //TBGInternalCuts
         110,  //TBGNoCutting

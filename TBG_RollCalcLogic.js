@@ -138,16 +138,12 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
-    //TEMP IN FIElD QUOTE MODE.  NOT WORKING IN FULL QUOTE
-    
-
     //require results from Quote update
-    hardProofCheck();
+    hardProofCheck(quote);
     setSpecialMarkupOps(quote);
 
     //UI changes
     uiUpdates(product);
-
     renderExtendedCostBreakdown();
     pu.showMessages();
 }
@@ -288,31 +284,26 @@ function getCutMethod() {
     return result
 }
 function setZundOps(quote, cutMethod) {
-    var zundFactors = {
-        "K1" : {"name" : "Knife 1", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 195, "intCutOpItem": 773, "rank" : 1},
-        "K2" : {"name" : "Knife 2", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 196, "intCutOpItem": 774, "rank" : 2},
-        "R1" : {"name" : "Router 1", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 197, "intCutOpItem": 775, "rank" : 3},
-        "R2" : {"name" : "Router 2", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 198, "intCutOpItem": 776, "rank" : 4},
-        "R3" : {"name" : "Router 3", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 199, "intCutOpItem": 777, "rank" : 5},
-        "R4" : {"name" : "Router 4", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 200, "intCutOpItem": 778, "rank" : 6}
-    }
-
     var zundLoading = fields.operation53;
     var zundCutting = fields.operation55;
     var zundUnloading = fields.operation56;
     var intCutOp = fields.operation112;
     var userItCutOpAnswer = fields.operation180_answer;
 
-    var zundChoice = getZundChoice(quote, zundFactors);
-
     if (cutMethod == 'zund') {
-        if (zundLoading) {
+        var zundFactors = {
+            "K1" : {"name" : "Knife 1", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 195, "intCutOpItem": 773, "rank" : 1},
+            "K2" : {"name" : "Knife 2", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 196, "intCutOpItem": 774, "rank" : 2},
+            "R1" : {"name" : "Router 1", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 197, "intCutOpItem": 775, "rank" : 3},
+            "R2" : {"name" : "Router 2", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 198, "intCutOpItem": 776, "rank" : 4},
+            "R3" : {"name" : "Router 3", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 199, "intCutOpItem": 777, "rank" : 5},
+            "R4" : {"name" : "Router 4", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 200, "intCutOpItem": 778, "rank" : 6}
+        }
+
+        var zundChoice = getZundChoice(quote, zundFactors);
+        if (zundChoice) {
             pu.validateValue(zundLoading, zundChoice.loadingOpItem);
-        }
-        if (zundCutting) {
             pu.validateValue(zundCutting, zundChoice.runOpItem);
-        }
-        if (zundUnloading) {
             pu.validateValue(zundUnloading,zundChoice.unloadingOpItem);
         }
         //INTERNAL CUTTING - map to choice item and enter answer 
@@ -991,11 +982,13 @@ function colorCritical() {
     }
 }
 
-function hardProofCheck() {
+function hardProofCheck(quote) {
     if (!window.hardProofMessageCount) {
         window.hardProofMessageCount = 0
     }
-    var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
+    var pieceWidth = quote.piece.width;
+    var pieceHeight = quote.piece.height;
+    var totalSquareFeet = (pieceWidth * pieceHeight * cu.getTotalQuantity())/144;
     var proofOp = fields.proof;
     var proofSelection = configureglobals.cquotedata.proof.name;
     if (totalSquareFeet >= 700) {

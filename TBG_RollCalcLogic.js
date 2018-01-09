@@ -608,9 +608,9 @@ function setLamRunOps(quote) {
                         pu.validateValue(laminatingRun2,718);
                     }
                 } else if (hasColdFront) {
-                    if (hasColdBack) {  // 1. Cold  2. Premask
+                    if (hasColdBack) {  // 1. Cold  2. Cold
                         pu.validateValue(laminatingRun, 363);
-                        pu.validateValue(laminatingRun2,718);
+                        pu.validateValue(laminatingRun2,714);
                     } else if (hasAdhesiveBack) { // 1. Cold / Adhesive 2. Premask
                         pu.validateValue(laminatingRun, 708);
                         pu.validateValue(laminatingRun2,718);
@@ -637,9 +637,9 @@ function setLamRunOps(quote) {
                         onQuoteUpdatedMessages += invalidLamMessage;
                     }
                 } else if (hasColdFront) {
-                    if (hasColdBack) {  // 1. Cold / Adhesive
-                        pu.validateValue(laminatingRun, 708);
-                        pu.validateValue(laminatingRun2,'');
+                    if (hasColdBack) {  // 1. Cold  2. Cold
+                        pu.validateValue(laminatingRun, 363);
+                        pu.validateValue(laminatingRun2, 714);
                     } else if (hasAdhesiveBack) {  // 1. Cold / Adhesive
                         pu.validateValue(laminatingRun, 708);
                         pu.validateValue(laminatingRun2,'');
@@ -1006,13 +1006,13 @@ function hardProofCheck(quote) {
 function setSpecialMarkupOps(quote) {
     //calculates job costs and inserts into special costing operation answers
     var teamCost = getOperationPrice(quote, 139);
-    var specCustCost = getOperationPrice(quote, 184);
+    var specCustCost = getOperationPrice(quote, 152);
     var jobCost = parseInt((quote.jobCostPrice + quote.operationsPrice - teamCost - specCustCost));
     if (cu.hasValue(fields.operation139)) {
         pu.validateValue(fields.operation139_answer, jobCost);
     }
-    if (cu.hasValue(fields.operation184)) {
-        pu.validateValue(fields.operation184_answer, jobCost);
+    if (cu.hasValue(fields.operation152)) {
+        pu.validateValue(fields.operation152_answer, jobCost);
     }
 }
 function getOperationPrice(quote, opId) {

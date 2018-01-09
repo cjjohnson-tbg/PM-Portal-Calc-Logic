@@ -619,9 +619,8 @@ function setLamOps() {
                             pu.validateValue(laminatingRun, 1598);
                             pu.validateValue(laminatingRun2,'');
                         } else { // WARNING
-                            pu.validateValue(laminatingRun, '');
-                            pu.validateValue(laminatingRun2,'');
                             onQuoteUpdatedMessages += '<p> Must have a Hot Lam, Adhesive, or Mount on back side</p>';
+                            cu.changeField(backLamOp, '', true);
                         }
                     } else if (hasColdFront) {
                         if (hasColdBack) {  // 1. Cold  2. Cold
@@ -630,6 +629,9 @@ function setLamOps() {
                         } else if (hasAdhesiveBack) { // 1. Adhesive
                             pu.validateValue(laminatingRun, 1595);
                             pu.validateValue(laminatingRun2,'');
+                        } else if (hasHotBack) {
+                            onQuoteUpdatedMessages += '<p>You have selected a Cold Front Lam and Hot Back Laminate. Please contact estimating for a special quote.</p>'
+                            cu.changeField(backLamOp,'', true);
                         } else {  // 1. Cold
                             pu.validateValue(laminatingRun, 777);
                             pu.validateValue(laminatingRun2, ''); 

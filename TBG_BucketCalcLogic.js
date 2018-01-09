@@ -3,12 +3,17 @@
 var cu = calcUtil;
 var pu = pmCalcUtil;
 
+var onQuoteUpdatedMessages = '';
+
 var bucketCalcLogic = {
     onCalcLoaded: function(product) {
         //run meta field action
-        metaFieldsActions.onCalcLoaded(product);
+       cu.initFields();
+       metaFieldsActions.onCalcLoaded(product);
         if (cu.isSmallFormat(product)) {
             uiUpdatesSF();
+        } else {
+            uiUpdatesLF();
         }
 
     },
@@ -30,26 +35,28 @@ var bucketCalcLogic = {
             if (cu.isSmallFormat(product)) {
                 var quote = configureglobals.cquote.pjQuote;
                 if (!quote) { return; }
-                var changeEventTriggered = boardCalcLogic.onQuoteUpdated_POD_SmallFormat(updates, validation, product, quote);
+                var changeEventTriggered = bucketCalcLogic.onQuoteUpdated_POD_SmallFormat(updates, validation, product, quote);
             } else {
                 var quote = configureglobals.cquote.lpjQuote;
                 if (!quote) { return; }
-                var changeEventTriggered = boardCalcLogic.onQuoteUpdated_POD_LargeFormat(updates, validation, product, quote);
+                var changeEventTriggered = bucketCalcLogic.onQuoteUpdated_POD_LargeFormat(updates, validation, product, quote);
             }
         }
-
+    },
     onQuoteUpdated_POD_SmallFormat: function(updates, validation, product, quote) {
         var changeEventTriggered = false;
         setTopAndBottomPieceOps();
         setInkConsumptionOps();
         setCuttingOperations(quote);
+        sizeLimitation(product);
         uiUpdatesSF();
     },
     onQuoteUpdated_POD_LargeFormat: function(updates, validation, product, quote) {
         var changeEventTriggered = false;
 
         setCuttingOps(quote, product);
-
+        sizeLimitation(product);
+        uiUpdatesLF();
 
     }
 }
@@ -67,14 +74,16 @@ function shipDateRestrictions() {
 }
 
 function uiUpdatesSF() {
-    addClassesSF():
+    addClassesSF();
     trimOptionsSF();
     shipDateRestrictions();
     setLabels();
+    pu.showMessages();
 }
 function uiUpdatesLF() {
     addClassesLF();
     trimOptionsLF();
+    pu.showMessages();
 }
 
 function setLabels() {
@@ -140,7 +149,7 @@ function trimOptionsLF() {
         58,   //TBG Tape, Mag, Velcro
         78  //LF Premask
     ]
-    pu.trimOperationItemName(lfOpsToTrimWithUnderscore, '_');
+    pu.trimOperationItemNames(lfOpsToTrimWithUnderscore, '_');
 }
 
 /**** CUTTING */
@@ -189,7 +198,6 @@ function getZundChoice(quote, zundFactors) {
     var printSubFactor = getMaterialZundFactor(zundFactors, quote, 'aPrintSubstrate');
     var mountSubFactor = getMaterialZundFactor(zundFactors, quote, 'mountSubstrate');
     var result = getMaxZundRank(zundFactors, zundFactors.K1, printSubFactor, mountSubFactor);
-    printConfig.zundFactor = result;
     return result
 }
 function getMaterialZundFactor(zundFactors, quote, substrate) {
@@ -502,6 +510,39 @@ function isNowBeforeCSTCutoffTime(hour24, minutes) {
   var returnVal = localTime.getTime() < localCutoffTime.getTime();
   return returnVal;
 }
+
+function sizeLimitation(product) {
+    var pjcSizeMax = {
+        495 : 37
+    }
+    var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
+    if (isNaN(totalSquareFeet)) {
+        console.log('cannot compute total Sq Ft size limitation');
+        return
+    }
+    var maxSq = pjcSizeMax[cu.getPjcId(product)] ? pjcSizeMax[cu.getPjcId(product)] : 200;
+    if (totalSquareFeet > maxSq) {
+        bucketSizeMessage = '<p>The Bucket product is limited to jobs less than ' + maxSq + ' sq ft.  For jobs greater than this please use the Board Printing Product.</p>';
+        onQuoteUpdatedMessages += bucketSizeMessage;
+        disableCheckoutButton(bucketSizeMessage);
+    } else {
+        enableCheckoutButton();
+    }
+}
+
+function disableCheckoutButton(text) {
+    $('button.continueButton').removeAttr('onclick');
+    $('button.continueButton').bind('click', function(event) {
+        if (text != '') {
+            cu.alert('<h3>These issues must be resolved before continuing</h3>' + text);
+        }
+    });
+}
+function enableCheckoutButton() {
+    $('button.continueButton').unbind('click');
+    $('button.continueButton').attr('onclick', 'common.continueClicked();');
+}
+
 configureEvents.registerOnCalcLoadedListener(bucketCalcLogic);
 configureEvents.registerOnCalcChangedListener(bucketCalcLogic);
 configureEvents.registerOnQuoteUpdatedListener(bucketCalcLogic);

@@ -811,15 +811,19 @@ function setTopAndBottomPieceOps() {
 //functions ran after completed full quote
 function setSpecialMarkupOps(quote) {
     //calculates job costs and inserts into special costing operation answers
+    var hasUpdate = false;
     var teamCost = getOperationPrice(quote, "TBG Team");
     var specCustCost = getOperationPrice(quote, "TBG Special Customer");
     var jobCost = parseInt((quote.jobCostPrice + quote.operationsPrice - teamCost - specCustCost));
     if (cu.hasValue(fields.operation218)) {
         pu.validateValue(fields.operation218_answer, jobCost);
+        hasUpdate = true;
     }
     if (cu.hasValue(fields.operation257)) {
         pu.validateValue(fields.operation257_answer, jobCost);
+        hasUpdate = true
     }
+    return hasUpdate
 }
 function getOperationPrice(quote, opHeader) {
     var operationQuotes = quote.operationQuotes;

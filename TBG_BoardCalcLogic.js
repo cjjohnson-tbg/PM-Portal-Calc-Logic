@@ -820,11 +820,9 @@ function setSpecialMarkupOps(quote) {
     var jobCost = parseInt((quote.jobCostPrice + quote.operationsPrice - teamCost - specCustCost));
     if (cu.hasValue(fields.operation218)) {
         pu.validateValue(fields.operation218_answer, jobCost);
-        hasUpdate = true;
     }
     if (cu.hasValue(fields.operation226)) {
         pu.validateValue(fields.operation226_answer, jobCost);
-        hasUpdate = true
     }
     return hasUpdate
 }

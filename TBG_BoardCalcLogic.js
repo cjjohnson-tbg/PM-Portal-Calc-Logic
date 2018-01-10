@@ -28,6 +28,9 @@ var boardCalcLogic = {
         cu.initFields();
 
         if (cu.isPOD(product)) {
+            //Run before quote validation
+            boardCalcLogic.preValidation_POD_SmallFormat(updates, validation, product, quote);
+            
             //STOP IF CALCULATOR NOT RETURNING QUOTE
             if (!configureglobals.cquote) { return; }
             if (!configureglobals.cquote.success) { return; }
@@ -43,6 +46,9 @@ var boardCalcLogic = {
             }
         }
         console.log('onQuoteUpdated End');
+    },
+    preValidation_POD_SmallFormat: function(updates, validation, product, quote) {
+        backlitInkValidation();
     },
     onQuoteUpdated_POD_SmallFormat: function(updates, validation, product, quote) {
         var changeEventTriggered = false;
@@ -76,7 +82,7 @@ var boardCalcLogic = {
 
 function functionsRanInFullQuote(updates, validation, product, quote) {
     checkForColorCriticalDevice(validation);
-    setInkConsumptionOps();
+    setInkConsumptionOps(quote);
     setCuttingOperations(quote);
     edgeBandingLogic();
     setLamOps();
@@ -96,6 +102,25 @@ function functionsRanAfterFullQuote(updates, validation, product, quote) {
     }
     updateUI(product);
     return false;
+}
+
+function backlitInkValidation() {
+    var isBacklit = false;
+    var substratesForceCMYKBacklit = [
+        '220',   //Backlit Film
+        '193'   //Styrene - translucent
+    ]
+    //Change Ink to Full Color - Backlit if Backlit Film or translucent styrene is Selected
+    if (cu.isValueInSet(fields.paperType, substratesForceCMYKBacklit)) {
+        isBacklit = true;
+        pu.validateValue(fields.printingS1, 55);
+        //No printing on back side
+        if (cu.hasValue(fields.printingS2)) {
+            cu.changeField(fields.printingS2, '', true);
+            onQuoteUpdatedMessages += '<p>Backlit Film cannot be printed on the back side.</p>';
+        }
+    }
+    return isBacklit
 }
 
 // Functions called in Full Quote
@@ -214,174 +239,35 @@ function setDevice(deviceId) {
     }
 }
 
-function setInkConsumptionOps() {
-    var side1InkMap = {
-        56  : 587,    //Vutek HS100 - CMYK - 1000 DPI_HS
-        57  : 612,    //Vutek HS 1000 CMYK + W
-        58  : 614,    //Vutek HS100 - CMYK + W + CMYK (Flood / Second Surface) - 1000 DPI_HS
-        99  : 614,    //Vutek HS100 - CMYK + W + CMYK (Spot / Second Surface) - 1000 DPI_HS
-        120 : 614,    //Vutek HS100 - CMYK + W + CMYK (Flood / First Surface) - 1000 DPI_HS 
-        122 : 614,    //Vutek HS100 - CMYK + W + CMYK (Spot / First Surface) - 1000 DPI_HS   
-        67  : 691,    //Vutek HS100 - Backlit - 1000 DPI_HS
-        61  : 615,    //Inca Q40 CMYK
-        124 : 615,    //Vutek HS100 - CMYK (Second Surface) - 1000 DPI_HS
-        62  : 616,    //Inca Q40 - CMYK + W (Spot / Second Surface)
-        63  : 617,    //Inca Q40 - CMYK + W + CMYK (Flood / Second Surface)
-        92  : 617,    //Inca Q40 - CMYK + W + CMYK (Spot / Second Surface)
-        69  : 749,    //Vutek HS100 - White Only - 1000 DPI_HS
-        72  : 769,    //Inca Q40 White Only
-        76  : 616,    //Inca Q40 - CMYK + W (Flood / Second Surface)
-        75  : 616,    //Inca Q40 - W + CMYK (Flood / First Surface)
-        95  : 616,    //Inca Q40 - W + CMYK (Spot / First Surface)
-        78  : 612,    //Vutek HS100 - CMYK + W (Flood / Second Surface) - 1000 DPI_HS
-        97  : 612,    //Vutek HS100 - CMYK + W (Spot / Second Surface) - 1000 DPI_HS
-        77  : 612,    //Vutek HS100 - W + CMYK (Flood / First Surface) - 1000 DPI_HS
-        98  : 612,    //Vutek HS100 - W + CMYK (Spot / First Surface) - 1000 DPI_HS
-        100 : 904,    //Vutek HS100 - CMYK + W + W (Flood / Second Surface) - 1000 DPI_HS   NEED NEW INK OP 
-        103 : 904,    //Vutek HS100 - CMYK + W + W (Spot / Second Surface) - 1000 DPI_HS
-        101 : 904,    //Vutek HS100 - W + W + CMYK (Flood / First Surface) - 1000 DPI_HS
-        102 : 904,    //Vutek HS100 - W + W + CMYK (Spot / First Surface) - 1000 DPI_HS
-        74  : 837,    //Inca X2 CMYK
-        141 : 837,    //Inca X2 CMYK
-        81  : 834,    //Inca Q40 Backlit
-        89  : 890,    //Inca Q40 - CMYK + W + W (Flood / Second Surface)
-        94  : 890,    //Inca Q40 - CMYK + W + W (Spot / Second Surface)
-        88  : 890,    //Inca Q40 - W + W + CMYK (Flood / First Surface)
-        93  : 890,    //Inca Q40 - W + W + CMYK (Spot / First Surface)
-        117 : 834,    //Inca Q40 - CMYK (Second Surface)
-        126 : 1038,  //Vutek HS100 - W + W Only (Spot / Second Surface) - 1000 DPI_HS
-        96  : 1038,    //Vutek HS100 - W + W Only (Spot / First Surface) - 1000 DPI_HS
-        125 : 749,   //Vutek HS100 - White Only (Spot / Second Surface) - 1000 DPI_HS
-        133 : 1038,   //Vutek HS125 - W + W Only (Flood / First Surface) - 1000 GS-LS
-        136 : 1038,   //Vutek HS125 - W + W Only (Flood / First Surface) - 600 DPI-HS
-        138  : 749,    //Vutek HS125 - White Only (Spot / First Surface)
-        142  : 749,    //Vutek HS125 - White Only (Spot / Second Surface)
-        111 : 904,    //Vutek HS125 - CMYK + W + W (Flood / Second Surface) - 600 DPI-HS
-        137 : 1038,  //Vutek HS125 - W + W Only (Spot / Second Surface) - 600 DPI-HS
-        136  : 890,    //Inca Q40 - W + W + CMYK (Flood / First Surface)
-        135 : 904,    //Vutek HS125 - W + W + CMYK (Spot / First Surface) - 600 DPI-HS
-        134 : 615,    //Vutek HS125 - CMYK (Second Surface) - 600 DPI-HS
-        104 : 587,  //Vutek HS125 - CMYK (First Surface) - 600 DPI-HS
-        115 : 614,  //Vutek HS125 - CMYK + W + CMYK (Flood / Second Surface) - 600 DPI-HS
-        114 : 614,  //Vutek HS125 - CMYK + W + CMYK (Spot / Second Surface) - 600 DPI-HS
-        121 : 614,  //Vutek HS125 - CMYK + W + CMYK (Flood / First Surface) - 600 DPI-HS
-        123 : 614,  //Vutek HS125 - CMYK + W + CMYK (Spot / First Surface) - 600 DPI-HS
-        105 : 691,  //Vutek HS125 - Backlit - 600 DPI-HS
-        107 : 612,  //Vutek HS125 - CMYK + W (Flood / Second Surface) - 600 DPI-HS
-        106 : 612,  //Vutek HS125 - CMYK + W (Spot / Second Surface) - 600 DPI-HS
-        109 : 612,  //Vutek HS125 - W + CMYK (Flood / First Surface) - 600 DPI-HS
-        108 : 612,  //Vutek HS125 - W + CMYK (Spot / First Surface) - 600 DPI-HS
-        110 : 904,  //Vutek HS125 - CMYK + W + W (Spot / Second Surface) - 600 DPI-HS
-        113 : 904,  //Vutek HS125 - W + W + CMYK (Flood / First Surface) - 600 DPI-HS
-        112 : 904   //Vutek HS125 - W + W + CMYK (Spot / First Surface) - 600 DPI-HS
+function setInkConsumptionOps(quote) {
+    //pull ink material properties embedded in description json and add as property
+    pu.setCustomProperties(quote.side1Ink, "description", "customProperties");
+    if (quote.side2Ink) {
+        pu.setCustomProperties(quote.side2Ink, "description", "customProperties");
     }
-    var side2InkMap = {
-        56  : 590,    //Vutek HS 1000 CMYK
-        57  : 613,    //Vutek HS 1000 CMYK + W
-        61  : 618,    //Inca Q40 CMYK
-        62  : 621,    //Inca Q40 CMYK + W
-        69  : 750,    //Vutek HS100 White Only
-        72  : 770,    //Inca Q40 White Only
-        76  : 621,    //Inca Q40 CMYK + W (Second Surface)
-        75  : 621,    //Inca Q40 W + CMYK (First Surface)
-        78  : 613,    //Vutek HS100 CMYK + W (Second Surface)
-        77  : 613,    //Vutek HS100 Q40 W + CMYK (First Surface)
-        74  : 838,     //Inca X2 CMYK
-        6  : 881,      //none
-        117 : 618,    //Inca Q40 - CMYK (Second Surface)
-        63 : 891,    //Inca Q40 - CMYK + W + CMYK (Flood / Second Surface)
-        92 : 891,    //Inca Q40 - CMYK + W + CMYK (Spot / Second Surface)
-        89 : 891,    //Inca Q40 - CMYK + W + W (Flood / Second Surface)
-        94 : 891,    //Inca Q40 - CMYK + W + W (Spot / Second Surface)
-        95 : 621,    //Inca Q40 - W + CMYK (Spot / First Surface)
-        91 : 891,    //Inca Q40 - W + W
-        88 : 891,    //Inca Q40 - W + W + CMYK (Flood / First Surface)
-        93 : 891,    //Inca Q40 - W + W + CMYK (Spot / First Surface)
-        109  : 613,    //Vutek HS100 Q40 W + CMYK (First Surface)
-        133 : 1039,   //Vutek HS125 - W + W Only (Flood / First Surface) - 1000 GS-LS
-        136 : 1039,  //Vutek HS125 - W + W Only (Flood / First Surface) - 600 DPI-HS
-        120 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Flood / First Surface) - 1000 DPI_HS
-        58 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Flood / Second Surface) - 1000 DPI_HS
-        122 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Spot / First Surface) - 1000 DPI_HS
-        99 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Spot / Second Surface) - 1000 DPI_HS
-        97 : 613,    //Vutek HS100 - CMYK + W (Spot / Second Surface) - 1000 DPI_HS
-        100 : 1040,    //Vutek HS100 - CMYK + W + W (Flood / Second Surface) - 1000 DPI_HS
-        103 : 1040,    //Vutek HS100 - CMYK + W + W (Spot / Second Surface) - 1000 DPI_HS
-        98 : 613,    //Vutek HS100 - W + CMYK (Spot / First Surface) - 1000 DPI_HS
-        101 : 1040,    //Vutek HS100 - W + W + CMYK (Flood / First Surface) - 1000 DPI_HS
-        102 : 1040,    //Vutek HS100 - W + W + CMYK (Spot / First Surface) - 1000 DPI_HS
-        96 : 1039,    //Vutek HS100 - W + W Only (Spot / First Surface) - 1000 DPI_HS
-        138  : 750,    //Vutek HS125 - White Only (Spot / First Surface) - 600 DPI-HS
-        137 : 1040,    //Vutek HS125 - W + W Only (Spot / Second Surface) - 600 DPI-HS
-        135 : 1039,    //Vutek HS100 - W + W Only (Spot / First Surface) - 1000 DPI_HS
-        136 : 1040,    //Vutek HS100 - W + W + CMYK (Flood / First Surface) - 1000 DPI_HS
-        134  : 613,    //Vutek HS100 CMYK + W (Second Surface)
-        104  : 590,    //Vutek HS125 - CMYK (First Surface) - 600 DPI-HS
-        107  : 613,    //Vutek HS125 - CMYK + W (Flood / Second Surface) - 600 DPI-HS
-        121 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Flood / First Surface) - 600 DPI_HS
-        115 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Flood / Second Surface) - 600 DPI_HS
-        123 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Spot / First Surface) - 600 DPI_HS
-        114 : 1041,    //Vutek HS100 - CMYK + W + CMYK (Spot / Second Surface) - 600 DPI_HS
-        106 : 613,    //Vutek HS100 - CMYK + W (Spot / Second Surface) - 600 DPI_HS
-        111 : 1040,    //Vutek HS100 - CMYK + W + W (Flood / Second Surface) - 600 DPI_HS\
-        110 : 1040,    //Vutek HS100 - CMYK + W + W (Spot / Second Surface) - 600 DPI_HS
-        108 : 613,    //Vutek HS100 - W + CMYK (Spot / First Surface) - 600 DPI_HS
-        113 : 1040,    //Vutek HS100 - W + W + CMYK (Flood / First Surface) - 600 DPI_HS
-        112 : 1040,    //Vutek HS100 - W + W + CMYK (Spot / First Surface) - 600 DPI_HS
+    var side1InkMatId = pu.getCustomProperties(quote.side1Ink, ["customProperties", "side1InkMatItem"]);
+    var side2InkMatId = pu.getCustomProperties(quote.side2Ink, ["customProperties", "side2InkMatItem"]);
+
+    var side1InkMatOp = fields.operation98;
+    var side2InkMatOp = fields.operation99;
+
+    //side 1 ink material
+    if (cu.hasValue(side1InkMatOp)) {
+        if (side1InkMatId) {
+            pu.validateValue(side1InkMatOp, side1InkMatId);
+        } else {
+            console.log('Side 1 ink operation not mapping for ink ' + side1InkMatId);
+        }
     }
-    var substratesForceCMYKBacklit = [
-        '220',   //Backlit Film
-        '193'   //Styrene - translucent
-    ]
-    /********* Align Ink to Color in Operations */
-    var sideOneInk = cu.getValue(fields.printingS1);
-    var sideTwoInk = cu.getValue(fields.printingS2);
-    var sideOneInkId = configureglobals.cquote.pjQuote.side1Ink.id;
-    var sideTwoInkId = null;
+    //side 2
     if (cu.hasValue(fields.printingS2)) {
-        sideTwoInkId = configureglobals.cquote.pjQuote.side2Ink.id;
-    }
-    var sideOneInkOp = fields.operation98;
-    var sideTwoInkOp = fields.operation99;
-    var shrinkOpTest = fields.operation143;  
-
-    //Change Ink to Full Color - Backlit if Backlit Film or translucent styrene is Selected
-    if (cu.isValueInSet(fields.paperType, substratesForceCMYKBacklit)) {
-        pu.validateValue(fields.printingS1, 55, true);
-        //No printing on back side
-        if (cu.hasValue(fields.printingS2)) {
-            cu.changeField(fields.printingS2, '', true);
-            onQuoteUpdatedMessages += '<p>Backlit Film cannot be printed on the back side.</p>';
-        }
-    }
-
-    if (sideOneInkId) {
-        var sideOneInkOpId = side1InkMap[sideOneInkId] ? side1InkMap[sideOneInkId] : null;
-        if (sideOneInkOpId) {
-            if (cu.getValue(sideOneInkOp) != sideOneInkOpId) {
-                cu.changeField(sideOneInkOp, sideOneInkOpId, true);
-            }
+        if (side2InkMatId) {
+            pu.validateValue(side2InkMatOp, side2InkMatId)
         } else {
-            console.log('Side 1 ink operation not mapping for ink ' + sideOneInkId);
+            console.log('Side 2 ink operation not mapping for ink ' + side2InkMatId);
         }
-    }
-    if (sideTwoInkOp) {
-        if (sideTwoInkId) {
-            var sideTwoInkOpId = side2InkMap[sideTwoInkId] ? side2InkMap[sideTwoInkId] : null;
-            if (sideTwoInkOpId) {
-                if (cu.getValue(sideTwoInkOp) != sideTwoInkOpId) {
-                    cu.changeField(sideTwoInkOp, sideTwoInkOpId, true);
-                }
-            } else {
-                if (cu.hasValue(sideTwoInkOp)) {
-                    cu.changeField(sideTwoInkOp,'', true);
-                }
-            }
-        } else {
-            if (cu.hasValue(sideTwoInkOp)) {
-                cu.changeField(sideTwoInkOp,'', true);
-            }
-        }
+    } else {
+        pu.validateValue(side2InkMatOp, '');
     }
 }
 

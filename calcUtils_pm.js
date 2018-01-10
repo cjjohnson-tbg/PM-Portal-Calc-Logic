@@ -171,5 +171,26 @@ var pmCalcUtil = {
         } catch (e) {
             return false;
         }
+    },
+    getCustomProperties: function (obj, properties) {
+        var result = null;
+        if (!obj) {
+            //console.log('object in getCustomProperties is not defined');
+            return result
+        }
+        //if properties not array, create array for loop
+        if (!(Array.isArray(properties))) {
+            properties = [properties];
+        }
+        //dive into each child property
+        for (var i = 0; i < properties.length; i++) {
+            if (obj[properties[i]]) {
+                obj = obj[properties[i]];
+            }
+        }
+        if (obj) {
+            result = obj;
+        }
+        return result
     }
 }

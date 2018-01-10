@@ -84,6 +84,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     heatBendingRules(updates);
     twoSidedJobOp();
     setTopAndBottomPieceOps();
+    mountAdhesive();
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
@@ -809,6 +810,42 @@ function setTopAndBottomPieceOps() {
             cu.changeField(topInchDecreaserAnswer, topLinInch, true);
         }
     } 
+}
+
+function mountAdhesive() {
+    var mountsWithClearAdhesive = [
+        '795',    //Optix DA Digital Acrylic .118_48X96-3580
+        '796',    //Optix DA Digital Acrylic .22_48X96-3582
+        '1031'    //Acrylic Clear Cast .118_48X96-3635
+    ]
+    var subsratesTypesWithClearAdhesive = [
+        '185',   //Optix DA Digital Acrylic
+        '283',  //Acrylic Clear Cast
+        '261',  //Acrylic Clear Extruded
+        '259',  //Acrylic DP95 Frosted 2 Sides
+        '253',   //Acrylic P95 Frosted 1 Side
+        '182',  //PETG
+        '228',  //PETG Non-Glare
+        '262'   //PETG Transilwrap
+    ]
+    var mountOp = fields.operation139;
+    var adhesiveOp = fields.operation140;
+    var adhesiveMatItem = '';
+    var clearAdhesive = 1030;
+    var defaulAdhesive = 797;
+    
+    if (mountOp && adhesiveOp) {
+        if (cu.hasValue(mountOp)) {
+            if (subsratesTypesWithClearAdhesive.indexOf(cu.getValue(fields.paperType)) != -1) {
+                adhesiveMatItem = clearAdhesive;
+            } else if (mountsWithClearAdhesive.indexOf(cu.getValue(mountOp)) != -1) {
+                adhesiveMatItem = clearAdhesive;
+            } else {
+                adhesiveMatItem = defaulAdhesive;
+            }
+        }
+    }
+    pu.validateValue(adhesiveOp, adhesiveMatItem);
 }
 
 //functions ran after completed full quote

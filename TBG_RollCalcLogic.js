@@ -522,6 +522,8 @@ function setLamRunOps(quote) {
     var laminatingRunAnswer = fields.operation96_answer;
     var laminatingRun2 = fields.operation141;
     var laminatingRunAnswer2 = fields.operation141_answer;
+    var laminatingRun3 = fields.operation153;
+    var laminatingRunAnswer3 = fields.operation153_answer;
     var premask = fields.operation78;
     var premaskRunAnswer = fields.operation78_answer;
 
@@ -545,27 +547,33 @@ function setLamRunOps(quote) {
                     if (selfAdhesive) {  // 1. Mount + Premask 
                         pu.validateValue(laminatingRun, 711);
                         pu.validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun3,'');
                     } else { // 1. Adhesive  2. Mount + Premask
                         pu.validateValue(laminatingRun, 706);
                         pu.validateValue(laminatingRun2, 717);
+                        pu.validateValue(laminatingRun3,'');
                     }
                 } else if (hasHotFront) { 
                     if (selfAdhesive) { // 1. Mount  2. Hot  3. Premask
                         pu.validateValue(laminatingRun, 710);
                         pu.validateValue(laminatingRun2, 718);
+                        pu.validateValue(laminatingRun3,'');
                     }
                     else { //  1. Hot / Adhesive  2. Mount + Premask
                         pu.validateValue(laminatingRun, 709);
                         pu.validateValue(laminatingRun2, 717);
+                        pu.validateValue(laminatingRun3,'');
                     }
                 } else if (hasColdFront) {
                     if (selfAdhesive) { // 1. Cold / Adhesive  2.  Mount + Premask
                         pu.validateValue(laminatingRun, 708);
                         pu.validateValue(laminatingRun2, 717);
+                        pu.validateValue(laminatingRun3,'');
                     }
-                    else { //  1. Cold / Adhesive  2. Mount + Premask
+                    else { //  1. Cold / Adhesive  2. Mount  3. Premask
                         pu.validateValue(laminatingRun, 708);
-                        pu.validateValue(laminatingRun2, 717);
+                        pu.validateValue(laminatingRun2, 716);
+                        pu.validateValue(laminatingRun3, 758);
                     }
                 }
             } else {  //mounted but no premask
@@ -573,27 +581,33 @@ function setLamRunOps(quote) {
                     if (selfAdhesive) {  // 1. Mount 
                         pu.validateValue(laminatingRun, 710);
                         pu.validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun3,'');
                     } else { // 1. Adhesive  2. Mount
                         pu.validateValue(laminatingRun, 706);
                         pu.validateValue(laminatingRun2, 716);
+                        pu.validateValue(laminatingRun3,'');
                     }
                 } else if (hasHotFront) { 
                     if (selfAdhesive) { // 1. Mount  2. Hot 
                         pu.validateValue(laminatingRun, 710);
                         pu.validateValue(laminatingRun2, 715);
+                        pu.validateValue(laminatingRun3,'');
                     }
                     else { //  1. Hot / Adhesive  2. Mount
                         pu.validateValue(laminatingRun, 709);
                         pu.validateValue(laminatingRun2, 716);
+                        pu.validateValue(laminatingRun3,'');
                     }
                 } else if (hasColdFront) {
                     if (selfAdhesive) { // 1. Mount  2. Cold 
                         pu.validateValue(laminatingRun, 710);
                         pu.validateValue(laminatingRun2, 714);
+                        pu.validateValue(laminatingRun3,'');
                     }
                     else { //  1. Cold / Adhesive  2. Mount
                         pu.validateValue(laminatingRun, 708);
                         pu.validateValue(laminatingRun2, 716);
+                        pu.validateValue(laminatingRun3,'');
                     }
                 }
             }
@@ -603,36 +617,45 @@ function setLamRunOps(quote) {
                     if (hasAdhesiveBack) { // 1. Hot / Adhesive 2. Premask
                         pu.validateValue(laminatingRun, 709);
                         pu.validateValue(laminatingRun2,718);
+                        pu.validateValue(laminatingRun3,'');
                     } else if (hasHotBack) { // 1. Hot / Hot 2. Premask
                         pu.validateValue(laminatingRun, 364);
                         pu.validateValue(laminatingRun2,718);
+                        pu.validateValue(laminatingRun3,'');
                     }
                 } else if (hasColdFront) {
-                    if (hasColdBack) {  // 1. Cold  2. Cold
+                    if (hasColdBack) {  // 1. Cold  2. Cold 3. Premask
                         pu.validateValue(laminatingRun, 363);
-                        pu.validateValue(laminatingRun2,714);
+                        pu.validateValue(laminatingRun2, 714);
+                        pu.validateValue(laminatingRun3, 758);
                     } else if (hasAdhesiveBack) { // 1. Cold / Adhesive 2. Premask
                         pu.validateValue(laminatingRun, 708);
                         pu.validateValue(laminatingRun2,718);
+                        pu.validateValue(laminatingRun3,'');
                     } else { // 1. Cold  2. Pre-mask
                         pu.validateValue(laminatingRun, 363);
                         pu.validateValue(laminatingRun2,718);
+                        pu.validateValue(laminatingRun3,'');
                     }
                 } else if (hasAdhesiveBack) { // 1. Adhesive  2. Premask
                     pu.validateValue(laminatingRun, 706);
                     pu.validateValue(laminatingRun2,718);
+                    pu.validateValue(laminatingRun3,'');
                 } else { // 1. Premask
                     pu.validateValue(laminatingRun, 712);
                     pu.validateValue(laminatingRun2,'');
+                    pu.validateValue(laminatingRun3,'');
                 }
             } else {  // no mount, no premask
                 if (hasHotFront) {
                     if (hasHotBack) { // 1. Hot / Hot
                         pu.validateValue(laminatingRun, 364);
                         pu.validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun3,'');
                     } else if (hasAdhesiveBack) {  // 1. Hot / Adhesive
                         pu.validateValue(laminatingRun, 709);
                         pu.validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun3,'');
                     } else {
                         onQuoteUpdatedMessages += invalidLamMessage;
                     }
@@ -640,16 +663,20 @@ function setLamRunOps(quote) {
                     if (hasColdBack) {  // 1. Cold  2. Cold
                         pu.validateValue(laminatingRun, 363);
                         pu.validateValue(laminatingRun2, 714);
+                        pu.validateValue(laminatingRun3,'');
                     } else if (hasAdhesiveBack) {  // 1. Cold / Adhesive
                         pu.validateValue(laminatingRun, 708);
                         pu.validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun3,'');
                     } else {  // 1. Cold
                         pu.validateValue(laminatingRun, 363);
                         pu.validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun3,'');
                     }
                 } else if (hasAdhesiveBack) { // 1. Adhesive
                     pu.validateValue(laminatingRun, 706);
                     pu.validateValue(laminatingRun2,'');
+                    pu.validateValue(laminatingRun3,'');
                 }
             }
         }
@@ -665,10 +692,16 @@ function setLamRunOps(quote) {
                     pu.validateValue(laminatingRunAnswer2, printConfig.lamLfWithSpoilage);
                 }
             }
+            if (cu.hasValue(laminatingRun3)) {
+                if (laminatingRunAnswer3) {
+                    pu.validateValue(laminatingRunAnswer3, printConfig.lamLfWithSpoilage);
+                }
+            }
         }
     } else {
         pu.validateValue(laminatingRun, '');
         pu.validateValue(laminatingRun2,'');
+        pu.validateValue(laminatingRun3,'');
     }
 }
 

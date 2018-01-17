@@ -97,11 +97,11 @@ var calcConfig = {
 
 			var roll = materials.roll;
 
-			var pieceWidth = vertical_piece_orienation ? piece.width : piece.height;
-			var pieceHeight = vertical_piece_orienation ? piece.height : piece.width;
+			var pieceWidth = vertical_piece_orienation ? piece.height : piece.width;
+			var pieceHeight = vertical_piece_orienation ? piece.width : piece.height;
 			
 			config.productionQty = productionQty;
-			config.sides = Number(cu.getValue(fields.sides));
+			config.sides = quote.piece.sides;
 
 			//set printable width as smallest width of all materials
 			config.formWidth = getSignatureDim(materials, 'width');

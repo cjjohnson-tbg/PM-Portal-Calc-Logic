@@ -420,6 +420,7 @@ function setLamOps() {
     }
     var laminatingRun = fields.operation135;
     var laminatingRun2 = fields.operation221;
+    var laminatingRun3 = fields.operation227;
     if (laminatingRun && laminatingRun2) {
         setLamRunOperations();
     }
@@ -438,32 +439,41 @@ function setLamOps() {
                     if (!hasFrontLam && !hasBackLam) { // 1. Premask / Adhesive  2. Mount
                         pu.validateValue(laminatingRun, 1600);
                         pu.validateValue(laminatingRun2, 1604);
+                        pu.validateValue(laminatingRun3, '');
                     } else if (hasHotFront) { //  1. Hot / Adhesive  2. Mount + Premask
                         pu.validateValue(laminatingRun, 1598);
                         pu.validateValue(laminatingRun2, 1605);
-                    } else if (hasColdFront) { //  1. Cold / Adhesive  2. Mount + Premask
-                        pu.validateValue(laminatingRun, 1597);
-                        pu.validateValue(laminatingRun2, 1605);
+                        pu.validateValue(laminatingRun3, '');
+                    } else if (hasColdFront) { //  1. Cold 2. Mount 3. Premask
+                        pu.validateValue(laminatingRun, 777);
+                        pu.validateValue(laminatingRun2, 1604);
+                        pu.validateValue(laminatingRun3, 1641);
                     } else { // 1. Premask / Adhesive  2. Mount  --CATCH ALL UNFORESEEN
                         pu.validateValue(laminatingRun, 1600);
                         pu.validateValue(laminatingRun2, 1604);
+                        pu.validateValue(laminatingRun3, '');
                     } 
                 } else {  //mounted but no premask
                    if (!hasFrontLam && !hasBackLam) { // 1. Adhesive  2. Mount
                         pu.validateValue(laminatingRun, 1595);
                         pu.validateValue(laminatingRun2, 1604);
+                        pu.validateValue(laminatingRun3, '');
                     } else if (hasHotFront) { //  1. Hot / Adhesive  2. Mount
                         pu.validateValue(laminatingRun, 1598);
                         pu.validateValue(laminatingRun2, 1604);
+                        pu.validateValue(laminatingRun3, '');
                     } else if (hasColdFront) { //  1. Cold / Adhesive  2. Mount
                         pu.validateValue(laminatingRun, 1597);
                         pu.validateValue(laminatingRun2, 1604);
+                        pu.validateValue(laminatingRun3, '');
                     } else if (hasAdhesiveFront || hasAdhesiveFront) { // 1. Adhesive  2. Mount
                         pu.validateValue(laminatingRun, 1597);
                         pu.validateValue(laminatingRun2, 1604);
+                        pu.validateValue(laminatingRun3, '');
                     } else { // 1. Adhesive  2. Mount  --CATCH ALL UNFORESEEN
                         pu.validateValue(laminatingRun, 1595);
                         pu.validateValue(laminatingRun2, 1604);
+                        pu.validateValue(laminatingRun3, '');
                     }
                 }
             } else {  //everything not mounted
@@ -472,66 +482,82 @@ function setLamOps() {
                         if (hasAdhesiveBack) { // 1. Hot / Adhesive 2. Premask
                             pu.validateValue(laminatingRun, 1598);
                             pu.validateValue(laminatingRun2,1606);
+                            pu.validateValue(laminatingRun3, '');
                         } else if (hasHotBack) { // 1. Hot / Hot 2. Premask
                             pu.validateValue(laminatingRun, 1529);
                             pu.validateValue(laminatingRun2,1606);
+                            pu.validateValue(laminatingRun3, '');
                         } else { // 1. Hot / Hot 2. Premask
                             pu.validateValue(laminatingRun, 1529);
                             pu.validateValue(laminatingRun2,1606);
+                            pu.validateValue(laminatingRun3, '');
                         }
                     } else if (hasColdFront) {
-                        if (hasColdBack) {  // 1. Cold  2. Premask
+                        if (hasColdBack) {  // 1. Cold  2. Cold 3. Premask
                             pu.validateValue(laminatingRun, 777);
                             pu.validateValue(laminatingRun2,1606);
+                            pu.validateValue(laminatingRun3, 1641);
                         } else if (hasAdhesiveBack) { // 1. Cold / Adhesive 2. Premask
                             pu.validateValue(laminatingRun, 1597);
                             pu.validateValue(laminatingRun2,1606);
+                            pu.validateValue(laminatingRun3, '');
                         } else { // 1. Cold  2. Pre-mask
                             pu.validateValue(laminatingRun, 777);
                             pu.validateValue(laminatingRun2,1606);
+                            pu.validateValue(laminatingRun3, '');
                         }
                     } else if (hasAdhesiveBack || hasAdhesiveFront) { // 1. Adhesive  2. Premask
                         pu.validateValue(laminatingRun, 1595);
                         pu.validateValue(laminatingRun2,1606);
+                        pu.validateValue(laminatingRun3, '');
                     } else { // 1. Premask
                         pu.validateValue(laminatingRun, 1601);
                         pu.validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun3, '');
                     }
                 } else {  // no mount, no premask
                     if (hasHotFront) {
                         if (hasHotBack) { // 1. Hot / Hot
                             pu.validateValue(laminatingRun, 1529);
                             pu.validateValue(laminatingRun2,'');
+                            pu.validateValue(laminatingRun3, '');
                         } else if (hasAdhesiveBack) {  // 1. Hot / Adhesive
                             pu.validateValue(laminatingRun, 1598);
                             pu.validateValue(laminatingRun2,'');
+                            pu.validateValue(laminatingRun3, '');
                         } else { // WARNING
                             onQuoteUpdatedMessages += '<p> Must have a Hot Lam, Adhesive, or Mount on back side</p>';
                             cu.changeField(backLamOp, '', true);
+                            pu.validateValue(laminatingRun3, '');
                         }
                     } else if (hasColdFront) {
                         if (hasColdBack) {  // 1. Cold  2. Cold
                             pu.validateValue(laminatingRun, 777);
                             pu.validateValue(laminatingRun2, 1602); 
+                            pu.validateValue(laminatingRun3, '');
                         } else if (hasAdhesiveBack) { // 1. Adhesive
                             pu.validateValue(laminatingRun, 1595);
                             pu.validateValue(laminatingRun2,'');
+                            pu.validateValue(laminatingRun3, '');
                         } else if (hasHotBack) {
                             onQuoteUpdatedMessages += '<p>You have selected a Cold Front Lam and Hot Back Laminate. Please contact estimating for a special quote.</p>'
                             cu.changeField(backLamOp,'', true);
                         } else {  // 1. Cold
                             pu.validateValue(laminatingRun, 777);
-                            pu.validateValue(laminatingRun2, ''); 
+                            pu.validateValue(laminatingRun2, '');
+                            pu.validateValue(laminatingRun3, ''); 
                         }
                     } else if (hasAdhesiveBack || hasAdhesiveFront) { // 1. Adhesive
                         pu.validateValue(laminatingRun, 1595);
                         pu.validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun3, '');
                     }
                 }
             }
         } else {
             pu.validateValue(laminatingRun,'');
             pu.validateValue(laminatingRun2,'');
+            pu.validateValue(laminatingRun3, '');
         }
     }
 }

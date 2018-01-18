@@ -444,10 +444,10 @@ function setLamOps() {
                         pu.validateValue(laminatingRun, 1598);
                         pu.validateValue(laminatingRun2, 1605);
                         pu.validateValue(laminatingRun3, '');
-                    } else if (hasColdFront) { //  1. Cold 2. Mount 3. Premask
-                        pu.validateValue(laminatingRun, 777);
-                        pu.validateValue(laminatingRun2, 1604);
-                        pu.validateValue(laminatingRun3, 1641);
+                    } else if (hasColdFront) { //  1. Cold / Adhesive 2. Mount / Premask
+                        pu.validateValue(laminatingRun, 1597);
+                        pu.validateValue(laminatingRun2, 1605);
+                        pu.validateValue(laminatingRun3, '');
                     } else { // 1. Premask / Adhesive  2. Mount  --CATCH ALL UNFORESEEN
                         pu.validateValue(laminatingRun, 1600);
                         pu.validateValue(laminatingRun2, 1604);

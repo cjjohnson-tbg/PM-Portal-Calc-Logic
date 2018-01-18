@@ -85,7 +85,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     setInkConsumptionOps(quote);
     setCuttingOperations(quote);
     edgeBandingLogic();
-    setLamOps();
+    setLamOps(quote);
     setFluteDirectionOp();
     heatBendingRules(updates);
     twoSidedJobOp();
@@ -392,7 +392,7 @@ function edgeBandingLogic() {
     }
 }
 
-function setLamOps() {
+function setLamOps(quote) {
     /************************* ADD LAMINATING RUN 1 AND 2 FOR LAMINATING, MOUNTING, AND PREMASK */
     var frontLamOp = fields.operation131;
     var backLamOp = fields.operation130;
@@ -421,6 +421,14 @@ function setLamOps() {
     var laminatingRun = fields.operation135;
     var laminatingRun2 = fields.operation221;
     var laminatingRun3 = fields.operation227;
+    var laminatingRun_answer = fields.operation135_answer;
+    var laminatingRun2_answer = fields.operation221_answer;
+    var laminatingRun3_answer = fields.operation227_answer;
+
+    var boardLength = quote.pressSheetQuote.height ? quote.pressSheetQuote.height : 120;
+    var boardCount = quote.pressSheetQuote.pressSheetCount;
+    var totalBoardLF = pu.roundTo(boardLength * boardCount / 12, 1);
+
     if (laminatingRun && laminatingRun2) {
         setLamRunOperations();
     }
@@ -428,6 +436,7 @@ function setLamOps() {
     var sfPreLaminating = cu.findOperationFromSet(sfPrePrintLamOps);
     if (cu.hasValue(sfPreLaminating)) {
         pu.validateValue(fields.operation151, 898);
+        pu.validateValue(fields.operation151_answer, totalBoardLF);
     } else {
         pu.validateValue(fields.operation151,'');
     }
@@ -495,7 +504,7 @@ function setLamOps() {
                     } else if (hasColdFront) {
                         if (hasColdBack) {  // 1. Cold  2. Cold 3. Premask
                             pu.validateValue(laminatingRun, 777);
-                            pu.validateValue(laminatingRun2,1606);
+                            pu.validateValue(laminatingRun2,1602);
                             pu.validateValue(laminatingRun3, 1641);
                         } else if (hasAdhesiveBack) { // 1. Cold / Adhesive 2. Premask
                             pu.validateValue(laminatingRun, 1597);
@@ -554,11 +563,23 @@ function setLamOps() {
                     }
                 }
             }
+            //insert total LF of boards into operation answer
+            if (laminatingRun_answer) {
+                pu.validateValue(laminatingRun_answer, totalBoardLF);
+            }
+            if (laminatingRun2_answer) {
+                pu.validateValue(laminatingRun2_answer, totalBoardLF);
+            }
+            if (laminatingRun2_answer) {
+                pu.validateValue(laminatingRun3_answer, totalBoardLF);
+            }
         } else {
             pu.validateValue(laminatingRun,'');
             pu.validateValue(laminatingRun2,'');
             pu.validateValue(laminatingRun3, '');
         }
+        
+
     }
 }
 

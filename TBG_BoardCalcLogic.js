@@ -401,12 +401,16 @@ function setLamOps(quote) {
     var hasFrontLam = cu.hasValue(frontLamOp);
     var hasBackLam = cu.hasValue(backLamOp);
     var hasMount = cu.hasValue(mountOp);
-    var hasPremask = cu.hasValue(premaskOp);
     
+
     var sfPrePrintLamOps = [
         '129',   //LF Pre-Printing Front Laminate
         '144'    //LF Pre-Printing Back Laminate
     ]
+    var sfPreLaminating = cu.findOperationFromSet(sfPrePrintLamOps);
+    var hasPremask = cu.hasValue(sfPreLaminating);
+
+    setPreLamMatAndRunCosts(sfPrePrintLamOps);
 
     if (frontLamOp) {
         var hasColdFront = fields.operation131.choice ? fields.operation131.choice.frontLamType == 'Cold' : false;
@@ -433,14 +437,6 @@ function setLamOps(quote) {
 
     if (laminatingRun && laminatingRun2) {
         setLamRunOperations();
-    }
-    /************************* ADD PRE- PRINTING LAMINATING SETUP FEE AND RUN WHEN FRONT AND/OR BACK LAM CHOSEN */
-    var sfPreLaminating = cu.findOperationFromSet(sfPrePrintLamOps);
-    if (cu.hasValue(sfPreLaminating)) {
-        pu.validateValue(fields.operation151, 898);
-        pu.validateValue(fields.operation151_answer, totalBoardLF);
-    } else {
-        pu.validateValue(fields.operation151,'');
     }
 
     function setLamRunOperations() {
@@ -583,6 +579,30 @@ function setLamOps(quote) {
         
 
     }
+}
+
+function setPreLamMatAndRunCosts(pLamOps) {
+    var prePrintLamRunOp = fields.operation151;
+    var prePrintLamRunOp_answer = fields.operation151_answer;
+    var passes = 0;
+    if (ops) {
+        passes = countHasValueFromSet(pLamOps);
+    }
+    if (passes = 2) {
+        pu.validateValue(prePrintLamRunOp, 898);
+    } else if (passes = 1) {
+        pu.validateValue(prePrintLamRunOp, 1642);
+    }
+}
+
+function countHasValueFromSet(opList) {
+    var opsWithValue = 0;
+    for (var i; i < pLamOps.length; i++) {
+        if (cu.hasValue(pLamOps[i])) {
+            opsWithValue++;
+        }
+    }
+    return opsWithValue
 }
 
 function setLamMatCosts(lf) {

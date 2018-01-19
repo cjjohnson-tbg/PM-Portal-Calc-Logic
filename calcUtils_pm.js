@@ -193,11 +193,14 @@ var pmCalcUtil = {
         }
         return result
     }, 
-    countHasValueFromSet: function (opList) {
+    countHasValueFromOpSet: function (operations) {
         var opsWithValue = 0;
-        for (var i; i < opList.length; i++) {
-            if (cu.hasValue(opList[i])) {
-                opsWithValue++;
+        for (var i = 0; i < operations.length; i++) {
+            var key = 'operation' + operations[i];
+            if (fields[key]) {
+                if (cu.hasValue(fields[key])) {
+                    opsWithValue++;
+                }
             }
         }
         return opsWithValue

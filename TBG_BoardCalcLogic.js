@@ -429,7 +429,7 @@ function setLamOps(quote) {
     var boardCount = quote.pressSheetQuote.pressSheetCount;
     var totalBoardLF = pu.roundTo(boardLength * boardCount / 12, 1);
 
-    setBoardMaterialCost(totalBoardLF);
+    setLamMatCosts(totalBoardLF);
 
     if (laminatingRun && laminatingRun2) {
         setLamRunOperations();
@@ -585,7 +585,7 @@ function setLamOps(quote) {
     }
 }
 
-function setBoardMaterialCost(lf) {
+function setLamMatCosts(lf) {
     var lamOpAnswers = [
         fields.operation129_answer,  //LF Pre-Printing Front Laminate
         fields.operation144_answer,  //LF Pre-Printing Back Laminate

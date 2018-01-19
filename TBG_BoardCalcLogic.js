@@ -429,6 +429,8 @@ function setLamOps(quote) {
     var boardCount = quote.pressSheetQuote.pressSheetCount;
     var totalBoardLF = pu.roundTo(boardLength * boardCount / 12, 1);
 
+    setBoardMaterialCost(totalBoardLF);
+
     if (laminatingRun && laminatingRun2) {
         setLamRunOperations();
     }
@@ -581,6 +583,24 @@ function setLamOps(quote) {
         
 
     }
+}
+
+function setBoardMaterialCost(lf) {
+    var lamOpAnswers = [
+        fields.operation129_answer,  //LF Pre-Printing Front Laminate
+        fields.operation144_answer,  //LF Pre-Printing Back Laminate
+        fields.operation131_answer,  //LF Front Laminating
+        fields.operation130_answer,   //LF Back Laminating
+        fields.operation133_answer,   //LF Premask
+
+    ]
+
+    for (var i = 0; i < lamOpAnswers.length; i++) {
+        if (lamOpAnswers[i]) {
+            pu.validateValue(lamOpAnswers[i],lf);
+        }
+    }
+
 }
 
 function setFluteDirectionOp() {

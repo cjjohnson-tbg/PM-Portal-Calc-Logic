@@ -565,10 +565,10 @@ function setLamRunOps(quote) {
                         pu.validateValue(laminatingRun3,'');
                     }
                 } else if (hasColdFront) {
-                    if (selfAdhesive) { // 1. Cold / Adhesive  2.  Mount + Premask
-                        pu.validateValue(laminatingRun, 708);
-                        pu.validateValue(laminatingRun2, 717);
-                        pu.validateValue(laminatingRun3,'');
+                    if (selfAdhesive) { // 1. Cold  2.  Mount  3. Premask
+                        pu.validateValue(laminatingRun, 363);
+                        pu.validateValue(laminatingRun2, 716);
+                        pu.validateValue(laminatingRun3, 758);
                     }
                     else { //  1. Cold / Adhesive  2. Mount  3. Premask
                         pu.validateValue(laminatingRun, 708);
@@ -1018,6 +1018,10 @@ function colorCritical() {
 function hardProofCheck(quote) {
     if (!window.hardProofMessageCount) {
         window.hardProofMessageCount = 0
+    }
+    // do not run if user is admin
+    if ($('#page').hasClass('userIsAdministrator')) {
+        return
     }
     var pieceWidth = quote.piece.width;
     var pieceHeight = quote.piece.height;

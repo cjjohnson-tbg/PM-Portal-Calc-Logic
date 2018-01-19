@@ -401,16 +401,13 @@ function setLamOps(quote) {
     var hasFrontLam = cu.hasValue(frontLamOp);
     var hasBackLam = cu.hasValue(backLamOp);
     var hasMount = cu.hasValue(mountOp);
-    
+    var hasPremask = cu.hasValue(premaskOp);
 
     var sfPrePrintLamOps = [
         '129',   //LF Pre-Printing Front Laminate
         '144'    //LF Pre-Printing Back Laminate
     ]
     var sfPreLaminating = cu.findOperationFromSet(sfPrePrintLamOps);
-    var hasPremask = cu.hasValue(sfPreLaminating);
-
-    setPreLamMatAndRunCosts(sfPrePrintLamOps);
 
     if (frontLamOp) {
         var hasColdFront = fields.operation131.choice ? fields.operation131.choice.frontLamType == 'Cold' : false;
@@ -433,11 +430,9 @@ function setLamOps(quote) {
     var boardCount = quote.pressSheetQuote.pressSheetCount;
     var totalBoardLF = pu.roundTo(boardLength * boardCount / 12, 1);
 
+    setPreLamRunCosts(sfPrePrintLamOps, totalBoardLF);
     setLamMatCosts(totalBoardLF);
-
-    if (laminatingRun && laminatingRun2) {
-        setLamRunOperations();
-    }
+    setLamRunOperations();
 
     function setLamRunOperations() {
         if (hasMount || hasFrontLam || hasBackLam || hasPremask) {
@@ -581,28 +576,24 @@ function setLamOps(quote) {
     }
 }
 
-function setPreLamMatAndRunCosts(pLamOps) {
+function setPreLamRunCosts(pLamOps, lf) {
     var prePrintLamRunOp = fields.operation151;
     var prePrintLamRunOp_answer = fields.operation151_answer;
     var passes = 0;
-    if (ops) {
-        passes = countHasValueFromSet(pLamOps);
+    if (pLamOps) {
+        passes = pu.countHasValueFromOpSet(pLamOps);
     }
-    if (passes = 2) {
-        pu.validateValue(prePrintLamRunOp, 898);
-    } else if (passes = 1) {
+    if (passes == 2) {
         pu.validateValue(prePrintLamRunOp, 1642);
+    } else if (passes == 1) {
+        pu.validateValue(prePrintLamRunOp, 898);
+    } else {
+        pu.validateValue(prePrintLamRunOp, '');
     }
-}
-
-function countHasValueFromSet(opList) {
-    var opsWithValue = 0;
-    for (var i; i < pLamOps.length; i++) {
-        if (cu.hasValue(pLamOps[i])) {
-            opsWithValue++;
-        }
+    //insert LF into Answer
+    if (prePrintLamRunOp_answer) {
+        pu.validateValue(prePrintLamRunOp_answer, lf)
     }
-    return opsWithValue
 }
 
 function setLamMatCosts(lf) {
@@ -612,7 +603,6 @@ function setLamMatCosts(lf) {
         fields.operation131_answer,  //LF Front Laminating
         fields.operation130_answer,   //LF Back Laminating
         fields.operation133_answer,   //LF Premask
-
     ]
 
     for (var i = 0; i < lamOpAnswers.length; i++) {
@@ -930,6 +920,10 @@ function addBasicDetailsToPage() {
 }
 function checkForHardProofRequired() {
     // SHOW HARD PROOF MESSAGE ON THROUGHPUT THRESHOLDS 
+    // do not run if user is admin
+    if ($('#page').hasClass('userIsAdministrator')) {
+        return
+    }
     if (!window.hardProofMessageCount) {
         window.hardProofMessageCount = 0;
     }

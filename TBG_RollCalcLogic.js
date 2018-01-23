@@ -269,11 +269,6 @@ function getCutMethod() {
         var result = 'mct';
         return result;
     }
-    //If Suma cut selected, set to No Cutting
-    if (cu.hasValue(fields.operation82)) {
-        var result = 'suma';
-        return result
-    }
     if (cu.hasValue(userDeclareCutOp)) {
         userDeclaredCutMethod = cutMethodId[cu.getValue(fields.operation111)];
         if (userDeclaredCutMethod) {

@@ -672,6 +672,12 @@ function setLamRunOps(quote) {
                     pu.validateValue(laminatingRun, 706);
                     pu.validateValue(laminatingRun2,'');
                     pu.validateValue(laminatingRun3,'');
+                } else if {  //has only back lam
+                    if (hasColdBack) {
+                        pu.validateValue(laminatingRun, 363);
+                        pu.validateValue(laminatingRun2, '');
+                        pu.validateValue(laminatingRun3, '');
+                    }
                 }
             }
         }

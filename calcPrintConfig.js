@@ -17,11 +17,10 @@ var calcConfig = {
 		}
 		var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
 		var piece = quote.piece;
-		var pieceQty = cu.getTotalQuantity();
-		var productionQty = Math.ceil(pieceQty * (1 + deviceDefaults.attrition));
+		var productionQty = configureglobals.cquote.lpjQuote.productionQuantity;
 		
 		var totalSubCost = quote.aPrintSubstratePrice;
-		var totalSquareFeet = quote.piece.totalSquareFeet * pieceQty;
+		var totalSquareFeet = quote.piece.totalSquareFeet * productionQty;
 		var subSqFtCost = totalSubCost / totalSquareFeet;
 
 		var bleed = deviceDefaults.bleed;

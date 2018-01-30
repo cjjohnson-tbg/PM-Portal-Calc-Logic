@@ -1,356 +1,58 @@
 var calcConfig = {
-    getUpdatedConfig: function(quote) {
-		//clear out existing print config
-		for (const prop of Object.keys(printConfig)) {
-        	delete printConfig[prop];
-        }
-		var deviceDefaults = quote.device;
-
-		//declare all configs to capture data for analysis
-		window.allConfigs = [];
-		window.allTotalCost = [];
-
-		//if no device default the break out
-		if (!deviceDefaults.customProperties) {
-			console.log('no device custom properties defined');
+	getUpdatedConfig: function(quote) {
+		this.initDatFields();
+		this.setDatFields(quote);
+		this.setMaterials(quote);  //SHOULD THIS BE A HELPER FUNCTOIN ASSIGNED TO this.materials ??
+		this.allConfigs = this.getAllConfigs(this.materials, quote, this.dat);
+		this.printConfig = this.getBestPrintConfig(this.allConfigs);
+	},
+	getBestPrintConfig: function(configs) {
+		//loop through allConfigs and choose best.  assign to this.printConfig
+		var result;
+		var index = 0;
+		for (var i = 0; i < configs.length; i++) {
+			configs[i].index = index;
+			if (result === undefined) {
+				result = configs[i];
+			} else {
+				if (configs[i].quote.totalCost < result.quote.totalCost) {
+					result = configs[i];
+				}
+			}
+			index++;
+		}
+		return result
+	},
+	initDatFields: function() {
+		this.printConfig  = {};
+		this.dat = {};
+		this.materials = {};
+	},
+	setDatFields: function(quote) {
+		this.dat.devDefaults = quote.device.customProperties ? quote.device.customProperties : '';
+		this.dat.productionQty = configureglobals.cquote.lpjQuote.productionQuantity;
+		this.dat.totalSquareFeet = quote.piece.totalSquareFeet;
+		this.dat.subSqFtCost = quote.aPrintSubstratePrice / (this.dat.totalSquareFeet * this.dat.productionQty);
+	},
+	setMaterials: function(quote) {
+		if (!this.materials) {
+			console.log('no materials defined');
 			return
 		}
-		var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
-		var piece = quote.piece;
-		var productionQty = configureglobals.cquote.lpjQuote.productionQuantity;
-		
-		var totalSubCost = quote.aPrintSubstratePrice;
-		var totalSquareFeet = quote.piece.totalSquareFeet * productionQty;
-		var subSqFtCost = totalSubCost / totalSquareFeet;
-
-		var bleed = deviceDefaults.bleed;
-		var devMargin = deviceDefaults.margin;
-		var leadWasteLF = deviceDefaults.leadWasteLF;
-		var gutter = deviceDefaults.gutter;
-
-		//establish chosen default susbtrate config
-		var rollOptions = [];
-		var defaultRoll = {
-			"id" : configureglobals.cprintsubstratesmgr.choice.id,
-			"name" : configureglobals.cprintsubstratesmgr.choice.productionName,
-			"width" : configureglobals.cprintsubstratesmgr.choice.width,
-			"length" : configureglobals.cprintsubstratesmgr.choice.height,
-			"paceId" : configureglobals.cprintsubstratesmgr.choice.referenceId
-		}
-		rollOptions.push(defaultRoll);
-		//Add in Roll Substrate Options
-		var altRolls = quote.piece.aPrintSubstrate.options;
-		if (altRolls) {
-			for (roll in altRolls) {
-				rollOptions.push(altRolls[roll]);
-			}
-		}
-
-		var materialOptions = {};
-		var frontLams = quote.piece.frontLaminate ? quote.piece.frontLaminate.options : null;
-		var backLams = quote.piece.backLaminate ? quote.piece.backLaminate.options : null;
-		var mounts = quote.piece.mountSubstrate ? quote.piece.mountSubstrate.options : null;
-		var aAdhesives = quote.piece.aAdhesiveLaminate ? quote.piece.aAdhesiveLaminate.options : null;
-		var bAdhesives = quote.piece.bAdhesiveLaminate ? quote.piece.bAdhesiveLaminate.options : null;
-
-		//Loop through all possible combinations ot options
-		for (var roll = 0; roll < rollOptions.length; roll++) {
-			for (var frontLam = 0; frontLam < (frontLams ? frontLams.length : 1); frontLam++) {
-				for (var backLam = 0; backLam < (backLams ? backLams.length : 1); backLam++ ) {
-					for (var mount = 0; mount < (mounts ? mounts.length : 1); mount++ ) {
-						for (var aAdhesive = 0; aAdhesive < (aAdhesives ? aAdhesives.length : 1); aAdhesive++ ) {
-							for (var bAdhesive = 0; bAdhesive < (bAdhesives ? bAdhesives.length : 1); bAdhesive++ ) {
-								var materials = {
-									"roll" : rollOptions[roll],
-									"frontLaminate" : (frontLams ? frontLams[frontLam] : null),
-									"backLaminate" : (backLams ? backLams[backLam] : null),
-									"mountSubstrate" : (mounts ? mounts[mount] : null),
-									"aAdhesiveLaminate" : (aAdhesives ? aAdhesives[backLam] : null),
-									"bAdhesiveLaminate" : (bAdhesives ? bAdhesives[backLam] : null)
-								}
-								setBestPrintConfig(materials);
-							}
-						}
-					}
-				}
-			}
-		}
-
-		function setBestPrintConfig(materials) {
-			var vertical_piece_orienation = false;
-			getPrintConfig(materials, vertical_piece_orienation);
-
-			//toggle orientation and rerun if sides different
-			if (piece.width != piece.height) {
-				if (!vertical_piece_orienation) {
-					vertical_piece_orienation = true;
-					getPrintConfig(materials, vertical_piece_orienation);
-				}
-			}
-		}
-
-		function getPrintConfig(materials, vertical_piece_orienation) {
-			var nDownTotal, numRolls, printLfNeeded, nDownTotalPerRoll, rollsNeeded, fullRolls, nDownTotalLastRoll, lastRollLf, lastRollSqFt, rollChangeCost, vertical_piece_orienation;
-			var config = {};
-			config.vertPiece = vertical_piece_orienation;
-
-			var roll = materials.roll;
-
-			var pieceWidth = vertical_piece_orienation ? piece.height : piece.width;
-			var pieceHeight = vertical_piece_orienation ? piece.width : piece.height;
-			
-			config.productionQty = productionQty;
-			config.sides = quote.piece.sides;
-
-			//set printable width as smallest width of all materials
-			config.formWidth = getSignatureDim(materials, 'width');
-			config.printableWidth = config.formWidth - (2 * devMargin);
-
-			//special Exception, if 126" roll form Length = 200, else 120 or min set by subsrate
-			//if piece > 200 then maxFormLF = 
-			config.formLengthMax = roll.width == 126 ? Math.max(pieceHeight, 200) : Math.max(pieceHeight, 120);
-			//if limited by substrates, update formLength
-			config.minMatLength = getSignatureDim(materials, 'length');
-			if (config.minMatLength < config.formLengthMax) {
-				config.formLengthMax = config.minMatLength;
-			}
-
-			config.printableLength = config.formLengthMax - (2 * devMargin);
-
-			//insert materials to config 
-			for (mat in materials) {
-				if (materials[mat]) {
-					config[mat] = materials[mat];
-				}
-			}
-
-			config.nAcrossForm = Math.floor( config.printableWidth / (pieceWidth + ( (bleed + gutter) * 2)) );
-			config.nDownForm = Math.floor( config.printableLength / (pieceHeight + ( (bleed + gutter) * 2)) );
-			config.nUpPerForm = config.nAcrossForm * config.nDownForm;
-
-			config.nDownTotal = Math.ceil(productionQty / config.nAcrossForm);
-
-			config.formLength = config.nDownForm * (pieceHeight + ( (bleed + gutter) * 2) );
-
-			//production quantity must round up if not equal to # across to fill up 1 full signature
-			config.totalForms = Math.ceil( config.productionQty / config.nUpPerForm );
-			config.totalFormLF = config.totalForms * config.formLength / 12;
-			config.totalFullForms = Math.floor( config.nDownTotal / config.nDownForm );
-			
-			config.nDownLastForm =  config.nDownTotal % config.nDownForm;
-			config.lastPartialFormLF = config.nDownLastForm * (pieceHeight + (2 * (bleed + gutter) )) / 12;
-
-			config.valid_quote = (config.nAcrossForm > 0 && config.nDownForm > 0) ? true : false;
-
-			if (!config.valid_quote) {
-				return
-			}
-
-			/***** 
-			  calculate materials usage based on signature 
-			******/
-			// Substrate
-			if (config.roll) {
-				var cr = config.roll;
-				if (!cr.price) {
-					cr.price = subSqFtCost * cr.width / 12;
-				}
-				cr.leadWasteLF = leadWasteLF;
-				cr.printableRollLen = cr.length - (leadWasteLF * 12);
-				cr.formsPerRoll = Math.floor(cr.printableRollLen / config.formLength);
-				cr.fullRolls = Math.floor(config.totalForms / cr.formsPerRoll);
-				cr.totalRolls = Math.ceil(config.totalForms / cr.formsPerRoll);
-
-				cr.formsOnLastRoll = config.totalForms % cr.formsPerRoll;
-				cr.fullFormsOnLastRoll = config.totalFullForms % cr.formsPerRoll;
-				cr.lastPartialFormLF = config.lastPartialFormLF;
-				cr.lastRollLf = leadWasteLF + (cr.fullFormsOnLastRoll * config.formLength) / 12 + cr.lastPartialFormLF;
-				cr.totalRollLF = cr.fullRolls * (cr.length / 12) + cr.lastRollLf;
-				cr.totalRollMatCost = cr.totalRollLF * cr.price;
-
-				//calc roll change -- Full rolls plus all rolls if 2 sides
-				cr.rollChangeMins = deviceDefaults.rollChangeMins * (cr.fullRolls + (cr.totalRolls * (config.sides - 1)));
-				cr.rollChangeCost = cr.fullRolls * deviceDefaults.rollChangeMins * deviceDefaults.hourlyRate / 60;
-
-				cr.totalCost = cr.totalRollMatCost + cr.rollChangeCost;
-
-				//now assign roll calculations to aPrintSusbtrate and bPrintSubstrate, if present
-				if (quote.piece.aPrintSubstrate) {
-					config.aPrintSubstrate = {};
-					var ca = config.aPrintSubstrate;
-					//assign all properties of Roll to aPrintSubstrate
-					for (prop in config.roll) {
-						config.aPrintSubstrate[prop] = config.roll[prop];
-					}
-				}
-				if (quote.piece.bPrintSubstrate) {
-					config.bPrintSubstrate = {};
-					var cb = config.bPrintSubstrate;
-					//assign all properties of Roll to aPrintSubstrate
-					for (prop in config.roll) {
-						config.bPrintSubstrate[prop] = config.roll[prop];
-					}
-				}
-			}
-
-			// Laminates
-			//Build in lamLF and spoilage even if no lam involved
-			config.lamLf = (config.formLength * config.totalFullForms) / 12 + config.lastPartialFormLF;
-			var lamLfWithSpoilage = getLamWithSpoilage(config.lamLf);
-			if (!isNaN(lamLfWithSpoilage)) {
-				config.lamLfWithSpoilage = roundTo(lamLfWithSpoilage, 1);
-			}
-			//laminates based on total LF of full signatures plus partial LF 
-			if (config.frontLaminate) {
-				var cf = config.frontLaminate;
-				if (!cf.price) {
-					cf.price = (quote.frontLaminatePrice / totalSquareFeet) * cf.width / 12;
-				}
-				cf.frontLamLF = config.lamLfWithSpoilage ? config.lamLfWithSpoilage : config.formLength / 12 + config.lastPartialFormLF;
-				cf.totalCost = cf.frontLamLF * cf.price;
-			}
-			if (config.backLaminate) {
-				var cb = config.backLaminate;
-				if (!cb.price) {
-					cb.price = (quote.backLaminatePrice / totalSquareFeet) * cb.width / 12;
-				}
-				cb.backLamLF = config.lamLfWithSpoilage ? config.lamLfWithSpoilage : config.formLength /12 + config.lastPartialFormLF;
-				cb.totalCost = cb.backLamLF * cb.price;
-			}
-
-			// Mounts
-			// Cost based on full sheets used.  Partials count as 1 full
-			if (config.mountSubstrate) {
-				var cm = config.mountSubstrate;
-				if (!cm.price) {
-					cm.price = (quote.mountSubstratePrice / totalSquareFeet) * cm.width * cm.length / 144;
-				}
-				cm.totalMountSubstrates = config.totalForms;
-				cm.totalCost = cm.totalMountSubstrates * cm.price;
-			}
-
-			// Adhesives
-			// Cost based on total LF of Signatures
-			if (config.aAdhesiveLaminate) {
-				var caa = config.aAdhesiveLaminate;
-				if (!caa.price) {
-					caa.price = (quote.aAdhesiveLaminatePrice / totalSquareFeet) + caa.width / 12;
-				}
-				caa.lfNeeded = config.totalFormLF;
-				caa.totalCost = caa.lfNeeded * caa.price;
-			}
-			if (config.bAdhesiveLaminate) {
-				var cba = config.bAdhesiveLaminate;
-				if (!cba.price) {
-					cba.price = (quote.aAdhesiveLaminatePrice / totalSquareFeet) + cba.width / 12;
-				}
-				cba.lfNeeded = config.totalFormLF;
-				cba.totalCost = cba.lfNeeded * cba.price;
-			}
-
-			//Combine all costs into a single quote area
-			config.quote = {
-				'aPrintSubstrateCost' : (config.aPrintSubstrate ? config.aPrintSubstrate.totalCost : 0),
-				'bPrintSubstrateCost' : (config.bPrintSubstrate ? config.bPrintSubstrate.totalCost : 0),
-				'frontLaminateCost' : (config.frontLaminate ? config.frontLaminate.totalCost : 0),
-				'backLaminateCost' : (config.backLaminate ? config.backLaminate.totalCost : 0),
-				'mountSubstrateCost' : (config.mountSubstrate ? config.mountSubstrate.totalCost : 0),
-				'aAdhesiveLaminateCost' : (config.aAdhesiveLaminate ? config.aAdhesiveLaminate.totalCost : 0),
-				'bAdhesiveLaminateCost' : (config.bAdhesiveLaminate ? config.bAdhesiveLaminate.totalCost : 0)
-			}
-			//add up all values 
-			config.totalCost = 0;
-			for (prop in config.quote) {
-				config.totalCost += config.quote[prop]
-			}
-			config.totalCost = Math.round(config.totalCost * 100) / 100;
-
-			//push config to all configs for review
-			window.allConfigs.push(config);
-			window.allTotalCost.push(config.totalCost);
-			//if total cost is less, reassign to new config
-			if (config.valid_quote) {
-				//if first time ran and printConfig has no properties
-				if (Object.keys(printConfig).length == 0) {
-					for (const prop of Object.keys(printConfig)) {
-						delete printConfig[prop];
-					}
-					for (prop in config) {
-						window.printConfig[prop] = config[prop];
-					}
-				} else if (config.totalCost < printConfig.totalCost) {
-					//clear current printConfig properties
-					for (const prop of Object.keys(printConfig)) {
-						delete printConfig[prop];
-					}
-					for (prop in config) {
-						window.printConfig[prop] = config[prop];
-					}
-				}
-			}
-		}
-
-		function getSignatureDim(materials, dim) {
-			//loop through each of the materials and set printable variable equal to smallest number
-			var result;
-			for (mat in materials) {
-				if (materials[mat]) {
-					if (materials[mat].hasOwnProperty(dim)) {
-						var matDim = materials[mat][dim];
-						if (matDim) {
-							if (result === undefined) {
-								result = matDim;
-							} else if (matDim < result) {
-								result = matDim;
-							}
-						}
-					}
-				}
-			}
-			return result
-		}
-
-		//loop through points to create cumulative spoilage
-		function getLamWithSpoilage(matLength) {
-			var spoilPoints = [[999, .06],[1999, .04],[2999, .03],[3999,.025],[4999,.02],[5000,.015]];
-			var spoilLf = 0;
-			var lastPt = 0;
-			for (var i = 0; i < spoilPoints.length; i++) {
-				if (matLength < spoilPoints[i][0]) {
-					spoilLf += ((matLength - lastPt) * spoilPoints[i][1]);
-				break
-				} else if (i == (spoilPoints.length - 1)) {
-					spoilLf += (matLength - spoilPoints[i][0]) * spoilPoints[i][1];
-					break
-				} else {
-					spoilLf += (spoilPoints[i][0] - lastPt) * spoilPoints[i][1];
-					lastPt = spoilPoints[i][0];
-				}
-			}
-			return Number(matLength + spoilLf)
-		}
-
-		function roundTo(n, digits) {
-		    var negative = false;
-		    if (digits === undefined) {
-		        digits = 0;
-		    }
-		    if( n < 0) {
-		        negative = true;
-		      n = n * -1;
-		    }
-		    var multiplicator = Math.pow(10, digits);
-		    n = parseFloat((n * multiplicator).toFixed(11));
-		    n = (Math.round(n) / multiplicator).toFixed(2);
-		    if( negative ) {    
-		        n = (n * -1).toFixed(2);
-		    }
-		    return Number(n);
-		}
-	
+		this.materials.aPrintSubstrates = matHelper.getAllSubstrateOptions(quote.piece.aPrintSubstrate, configureglobals);
+		this.materials.bPrintSubstrates = quote.piece.bPrintSubstrate ? matHelper.getAllSubstrateOptions(quote.piece.bPrintSubstrate, configureglobals) : null;
+		this.materials.frontLams = quote.piece.frontLaminate ? quote.piece.frontLaminate.options : null;
+		this.materials.backLams = quote.piece.backLaminate ? quote.piece.backLaminate.options : null;
+		this.materials.mounts = quote.piece.mountSubstrate ? quote.piece.mountSubstrate.options : null;
+		this.materials.aAdhesives = quote.piece.aAdhesiveLaminate ? quote.piece.aAdhesiveLaminate.options : null;
+		this.materials.bAdhesives = quote.piece.bAdhesiveLaminate ? quote.piece.bAdhesiveLaminate.options : null;
 	},
-
-	getLamWaste : function(quote) {
+	getAllConfigs: function(materialList, quote, dat) {
+		var allConfigOptions = configHelper.getConfigOptionList(materialList);
+		var allConfigs = configHelper.getAllConfigsFromList(allConfigOptions, quote, dat);
+		return allConfigs
+	},
+	getLamWaste: function(quote, printConfig) {
 		//pulls calculated lam materials needed from printConfig and compare against Coll calculation
 		var collFrontLamCost = quote.frontLaminatePrice ? quote.frontLaminatePrice : 0;
 		var collBackLamCost = quote.backLaminatePrice ? quote.backLaminatePrice : 0;
@@ -365,3 +67,287 @@ var calcConfig = {
 		return ccFrontLamCost + ccBackLamCost - collFrontLamCost - collBackLamCost
 	}
 }
+
+var configHelper = {
+	getConfigOptionList: function(materialList) {
+		var result = [];
+		for (var aPrintSub = 0; aPrintSub < materialList.aPrintSubstrates.length; aPrintSub++) {
+			for (var bPrintSub = 0; bPrintSub < (materialList.bPrintSubstrates ? materialList.bPrintSubstrates.length : 1); bPrintSub++) {
+				for (var frontLam = 0; frontLam < (materialList.frontLams ? materialList.frontLams.length : 1); frontLam++) {
+					for (var backLam = 0; backLam < (materialList.backLams ? materialList.backLams.length : 1); backLam++ ) {
+						for (var mount = 0; mount < (materialList.mounts ? materialList.mounts.length : 1); mount++ ) {
+							for (var aAdhesive = 0; aAdhesive < (materialList.aAdhesives ? materialList.aAdhesives.length : 1); aAdhesive++ ) {
+								for (var bAdhesive = 0; bAdhesive < (materialList.bAdhesives ? materialList.bAdhesives.length : 1); bAdhesive++ ) {
+									var materials = {
+										"aPrintSubstrate" : materialList.aPrintSubstrates[aPrintSub],
+										"bPrintSubstrate" : (materialList.bPrintSubstrates ? materialList.bPrintSubstrates[bPrintSub] : null),
+										"frontLaminate" : (materialList.frontLams ? materialList.frontLams[frontLam] : null),
+										"backLaminate" : (materialList.backLams ? materialList.backLams[backLam] : null),
+										"mountSubstrate" : (materialList.mounts ? materialList.mounts[mount] : null),
+										"aAdhesiveLaminate" : (materialList.aAdhesives ? materialList.aAdhesives[aAdhesive] : null),
+										"bAdhesiveLaminate" : (materialList.bAdhesives ? materialList.bAdhesives[bAdhesive] : null)
+									}
+									result.push(materials);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return result
+	},
+	getAllConfigsFromList: function(configs, quote, dat) {
+		var results = [];
+		for (var i = 0; i < configs.length; i++) {
+			var vertical_piece_orienation = false;
+			var horizConfig = this.getPrintConfig(configs[i], quote, dat, vertical_piece_orienation, dat);
+			results.push(horizConfig);
+			//toggle orientation and rerun if sides different
+			if (quote.piece.width != quote.piece.height) {
+				vertical_piece_orienation = true;
+				var vertConfig = this.getPrintConfig(configs[i], quote, dat, vertical_piece_orienation, dat);
+				results.push(vertConfig);
+			}
+		}
+		return results
+	},
+	getPrintConfig: function(mats, quote, dat, vertical_piece_orienation, dat) {
+		var config = {};
+		config.details = this.getConfigDetails(mats, quote.piece, dat, vertical_piece_orienation);
+		config.materials = this.getConfigMaterails(mats);
+		this.setMaterialCalculedFields(config.materials, config.details, quote, dat);
+		config.quote = this.getTotalCosts(config.materials);
+		var stop = 1;
+		return config
+	},
+	getTotalCosts: function(materials) {
+		var costs = {};
+		var totalCost = 0;
+		for (material in materials) {
+			costs[material] = materials[material].totalCost;
+			if (!isNaN(materials[material].totalCost)) {
+				totalCost += materials[material].totalCost;
+			}
+		}
+		costs.totalCost = totalCost;
+		return costs
+	},
+	setMaterialCalculedFields: function(materials, details, quote, dat) {
+		for (material in materials) {
+			if (material == 'aPrintSubstrate' | material == 'bPrintSubstrate') {
+				var materialCalcs = this.setPrintSubstrateCalcs(materials[material], details, dat);
+			}
+			else {
+				var materialCalcs = this.setSubstrateCalcs(materials[material], material, details, quote, dat);
+			}
+			//Add properties to material
+			for (prop in materialCalcs) {
+				materials[material][prop] = materialCalcs[prop];
+			}
+		}
+		return materials
+	},
+	setPrintSubstrateCalcs: function(printSubstrate, details, dat) {
+		if (!printSubstrate) {return}
+		var props = {};
+		if (!printSubstrate.price) {
+			printSubstrate.price = dat.subSqFtCost * printSubstrate.width / 12;
+		}
+		props.price = printSubstrate.price;
+		props.leadWasteLF = dat.devDefaults.leadWasteLF;
+		props.printableRollLen = printSubstrate.length - (props.leadWasteLF * 12);
+		props.formsPerRoll = Math.floor(props.printableRollLen / details.formLength);
+		props.fullRolls = Math.floor(details.totalForms / props.formsPerRoll);
+		props.totalRolls = Math.ceil(details.totalForms / props.formsPerRoll);
+
+		props.formsOnLastRoll = details.totalForms % props.formsPerRoll;
+		props.fullFormsOnLastRoll = details.totalFullForms % props.formsPerRoll;
+		props.lastPartialFormLF = details.lastPartialFormLF;
+		props.lastRollLf = dat.devDefaults.leadWasteLF + (props.fullFormsOnLastRoll * details.formLength) / 12 + props.lastPartialFormLF;
+		props.totalRollLF = props.fullRolls * (printSubstrate.length / 12) + props.lastRollLf;
+		props.totalRollMatCost = props.totalRollLF * props.price;
+
+		//calc roll change -- Full rolls plus all rolls if 2 sides
+		props.rollChangeMins = dat.devDefaults.rollChangeMins * (props.fullRolls + (props.totalRolls * (details.sides - 1)));
+		props.rollChangeCost = props.fullRolls * dat.devDefaults.rollChangeMins * dat.devDefaults.hourlyRate / 60;
+
+		props.totalCost = props.totalRollMatCost + props.rollChangeCost;
+
+		return props
+	},
+	setSubstrateCalcs: function(mat, matType, details, quote, dat) {
+		var props = {};
+		if (mat) {
+			if (matType == 'mountSubstrate') {
+				if (!mat.price) {
+					mat.price = (quote.mountSubstratePrice / dat.totalSquareFeet) * mat.width * mat.length / 144;
+					props.price = mat.price;
+				}
+				props.mounts = details.totalForms;
+				props.totalCost = props.mounts * mat.price;
+			} else {
+				if (!mat.price) {
+					mat.price = (quote[matType + 'Price'] / dat.otalSquareFeet) * mat.width / 12;
+					props.price = mat.price;
+				}
+				if (matType.indexOf('Laminate') != 0) {
+					props.linearFeet = details.lamLfWithSpoilage ? details.lamLfWithSpoilage : details.formLength /12 + details.lastPartialFormLF;
+				} else {
+					props.linearFeet = details.totalFormLF;
+				}
+				props.totalCost = props.linearFeet * mat.price;
+			}
+		}
+		return props;
+	},
+	getConfigDetails: function(mats, piece, dat, vertical_piece_orienation) {
+		var details = {};
+		details.vertPiece = vertical_piece_orienation;
+		var pieceWidth = vertical_piece_orienation ? piece.height : piece.width;
+		var pieceHeight = vertical_piece_orienation ? piece.width : piece.height;
+
+		details.pieceWidth = pieceWidth;
+		details.pieceHeight = pieceHeight;
+
+		details.productionQty = dat.productionQty;
+		details.sides = piece.sides;
+		//set printable width as smallest width of all materials
+		details.formWidth = this.getSignatureDim(mats, 'width');
+		details.printableWidth = details.formWidth - (2 * dat.devDefaults.margin);
+
+		details.formLengthMax = this.getFormLength(mats, pieceHeight);
+		details.printableLength = details.formLengthMax - (2 * dat.devDefaults.margin);
+
+		details.nAcrossForm = Math.floor( details.printableWidth / (pieceWidth + ( (dat.devDefaults.bleed + dat.devDefaults.gutter) * 2)) );
+		details.nDownForm = Math.floor( details.printableLength / (pieceHeight + ( (dat.devDefaults.bleed + dat.devDefaults.gutter) * 2)) );
+		details.nUpPerForm = details.nAcrossForm * details.nDownForm;
+		details.nDownTotal = Math.ceil(dat.productionQty / details.nAcrossForm);
+		details.formLength = details.nDownForm * (pieceHeight + ( (dat.devDefaults.bleed + dat.devDefaults.gutter) * 2) );
+
+		//production quantity must round up if not equal to # across to fill up 1 full signature
+		details.totalForms = Math.ceil( dat.productionQty / details.nUpPerForm );
+		details.totalFormLF = details.totalForms * details.formLength / 12;
+		details.totalFullForms = Math.floor( details.nDownTotal / details.nDownForm );
+		details.nDownLastForm =  details.nDownTotal % details.nDownForm;
+		details.lastPartialFormLF = details.nDownLastForm * (pieceHeight + (2 * (dat.devDefaults.bleed + dat.devDefaults.gutter) )) / 12;
+		details.valid_quote = (details.nAcrossForm > 0 && details.nDownForm > 0) ? true : false;
+
+		//Attrition for Lamainating
+		details.lamLf = (details.formLength * details.totalFullForms) / 12 + details.lastPartialFormLF;
+		details.lamLfWithSpoilage = this.getLamWithSpoilage(details.lamLf);
+
+		return details
+	},
+	getLamWithSpoilage: function(matLength) {
+		var spoilPoints = [[999, .06],[1999, .04],[2999, .03],[3999,.025],[4999,.02],[5000,.015]];
+		var spoilLf = 0;
+		var lastPt = 0;
+		for (var i = 0; i < spoilPoints.length; i++) {
+			if (matLength < spoilPoints[i][0]) {
+				spoilLf += ((matLength - lastPt) * spoilPoints[i][1]);
+			break
+			} else if (i == (spoilPoints.length - 1)) {
+				spoilLf += (matLength - spoilPoints[i][0]) * spoilPoints[i][1];
+				break
+			} else {
+				spoilLf += (spoilPoints[i][0] - lastPt) * spoilPoints[i][1];
+				lastPt = spoilPoints[i][0];
+			}
+		}
+		return Number(matLength + spoilLf)
+	},
+	getConfigMaterails: function(mats) {
+		//insert materials to details 
+		var results = {};
+		for (mat in mats) {
+			if (mats[mat]) {
+				results[mat] = mats[mat];
+			}
+		}
+		return results
+	},
+	getFormLength: function(mats, pieceHeight) {
+		var defaultLen = 126;
+		var result = defaultLen;
+		//Special rule, if width of roll is 126" then use 200"
+		if (mats.aPrintSubstrate.width == 126) {
+			result = 200
+		}
+		if (pieceHeight > result) {
+			result = pieceHeight
+		}
+		var minMatLength = this.getSignatureDim(mats, 'length');
+		if (minMatLength < result) {
+			result = minMatLength;
+		}
+		//error out if min material length is less than pieceHeight
+		if (minMatLength < pieceHeight) {
+			return null
+		}
+		return result
+	},
+	getSignatureDim: function(materials, dim) {
+		//loop through each of the materials and set printable variable equal to smallest number
+		var result;
+		for (mat in materials) {
+			if (materials[mat]) {
+				if (materials[mat].hasOwnProperty(dim)) {
+					var matDim = materials[mat][dim];
+					if (matDim) {
+						if (result === undefined) {
+							result = matDim;
+						} else if (matDim < result) {
+							result = matDim;
+						}
+					}
+				}
+			}
+		}
+		return result
+	}
+}
+
+
+var matHelper = {
+	getAllSubstrateOptions: function(substrate, configuration) {
+		var results = [];
+		if (substrate) {
+			results.push({
+				"id" : configuration.cprintsubstratesmgr.choice.id,
+				"name" : configuration.cprintsubstratesmgr.choice.productionName,
+				"width" : configuration.cprintsubstratesmgr.choice.width,
+				"length" : configuration.cprintsubstratesmgr.choice.height,
+				"paceId" : configuration.cprintsubstratesmgr.choice.referenceId
+			});
+			//Add in Roll Substrate Options inserted in substrate notes (property created in rollCalc script)
+			var altRolls = substrate.options;
+			if (altRolls) {
+				for (roll in altRolls) {
+					results.push(altRolls[roll]);
+				}
+			}
+		}
+		return results
+	}
+}
+
+function roundTo(n, digits) {
+	var negative = false;
+	if (digits === undefined) {
+		digits = 0;
+	}
+	if( n < 0) {
+		negative = true;
+		n = n * -1;
+	}
+	var multiplicator = Math.pow(10, digits);
+	n = parseFloat((n * multiplicator).toFixed(11));
+	n = (Math.round(n) / multiplicator).toFixed(2);
+	if( negative ) {    
+		n = (n * -1).toFixed(2);
+	}
+return Number(n);
+}
+
+

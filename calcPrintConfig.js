@@ -51,20 +51,6 @@ var calcConfig = {
 		var allConfigOptions = configHelper.getConfigOptionList(materialList);
 		var allConfigs = configHelper.getAllConfigsFromList(allConfigOptions, quote, dat);
 		return allConfigs
-	},
-	getLamWaste: function(quote, printConfig) {
-		//pulls calculated lam materials needed from printConfig and compare against Coll calculation
-		var collFrontLamCost = quote.frontLaminatePrice ? quote.frontLaminatePrice : 0;
-		var collBackLamCost = quote.backLaminatePrice ? quote.backLaminatePrice : 0;
-		var ccFrontLamCost = 0;
-		var ccBackLamCost = 0;
-		if (printConfig.frontLam) {
-			ccFrontLamCost = printConfig.frontLam.price * printConfig.lam_lf_with_spoilage;
-		}
-		if (printConfig.backLam) {
-			ccBackLamCost = printConfig.backLam.price * printConfig.lam_lf_with_spoilage;
-		}
-		return ccFrontLamCost + ccBackLamCost - collFrontLamCost - collBackLamCost
 	}
 }
 
@@ -191,10 +177,10 @@ var configHelper = {
 					mat.price = (quote[matType + 'Price'] / dat.otalSquareFeet) * mat.width / 12;
 					props.price = mat.price;
 				}
-				if (matType.indexOf('Laminate') != 0) {
-					props.linearFeet = details.lamLfWithSpoilage ? details.lamLfWithSpoilage : details.formLength /12 + details.lastPartialFormLF;
-				} else {
+				if (matType.indexOf('Adhesive') != -1) {
 					props.linearFeet = details.totalFormLF;
+				} else {
+					props.linearFeet = details.lamLfWithSpoilage ? details.lamLfWithSpoilage : details.formLength /12 + details.lastPartialFormLF;
 				}
 				props.totalCost = props.linearFeet * mat.price;
 			}
@@ -235,7 +221,7 @@ var configHelper = {
 
 		//Attrition for Lamainating
 		details.lamLf = (details.formLength * details.totalFullForms) / 12 + details.lastPartialFormLF;
-		details.lamLfWithSpoilage = this.getLamWithSpoilage(details.lamLf);
+		details.lamLfWithSpoilage = roundTo(this.getLamWithSpoilage(details.lamLf), 0);
 
 		return details
 	},

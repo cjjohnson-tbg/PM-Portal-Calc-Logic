@@ -64,7 +64,7 @@ var rollCalcLogic = {
         //Add properties to global objects from embedded meta 
         setConfigGlobalProperties(quote);
         //Run Roll Imposition Engine
-        calcConfig.getUpdatedConfig(quote);
+        cc.getUpdatedConfig(quote);
         //run meta field action
         metaFieldsActions.onQuoteUpdated(product);
 
@@ -177,29 +177,31 @@ function createOperationItemKey(quote) {
 /**** WASTE CALCULATTONS */
 function setWasteOperationCosts(quote) {
     //Compares Coll Calculated material costs against PrintConfig costs (Roll Impo calc) and inserts difference into operation answers
+    var printConfig = cc.printConfig;
     if (!printConfig) { 
         console.log('no printConfig');
         return;
     }
-    if (!printConfig.valid_quote) {
+    if (!printConfig.details.valid_quote) {
         console.log('no valid print configs');
         return;
     }
+    var materials = printConfig.materials;
 
     // Roll Substrate Waste
-    var calcPrintSubCost = (printConfig.aPrintSubstrate ? printConfig.aPrintSubstrate.totalRollMatCost : 0) + (printConfig.bPrintSubstrate ? printConfig.bPrintSubstrate.totalRollMatCost : 0);
+    var calcPrintSubCost = (materials.aPrintSubstrate ? materials.aPrintSubstrate.totalRollMatCost : 0) + (materials.bPrintSubstrate ? materials.bPrintSubstrate.totalRollMatCost : 0);
     var printSubCost = (quote.aPrintSubstratePrice ? quote.aPrintSubstratePrice : 0) + (quote.bPrintSubstratePrice ? quote.bPrintSubstratePrice : 0);
     setWasteOperationAnswer(fields.operation135_answer, calcPrintSubCost, printSubCost);
 
-    var calcLamCost = (printConfig.frontLaminate ? printConfig.frontLaminate.totalCost : 0) + (printConfig.backLaminate ? printConfig.backLaminate.totalCost : 0);
+    var calcLamCost = (materials.frontLaminate ? materials.frontLaminate.totalCost : 0) + (materials.backLaminate ? materials.backLaminate.totalCost : 0);
     var lamSubCost = (quote.frontLaminatePrice ? quote.frontLaminatePrice : 0) + (quote.backLaminatePrice ? quote.backLaminatePrice : 0);
     setWasteOperationAnswer(fields.operation146_answer, calcLamCost, lamSubCost);
 
-    var calcMountCost = printConfig.mountSubstrate ? printConfig.mountSubstrate.totalCost : 0;
+    var calcMountCost = materials.mountSubstrate ? materials.mountSubstrate.totalCost : 0;
     var mountSubCost = quote.mountSubstratePrice ? quote.mountSubstratePrice : 0;
     setWasteOperationAnswer(fields.operation147_answer, calcMountCost, mountSubCost);
 
-    var calcAdhesiveCost = (printConfig.aAdhesiveLaminate ? printConfig.aAdhesiveLaminate.totalCost : 0) + (printConfig.bAdhesiveLaminate ? printConfig.bAdhesiveLaminate.totalCost : 0);
+    var calcAdhesiveCost = (materials.aAdhesiveLaminate ? materials.aAdhesiveLaminate.totalCost : 0) + (materials.bAdhesiveLaminate ? materials.bAdhesiveLaminate.totalCost : 0);
     var adhesiveSubCost = (quote.aAdhesiveLaminatePrice ? quote.aAdhesiveLaminatePrice : 0) + (quote.bAdhesiveLaminatePrice ? quote.bAdhesiveLaminatePrice : 0);
     setWasteOperationAnswer(fields.operation148_answer, calcAdhesiveCost, adhesiveSubCost);
 }
@@ -672,12 +674,10 @@ function setLamRunOps(quote) {
                     pu.validateValue(laminatingRun, 706);
                     pu.validateValue(laminatingRun2,'');
                     pu.validateValue(laminatingRun3,'');
-                } else if {  //has only back lam
-                    if (hasColdBack) {
-                        pu.validateValue(laminatingRun, 363);
-                        pu.validateValue(laminatingRun2, '');
-                        pu.validateValue(laminatingRun3, '');
-                    }
+                } else if (hasColdBack) {  // 1.colc
+                    pu.validateValue(laminatingRun, 363);
+                    pu.validateValue(laminatingRun2, '');
+                    pu.validateValue(laminatingRun3, '');
                 }
             }
         }

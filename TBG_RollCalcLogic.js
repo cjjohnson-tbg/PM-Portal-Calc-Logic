@@ -122,10 +122,10 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     setWasteOperationCosts(quote);
     setCuttingOps(quote, product);
 
-    setRollChangeCost();
+    setRollChangeCost(cc.printConfig.materials);
 
     setInkMaterialCosts();
-    setLamRunOps(quote);
+    setLamRunOps(quote, cc.printConfig);
     canonBacklitLogic(updates, product);
     checkSidesOpConflicts(quote);
     setVinylCuttingRules();
@@ -227,16 +227,16 @@ function setWasteOperationAnswer(opAnswer, calcCost, cost) {
         cu.changeField(opAnswer, waste, true);
     }
 }
-function setRollChangeCost() {
+function setRollChangeCost(printConfigMaterials) {
     //Roll Change Minutes
     var rollChangeOp = fields.operation138;
     var rollChangeOpAnswer = fields.operation138_answer;
     var rollChangeMins = 0;
-    if (printConfig.aPrintSubstrate) {
-        rollChangeMins += printConfig.aPrintSubstrate.rollChangeMins;
+    if (printConfigMaterials.aPrintSubstrate) {
+        rollChangeMins += printConfigMaterials.aPrintSubstrate.rollChangeMins;
     }
-    if (printConfig.bPrintSubstrate) {
-        rollChangeMins += printConfig.bPrintSubstrate.rollChangeMins;
+    if (printConfigMaterials.bPrintSubstrate) {
+        rollChangeMins += printConfigMaterials.bPrintSubstrate.rollChangeMins;
     } 
     if (rollChangeOp) {
         if (!isNaN(rollChangeMins)) {
@@ -510,7 +510,11 @@ function setInkMaterialCosts() {
     }
 }
 
-function setLamRunOps(quote) {
+function setLamRunOps(quote, config) {
+    if (!config) {
+        return 
+    }
+    var lamLfWithSpoilage = config.details.lamLfWithSpoilage
     var hasFrontLam = cu.hasValue(fields.frontLaminate);
     var hasBackLam = cu.hasValue(fields.backLaminate);
     var hasMount = cu.hasValue(fields.mountSubstrate);
@@ -682,20 +686,20 @@ function setLamRunOps(quote) {
             }
         }
         
-        if (printConfig.lamLfWithSpoilage) {
+        if (lamLfWithSpoilage) {
             if (cu.hasValue(laminatingRun)) {
                 if (laminatingRunAnswer) {
-                    pu.validateValue(laminatingRunAnswer, printConfig.lamLfWithSpoilage);
+                    pu.validateValue(laminatingRunAnswer, lamLfWithSpoilage);
                 }
             }
             if (cu.hasValue(laminatingRun2)) {
                 if (laminatingRunAnswer2) {
-                    pu.validateValue(laminatingRunAnswer2, printConfig.lamLfWithSpoilage);
+                    pu.validateValue(laminatingRunAnswer2, lamLfWithSpoilage);
                 }
             }
             if (cu.hasValue(laminatingRun3)) {
                 if (laminatingRunAnswer3) {
-                    pu.validateValue(laminatingRunAnswer3, printConfig.lamLfWithSpoilage);
+                    pu.validateValue(laminatingRunAnswer3, lamLfWithSpoilage);
                 }
             }
         }

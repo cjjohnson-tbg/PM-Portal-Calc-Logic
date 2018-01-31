@@ -48,14 +48,14 @@ var calcConfig = {
 		this.materials.bAdhesives = quote.piece.bAdhesiveLaminate ? quote.piece.bAdhesiveLaminate.options : null;
 	},
 	getAllConfigs: function(materialList, quote, dat) {
-		var allConfigOptions = configHelper.getConfigOptionList(materialList);
+		var allConfigOptions = configHelper.getAllMaterialConfigOptions(materialList);
 		var allConfigs = configHelper.getAllConfigsFromList(allConfigOptions, quote, dat);
 		return allConfigs
 	}
 }
 
 var configHelper = {
-	getConfigOptionList: function(materialList) {
+	getAllMaterialConfigOptions: function(materialList) {
 		var result = [];
 		for (var aPrintSub = 0; aPrintSub < materialList.aPrintSubstrates.length; aPrintSub++) {
 			for (var bPrintSub = 0; bPrintSub < (materialList.bPrintSubstrates ? materialList.bPrintSubstrates.length : 1); bPrintSub++) {
@@ -87,30 +87,38 @@ var configHelper = {
 		var results = [];
 		for (var i = 0; i < configs.length; i++) {
 			var vertical_piece_orienation = false;
-			var horizConfig = this.getPrintConfig(configs[i], quote, dat, vertical_piece_orienation, dat);
+			var horizConfig = this.getPrintConfig(configs[i], quote, dat, vertical_piece_orienation);
 			results.push(horizConfig);
 			//toggle orientation and rerun if sides different
 			if (quote.piece.width != quote.piece.height) {
 				vertical_piece_orienation = true;
-				var vertConfig = this.getPrintConfig(configs[i], quote, dat, vertical_piece_orienation, dat);
+				var vertConfig = this.getPrintConfig(configs[i], quote, dat, vertical_piece_orienation);
 				results.push(vertConfig);
 			}
 		}
 		return results
 	},
-	getPrintConfig: function(mats, quote, dat, vertical_piece_orienation, dat) {
-		var config = {};
-		config.details = this.getConfigDetails(mats, quote.piece, dat, vertical_piece_orienation);
-		config.materials = this.getConfigMaterails(mats);
-		this.setMaterialCalculedFields(config.materials, config.details, quote, dat);
-		config.quote = this.getTotalCosts(config.materials);
+	getPrintConfig: function(materials, quote, dat, vertical_piece_orienation) {
+		var results = {};
+		var jobDetails = this.getConfigDetails(materials, quote.piece, dat, vertical_piece_orienation);
+		results.details = jobDetails;
+		var configMaterials = this.getConfigMaterials(materials); //removes empty materials
+		var matCalculatedFields = matHelper.getMaterialCalculedFields(configMaterials, jobDetails, quote, dat);
+		//add new fields to material list
+		for (var material in matCalculatedFields) {
+			for (var field in matCalculatedFields[material]) {
+				configMaterials[material][field] = matCalculatedFields[material][field];
+			}
+		}
+		results.materials = configMaterials;
+		results.quote = this.getTotalCosts(configMaterials);
 		var stop = 1;
-		return config
+		return results
 	},
 	getTotalCosts: function(materials) {
 		var costs = {};
 		var totalCost = 0;
-		for (material in materials) {
+		for (var material in materials) {
 			costs[material] = materials[material].totalCost;
 			if (!isNaN(materials[material].totalCost)) {
 				totalCost += materials[material].totalCost;
@@ -118,74 +126,6 @@ var configHelper = {
 		}
 		costs.totalCost = totalCost;
 		return costs
-	},
-	setMaterialCalculedFields: function(materials, details, quote, dat) {
-		for (material in materials) {
-			if (material == 'aPrintSubstrate' | material == 'bPrintSubstrate') {
-				var materialCalcs = this.setPrintSubstrateCalcs(materials[material], details, dat);
-			}
-			else {
-				var materialCalcs = this.setSubstrateCalcs(materials[material], material, details, quote, dat);
-			}
-			//Add properties to material
-			for (prop in materialCalcs) {
-				materials[material][prop] = materialCalcs[prop];
-			}
-		}
-		return materials
-	},
-	setPrintSubstrateCalcs: function(printSubstrate, details, dat) {
-		if (!printSubstrate) {return}
-		var props = {};
-		if (!printSubstrate.price) {
-			printSubstrate.price = dat.subSqFtCost * printSubstrate.width / 12;
-		}
-		props.price = printSubstrate.price;
-		props.leadWasteLF = dat.devDefaults.leadWasteLF;
-		props.printableRollLen = printSubstrate.length - (props.leadWasteLF * 12);
-		props.formsPerRoll = Math.floor(props.printableRollLen / details.formLength);
-		props.fullRolls = Math.floor(details.totalForms / props.formsPerRoll);
-		props.totalRolls = Math.ceil(details.totalForms / props.formsPerRoll);
-
-		props.formsOnLastRoll = details.totalForms % props.formsPerRoll;
-		props.fullFormsOnLastRoll = details.totalFullForms % props.formsPerRoll;
-		props.lastPartialFormLF = details.lastPartialFormLF;
-		props.lastRollLf = dat.devDefaults.leadWasteLF + (props.fullFormsOnLastRoll * details.formLength) / 12 + props.lastPartialFormLF;
-		props.totalRollLF = props.fullRolls * (printSubstrate.length / 12) + props.lastRollLf;
-		props.totalRollMatCost = props.totalRollLF * props.price;
-
-		//calc roll change -- Full rolls plus all rolls if 2 sides
-		props.rollChangeMins = dat.devDefaults.rollChangeMins * (props.fullRolls + (props.totalRolls * (details.sides - 1)));
-		props.rollChangeCost = props.fullRolls * dat.devDefaults.rollChangeMins * dat.devDefaults.hourlyRate / 60;
-
-		props.totalCost = props.totalRollMatCost + props.rollChangeCost;
-
-		return props
-	},
-	setSubstrateCalcs: function(mat, matType, details, quote, dat) {
-		var props = {};
-		if (mat) {
-			if (matType == 'mountSubstrate') {
-				if (!mat.price) {
-					mat.price = (quote.mountSubstratePrice / dat.totalSquareFeet) * mat.width * mat.length / 144;
-					props.price = mat.price;
-				}
-				props.mounts = details.totalForms;
-				props.totalCost = props.mounts * mat.price;
-			} else {
-				if (!mat.price) {
-					mat.price = (quote[matType + 'Price'] / dat.otalSquareFeet) * mat.width / 12;
-					props.price = mat.price;
-				}
-				if (matType.indexOf('Adhesive') != -1) {
-					props.linearFeet = details.totalFormLF;
-				} else {
-					props.linearFeet = details.lamLfWithSpoilage ? details.lamLfWithSpoilage : details.formLength /12 + details.lastPartialFormLF;
-				}
-				props.totalCost = props.linearFeet * mat.price;
-			}
-		}
-		return props;
 	},
 	getConfigDetails: function(mats, piece, dat, vertical_piece_orienation) {
 		var details = {};
@@ -221,7 +161,7 @@ var configHelper = {
 
 		//Attrition for Lamainating
 		details.lamLf = (details.formLength * details.totalFullForms) / 12 + details.lastPartialFormLF;
-		details.lamLfWithSpoilage = roundTo(this.getLamWithSpoilage(details.lamLf), 0);
+		details.lamLfWithSpoilage = roundTo(this.getLamWithSpoilage(details.lamLf), 1);
 
 		return details
 	},
@@ -243,12 +183,15 @@ var configHelper = {
 		}
 		return Number(matLength + spoilLf)
 	},
-	getConfigMaterails: function(mats) {
+	getConfigMaterials: function(mats) {
 		//insert materials to details 
 		var results = {};
-		for (mat in mats) {
+		for (var mat in mats) {
 			if (mats[mat]) {
-				results[mat] = mats[mat];
+				results[mat] = {};
+				for (var key in mats[mat]) {
+					results[mat][key] = mats[mat][key];
+				}
 			}
 		}
 		return results
@@ -309,13 +252,84 @@ var matHelper = {
 			//Add in Roll Substrate Options inserted in substrate notes (property created in rollCalc script)
 			var altRolls = substrate.options;
 			if (altRolls) {
-				for (roll in altRolls) {
+				for (var roll in altRolls) {
 					results.push(altRolls[roll]);
 				}
 			}
 		}
 		return results
-	}
+	},
+	getMaterialCalculedFields: function(jobMaterials, details, quote, dat) {
+		var results = {};
+		for (var material in jobMaterials) {
+			var materialCalcs = {};
+			results[material] = {};
+			if (material == 'aPrintSubstrate' || material == 'bPrintSubstrate') {
+				materialCalcs = this.getPrintSubstrateCalcs(jobMaterials[material], details, dat);
+			}
+			else {
+				materialCalcs = this.getSubstrateCalcs(jobMaterials[material], material, details, quote, dat);
+			}
+			//Add properties to material
+			for (var prop in materialCalcs) {
+				results[material][prop] = materialCalcs[prop];
+			}
+		}
+		return results
+	},
+	getPrintSubstrateCalcs: function(printSubstrate, details, dat) {
+		if (!printSubstrate) {return}
+		var props = {};
+		if (!printSubstrate.price) {
+			printSubstrate.price = dat.subSqFtCost * printSubstrate.width / 12;
+		}
+		props.price = printSubstrate.price;
+		props.leadWasteLF = dat.devDefaults.leadWasteLF;
+		props.printableRollLen = printSubstrate.length - (props.leadWasteLF * 12);
+		props.formsPerRoll = Math.floor(props.printableRollLen / details.formLength);
+		props.fullRolls = Math.floor(details.totalForms / props.formsPerRoll);
+		props.totalRolls = Math.ceil(details.totalForms / props.formsPerRoll);
+
+		props.formsOnLastRoll = details.totalForms % props.formsPerRoll;
+		props.fullFormsOnLastRoll = details.totalFullForms % props.formsPerRoll;
+		props.lastPartialFormLF = details.lastPartialFormLF;
+		props.lastRollLf = dat.devDefaults.leadWasteLF + (props.fullFormsOnLastRoll * details.formLength) / 12 + props.lastPartialFormLF;
+		props.totalRollLF = props.fullRolls * (printSubstrate.length / 12) + props.lastRollLf;
+		props.totalRollMatCost = props.totalRollLF * props.price;
+
+		//calc roll change -- Full rolls plus all rolls if 2 sides
+		props.rollChangeMins = dat.devDefaults.rollChangeMins * (props.fullRolls + (props.totalRolls * (details.sides - 1)));
+		props.rollChangeCost = props.fullRolls * dat.devDefaults.rollChangeMins * dat.devDefaults.hourlyRate / 60;
+
+		props.totalCost = props.totalRollMatCost + props.rollChangeCost;
+
+		return props
+	},
+	getSubstrateCalcs: function(jobMaterial, matType, details, quote, dat) {
+		var props = {};
+		if (jobMaterial) {
+			if (matType == 'mountSubstrate') {
+				if (!jobMaterial.price) {
+					jobMaterial.price = (quote.mountSubstratePrice / dat.totalSquareFeet) * jobMaterial.width * jobMaterial.length / 144;
+				}
+				props.price = jobMaterial.price;
+				props.mounts = details.totalForms;
+				props.totalCost = props.mounts * jobMaterial.price;
+			} else {
+				if (!jobMaterial.price) {
+					jobMaterial.price = (quote[matType + 'Price'] / dat.totalSquareFeet) * jobMaterial.width / 12;
+					props.price = jobMaterial.price;
+				}
+				if (matType.indexOf('Adhesive') != -1) {
+					props.linearFeet = details.totalFormLF;
+				} else {
+					props.linearFeet = details.lamLfWithSpoilage ? details.lamLfWithSpoilage : details.formLength /12 + details.lastPartialFormLF;
+				}
+				props.totalCost = props.linearFeet * jobMaterial.price;
+			}
+		}
+		return props;
+	},
 }
 
 function roundTo(n, digits) {

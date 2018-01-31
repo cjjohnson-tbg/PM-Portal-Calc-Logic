@@ -541,7 +541,7 @@ function setLamRunOps(quote, config) {
     var selfAdhesive = configureglobals.cprintsubstratesmgr.choice ? configureglobals.cprintsubstratesmgr.choice.selfAdhesive : false;
 
     var invalidLamMessage = '<p>The mounting and laminating choices in this job is not valid.  If you need this configuration please consult Estimating and/or Planning</p>';
-    if (hasMount || hasFrontLam || hasBackLam) {
+    if (hasMount || hasFrontLam || hasBackLam || hasPremask) {
         if (hasMount) {
             if (hasPremask) {
                 if (!hasFrontLam && !hasBackLam) { 

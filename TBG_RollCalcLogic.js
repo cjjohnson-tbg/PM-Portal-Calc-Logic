@@ -239,6 +239,9 @@ function setRollChangeCost(printConfigMaterials) {
         rollChangeMins += printConfigMaterials.bPrintSubstrate.rollChangeMins;
     } 
     if (rollChangeOp) {
+        if (rollChangeMins > 0 && (!cu.hasValue(rollChangeOp))) {
+            cu.changeField(rollChangeOp, 682, true);
+        } 
         if (!isNaN(rollChangeMins)) {
             if (rollChangeOpAnswer) {
                 if (cu.getValue(rollChangeOpAnswer) != rollChangeMins) {

@@ -548,9 +548,9 @@ function setLamRunOps(quote, config) {
         if (hasMount) {
             if (hasPremask) {
                 if (!hasFrontLam && !hasBackLam) { 
-                    if (selfAdhesive) {  // 1. Mount + Premask 
-                        pu.validateValue(laminatingRun, 711);
-                        pu.validateValue(laminatingRun2,'');
+                    if (selfAdhesive) {  // 1. Mount  2. Premask 
+                        pu.validateValue(laminatingRun, 712);
+                        pu.validateValue(laminatingRun2,716);
                         pu.validateValue(laminatingRun3,'');
                     } else { // 1. Adhesive  2. Mount + Premask
                         pu.validateValue(laminatingRun, 706);

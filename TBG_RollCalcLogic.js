@@ -576,10 +576,10 @@ function setLamRunOps(quote, config) {
                         pu.validateValue(laminatingRun2, 716);
                         pu.validateValue(laminatingRun3, 758);
                     }
-                    else { //  1. Cold / Adhesive  2. Mount  3. Premask
+                    else { //  1. Cold / Adhesive  2. Mount + Premask
                         pu.validateValue(laminatingRun, 708);
-                        pu.validateValue(laminatingRun2, 716);
-                        pu.validateValue(laminatingRun3, 758);
+                        pu.validateValue(laminatingRun2, 717);
+                        pu.validateValue(laminatingRun3, '');
                     }
                 }
             } else {  //mounted but no premask

@@ -540,8 +540,8 @@ function setLamRunOps(quote, config) {
     var hasColdBack = backLamType == 'Cold';
     var hasHotFront = frontLamType == 'Hot';
     var hasHotBack = backLamType == 'Hot';
-    var hasAdhesiveBack = cu.getValue(fields.backLaminate) == 38;
-    var hasAdhesiveFront = cu.getValue(fields.frontLaminate) == 38;
+    var hasAdhesiveBack = backLamType == 'Adhesive';
+    var hasAdhesiveFront = frontLamType == 'Adhesive';
     var hasPremask = cu.hasValue(fields.operation78);
     var selfAdhesive = configureglobals.cprintsubstratesmgr.choice ? configureglobals.cprintsubstratesmgr.choice.selfAdhesive : false;
 

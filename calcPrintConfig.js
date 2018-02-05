@@ -325,6 +325,8 @@ var matHelper = {
 				} else {
 					props.linearFeet = details.lamLfWithSpoilage ? details.lamLfWithSpoilage : details.formLength /12 + details.lastPartialFormLF;
 				}
+				var materialLength = jobMaterial.length ? jobMaterial.length : 1800;
+				props.rollChanges = Math.floor( props.linearFeet * 12 / materialLength);
 				props.totalCost = props.linearFeet * jobMaterial.price;
 			}
 		}

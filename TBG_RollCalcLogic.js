@@ -530,6 +530,8 @@ function setLamRunOps(quote, config) {
     var laminatingRunAnswer3 = fields.operation153_answer;
     var premask = fields.operation78;
     var premaskRunAnswer = fields.operation78_answer;
+    var rollChangeOp = fields.operation154;
+    var rollChangeOpAnswer = fields.operation154_answer;
 
     var frontLamType = (hasFrontLam && quote.piece.frontLaminate) ? quote.piece.frontLaminate.type.name : null;
     var backLamType = (hasBackLam && quote.piece.backLaminate) ? quote.piece.backLaminate.type.name : null;
@@ -711,6 +713,26 @@ function setLamRunOps(quote, config) {
         pu.validateValue(laminatingRun2,'');
         pu.validateValue(laminatingRun3,'');
     }
+    var rollChangeMins = getLamRollChangeOp(config.materials);
+    if (rollChangeMins > 0) {
+        pu.validateValue(rollChangeOp, 760);
+        pu.validateValue(rollChangeOpAnswer, rollChangeMins);
+    } else {
+        pu.validateValue(rollChangeOp,'');
+    }
+}
+function getLamRollChangeOp(materials) {
+    var result = 0;
+    var rollChanges = 0;
+    var minutesPerChange = 15;
+    var hasAdhesive = false;
+    for (mat in materials) {
+        if (mat != 'aPrintSubstrate' && mat != 'bPrintSubstrate') {
+            rollChanges += materials[mat].rollChanges ? materials[mat].rollChanges : 0;
+        }
+    }
+    result = minutesPerChange * rollChanges;
+    return result
 }
 
 function canonBacklitLogic(updates, product) {

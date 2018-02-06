@@ -12,6 +12,12 @@ var calcConfig = {
 		var index = 0;
 		for (var i = 0; i < configs.length; i++) {
 			configs[i].index = index;
+			if (!configs[i].details) {
+				continue
+			}
+			if (!configs[i].details.valid_quote) {
+				continue
+			}
 			if (result === undefined) {
 				result = configs[i];
 			} else {
@@ -20,6 +26,9 @@ var calcConfig = {
 				}
 			}
 			index++;
+		}
+		if (!result) {
+			console.log('alert not a valid quote generated');
 		}
 		return result
 	},

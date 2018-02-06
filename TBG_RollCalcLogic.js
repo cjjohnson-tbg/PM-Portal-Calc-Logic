@@ -122,7 +122,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     setWasteOperationCosts(quote);
     setCuttingOps(quote, product);
 
-    setRollChangeCost(cc.printConfig.materials);
+    setRollChangeCost(cc.printConfig);
 
     setInkMaterialCosts();
     setLamRunOps(quote, cc.printConfig);
@@ -227,17 +227,20 @@ function setWasteOperationAnswer(opAnswer, calcCost, cost) {
         cu.changeField(opAnswer, waste, true);
     }
 }
-function setRollChangeCost(printConfigMaterials) {
+function setRollChangeCost(printConfig) {
     //Roll Change Minutes
     var rollChangeOp = fields.operation138;
     var rollChangeOpAnswer = fields.operation138_answer;
     var rollChangeMins = 0;
-    if (printConfigMaterials.aPrintSubstrate) {
-        rollChangeMins += printConfigMaterials.aPrintSubstrate.rollChangeMins;
+    if (printConfig) {
+        var printConfigMaterials = printConfig.materials;
+        if (printConfigMaterials.aPrintSubstrate) {
+            rollChangeMins += printConfigMaterials.aPrintSubstrate.rollChangeMins;
+        }
+        if (printConfigMaterials.bPrintSubstrate) {
+            rollChangeMins += printConfigMaterials.bPrintSubstrate.rollChangeMins;
+        }
     }
-    if (printConfigMaterials.bPrintSubstrate) {
-        rollChangeMins += printConfigMaterials.bPrintSubstrate.rollChangeMins;
-    } 
     if (rollChangeOp) {
         if (rollChangeMins > 0 && (!cu.hasValue(rollChangeOp))) {
             cu.changeField(rollChangeOp, 682, true);

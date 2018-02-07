@@ -274,7 +274,7 @@ var matHelper = {
 			var materialCalcs = {};
 			results[material] = {};
 			if (material == 'aPrintSubstrate' || material == 'bPrintSubstrate') {
-				materialCalcs = this.getPrintSubstrateCalcs(jobMaterials[material], details, dat);
+				materialCalcs = this.getPrintSubstrateCalcs(jobMaterials, material, details, dat);
 			}
 			else {
 				materialCalcs = this.getSubstrateCalcs(jobMaterials[material], material, details, quote, dat);
@@ -286,7 +286,8 @@ var matHelper = {
 		}
 		return results
 	},
-	getPrintSubstrateCalcs: function(printSubstrate, details, dat) {
+	getPrintSubstrateCalcs: function(jobMaterials, printSubstrateName, details, dat) {
+		var printSubstrate = jobMaterials[printSubstrateName];
 		if (!printSubstrate) {return}
 		var props = {};
 		if (!printSubstrate.price) {
@@ -306,8 +307,13 @@ var matHelper = {
 		props.totalRollLF = props.fullRolls * (printSubstrate.length / 12) + props.lastRollLf;
 		props.totalRollMatCost = props.totalRollLF * props.price;
 
-		//calc roll change -- Full rolls plus all rolls if 2 sides
-		props.rollChangeMins = dat.devDefaults.rollChangeMins * (props.fullRolls + (props.totalRolls * (details.sides - 1)));
+		//calc roll change -- First setup on aPrintSubstrate included in device price, but not on aPrintSubstrate
+		//second side roll change only when 2 sided print without bPrintSubstrate (cannot has twosided print on bPrintSubstrate)
+
+		props.side1rollChangeMins = printSubstrateName == 'aPrintSubstrate' ? dat.devDefaults.rollChangeMins * (props.totalRolls - 1) : dat.devDefaults.rollChangeMins * props.totalRolls;
+		props.side2rollChangeMins = jobMaterials.bPrintSubstrate ? 0 : dat.devDefaults.rollChangeMins * props.totalRolls * (details.sides - 1);
+
+		props.rollChangeMins = props.side1rollChangeMins + props.side2rollChangeMins;
 		props.rollChangeCost = props.fullRolls * dat.devDefaults.rollChangeMins * dat.devDefaults.hourlyRate / 60;
 
 		props.totalCost = props.totalRollMatCost + props.rollChangeCost;

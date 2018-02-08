@@ -716,7 +716,9 @@ function setLamRunOps(quote, config) {
         pu.validateValue(laminatingRun2,'');
         pu.validateValue(laminatingRun3,'');
     }
-    var rollChangeMins = getLamRollChangeOp(config.materials);
+    //if cold over cold, then 
+    var hasColdOverCold = hasColdFront && hasColdBack;
+    var rollChangeMins = getLamRollChangeOp(config.materials, hasColdOverCold);
     if (rollChangeMins > 0) {
         pu.validateValue(rollChangeOp, 760);
         pu.validateValue(rollChangeOpAnswer, rollChangeMins);
@@ -724,14 +726,20 @@ function setLamRunOps(quote, config) {
         pu.validateValue(rollChangeOp,'');
     }
 }
-function getLamRollChangeOp(materials) {
+function getLamRollChangeOp(materials, hasColdOverCold) {
     var result = 0;
     var rollChanges = 0;
     var minutesPerChange = 15;
     var hasAdhesive = false;
     for (mat in materials) {
         if (mat != 'aPrintSubstrate' && mat != 'bPrintSubstrate') {
-            rollChanges += materials[mat].rollChanges ? materials[mat].rollChanges : 0;
+            //if cold over cold then add times together, otherwise take largest (will do on same run)
+            var materialRollChanges = materials[mat].rollChanges ? materials[mat].rollChanges : 0;
+            if (hasColdOverCold) {
+                rollChanges += materialRollChanges;
+            } else {
+                rollChanges = Math.max(rollChanges, materialRollChanges)
+            }
         }
     }
     result = minutesPerChange * rollChanges;

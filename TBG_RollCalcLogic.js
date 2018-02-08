@@ -795,7 +795,8 @@ function bannerFinishingOperationDisplay(product) {
         '173',   //Aberdeen Luminary 9111
         '174',   //Aberdeen Trinity
         '172',   //Top Value Heavy Knit
-        '270'   //Heavy Kit Fabric - Top Value 7.3oz
+        '270',   //Heavy Kit Fabric - Top Value 7.3oz
+        '394'    //Aberdeen Triple White
     ]
     var bannerFinishingOperations = [
         60,   //TBG Grommets

@@ -425,6 +425,8 @@ function setLamOps(quote) {
     var laminatingRun_answer = fields.operation135_answer;
     var laminatingRun2_answer = fields.operation221_answer;
     var laminatingRun3_answer = fields.operation227_answer;
+    var lamRollChangeOp = fields.operation264;
+    var lamRollChangeOpAnswer = fields.operation264_answer;
 
     var boardLength = quote.pressSheetQuote.height ? quote.pressSheetQuote.height : 120;
     var boardCount = quote.pressSheetQuote.pressSheetCount;
@@ -566,14 +568,38 @@ function setLamOps(quote) {
             if (laminatingRun2_answer) {
                 pu.validateValue(laminatingRun3_answer, totalBoardLF);
             }
+            setLamRollChangeLabor(quote, lamRollChangeOp, lamRollChangeOpAnswer);
         } else {
             pu.validateValue(laminatingRun,'');
             pu.validateValue(laminatingRun2,'');
             pu.validateValue(laminatingRun3, '');
+            pu.validateValue(lamRollChangeOp, '');
         }
-        
-
     }
+}
+function setLamRollChangeLabor(quote, rollChangeOp, answer) {
+    var rollChangeMins = getLamRollChangeOp(quote);
+    if (rollChangeMins > 0) {
+        pu.validateValue(rollChangeOp, 1691);
+        if (answer) {
+            pu.validateValue(answer, rollChangeMins);
+        }
+    } else {
+        pu.validateValue(rollChangeOp,'');
+    }
+
+}
+function getLamRollChangeOp(quote) {
+    var result = 0;
+    var rollChanges = 0;
+    var minutesPerChange = 15;
+    var rollLF = 150;
+    var boardLength = quote.pressSheetQuote.height;
+    var boards = quote.pressSheetQuote.pressSheetCount;
+    rollChanges = Math.ceil(boards * boardLength / (rollLF * 12)) - 1;
+
+    result = minutesPerChange * rollChanges;
+    return result
 }
 
 function setPreLamRunCosts(pLamOps, lf) {

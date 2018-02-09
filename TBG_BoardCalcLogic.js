@@ -91,6 +91,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     twoSidedJobOp();
     setTopAndBottomPieceOps();
     mountAdhesive();
+    jobCostSpoilage(quote);
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
@@ -835,6 +836,17 @@ function mountAdhesive() {
         }
     }
     pu.validateValue(adhesiveOp, adhesiveMatItem);
+}
+function jobCostSpoilage(quote) {
+    var spoilageOp = fields.operation233;
+    var spoilageOpAns = fields.operation233_answer;
+    var spoilageCost = quote.jobCostPrice ? quote.jobCostPrice : 0;
+    if (spoilageOp) {
+        if (!cu.hasValue(spoilageOp)) {
+            cu.changeField(spoilageOp, 1666, true);
+        }
+        pu.validateValue(spoilageOpAns, spoilageCost)
+    }
 }
 
 //functions ran after completed full quote

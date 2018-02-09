@@ -425,8 +425,8 @@ function setLamOps(quote) {
     var laminatingRun_answer = fields.operation135_answer;
     var laminatingRun2_answer = fields.operation221_answer;
     var laminatingRun3_answer = fields.operation227_answer;
-    var lamRollChangeOp = fields.operation264;
-    var lamRollChangeOpAnswer = fields.operation264_answer;
+    var lamRollChangeOp = fields.operation232;
+    var lamRollChangeOpAnswer = fields.operation232_answer;
 
     var boardLength = quote.pressSheetQuote.height ? quote.pressSheetQuote.height : 120;
     var boardCount = quote.pressSheetQuote.pressSheetCount;
@@ -580,7 +580,7 @@ function setLamOps(quote) {
 function setLamRollChangeLabor(quote, rollChangeOp, answer) {
     var rollChangeMins = getLamRollChangeOp(quote);
     if (rollChangeMins > 0) {
-        pu.validateValue(rollChangeOp, 1691);
+        pu.validateValue(rollChangeOp, 1664);
         if (answer) {
             pu.validateValue(answer, rollChangeMins);
         }

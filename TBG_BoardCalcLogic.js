@@ -908,7 +908,7 @@ function updateClasses() {
         215     //LF Gutter
     ]
     var estimstingOnlyOperations = [
-        218    //TBG Team Factor (temporary)
+        //218    //TBG Team Factor (temporary)
     ]
     var opsWithOther = [
         129,
@@ -918,9 +918,13 @@ function updateClasses() {
         139,
         133
     ]
-
+    var opsWithCalculatedAnswer = [
+        218,    //TBG Team
+        226     //TBG Special Customer
+    ]
     pu.addClassToOperation(planningOnlyOperations,'planning');
     pu.addClassToOperation(estimstingOnlyOperations,'estimating');
+    pu.addClassToOperation(opsWithCalculatedAnswer,'calculatedAnswer');
     pu.addClassToOperationItemsWithString(opsWithOther, 'otherOpItem', 'Other');
     pu.removeClassFromOperation(170,'costingOnly');
     pu.removeClassFromOperation(205,'costingOnly');

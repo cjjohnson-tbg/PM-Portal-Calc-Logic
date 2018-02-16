@@ -1123,7 +1123,7 @@ function uiUpdates(product) {
         134    //TBG Gutter
     ]
     var estimatingOnlyOps = [
-        139     //TBG Team Factor
+        //139     //TBG Team Factor
     ]
     var inkOpsWithDPI = [
         52  //TBG Ink Configuration - Vutek HS100
@@ -1134,12 +1134,17 @@ function uiUpdates(product) {
         58,   //TBG Tape, Mag, Velcro
         78  //LF Premask
     ]
+    var opsWithCalculatedAnswer = [
+        139,    //TBG Team
+        226     //TBG Special Customer
+    ]
     pu.trimOperationItemNames(inkOpsWithDPI, ' - ');
     pu.trimOperationItemNames(opsToTrimWithUnderscore, '_');
     pu.removeOperationItemsWithString(104,'Print');
     pu.removeClassFromOperation(111,'costingOnly');
     pu.addClassToOperation(planningOnlyOps, 'planning');
     pu.addClassToOperation(estimatingOnlyOps,'estimating');
+    pu.addClassToOperation(opsWithCalculatedAnswer,'calculatedAnswer');
 
     canvasOperationDisplay();
     bannerFinishingOperationDisplay(product);

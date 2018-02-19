@@ -5,6 +5,8 @@ var calcCount = 0;
 
 var onQuoteUpdatedMessages = '';
 
+
+
 var boardCalcLogic = {
     onCalcLoaded: function(product) {
         cu.initFields();
@@ -882,6 +884,7 @@ function updateUI(product) {
     metaFieldsActions.onQuoteUpdated(product);
     updateOpQuestions();
     addBasicDetailsToPage();
+    maxQuotedJob();
     pu.showMessages();
     renderExtendedCostBreakdown();
 }
@@ -959,6 +962,15 @@ function addBasicDetailsToPage() {
     $('#smallFormatPrintSpecs').insertAfter('.quoteContinue');
     $('#smallFormatPrintSpecs').show();
     $('#pressSheetName span').text(cu.getPressSheetName()); 
+}
+function maxQuotedJob() {
+    var jobQuote = configureglobals.cquote.jobTotalPrice;
+    var maxQuotaJobAmt = 5000;
+    if (jobQuote > maxQuotaJobAmt) {
+        $('#validation-message-container').html('<div class="ribbon-wrapper quote-warning">The total price of your job exceeds $' + maxQuotaJobAmt + '. Please contact Central Estimating to obtain a quote for your job.</div>')
+    } else {
+        $('#validation-message-container').html('');
+    }
 }
 function checkForHardProofRequired() {
     // SHOW HARD PROOF MESSAGE ON THROUGHPUT THRESHOLDS 

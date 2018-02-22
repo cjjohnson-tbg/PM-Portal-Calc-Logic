@@ -14,6 +14,7 @@ var hasOutsideDieSelected;
 
 var onQuoteUpdatedMessages = '';
 var cu = calcUtil;
+var pu = pmCalcUtil;
 var sfSheetCalcLogic = {
     onCalcLoaded: function(product) {
         // $('.operation66').addClass('hideIt');
@@ -96,6 +97,9 @@ var sfSheetCalcLogic = {
                 if (cu.getPjcId(product) == 971) {
                     $('#operation14 label.opQuestion').text('How many sets to shrink wrap together');
                 }
+
+                ulineLabelDimSelector(updates, product);
+
                 /********* Display Run Time information on Estimating Site for LF Board Estimating */
                 $('#runTime span').text(cu.getTotalRuntime());
                 $('#totalPressSheets span').text(cu.getTotalPressSheets());
@@ -117,6 +121,29 @@ var sfSheetCalcLogic = {
                 onQuoteUpdatedMessages += submessage;
                 cu.alert(onQuoteUpdatedMessages);
                 onQuoteUpdatedMessages = '';
+            }
+        }
+    }
+}
+
+function ulineLabelDimSelector(updates, product)  {
+    if (cu.getPjcId(product) == 199) {
+        var presetDims = fields.presetDimensions;
+        var stockType = fields.paperType;
+
+        if (cu.isLastChangedField(updates, stockType)) {
+            var labelDims = {
+                122 : 434,   //Uline Label 4x3.33
+                123 : 393,   //Uline Label 4x2
+                124 : 808,   //Uline Label 8.5x5.5
+                125 : 392,   //Uline Label 2.625x1
+                126 : 435,   //Uline Label 4x6
+                108 : null   //Special Order Uline Labels
+            }
+
+            var presetDimId = labelDims[cu.getValue(stockType)] ? labelDims[cu.getValue(stockType)] : null;
+            if (presetDimId) {
+                pu.validateValue(presetDims, presetDimId);
             }
         }
     }

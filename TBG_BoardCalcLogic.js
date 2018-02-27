@@ -919,13 +919,20 @@ function updateClasses() {
         133
     ]
     var opsWithCalculatedAnswer = [
+        133,    //Premask
         218,    //TBG Team
-        226     //TBG Special Customer
+        226,    //TBG Special Customer
+        129,    //Pre-Printing Front Laminate
+        144,    //Pre-Printing Back Laminate
+        131,    //Front Laminating
+        130,    //Back Laminating
+        139    //Mounting
     ]
+
     pu.addClassToOperation(planningOnlyOperations,'planning');
     pu.addClassToOperation(estimstingOnlyOperations,'estimating');
-    pu.addClassToOperation(opsWithCalculatedAnswer,'calculatedAnswer');
     pu.addClassToOperationItemsWithString(opsWithOther, 'otherOpItem', 'Other');
+    pu.addClassToOperation(opsWithCalculatedAnswer,'calculatedAnswer');
     pu.removeClassFromOperation(170,'costingOnly');
     pu.removeClassFromOperation(205,'costingOnly');
 }
@@ -945,10 +952,7 @@ function updateOpItems() {
     pu.removeOperationItemsWithString(156,'Print');
 }
 function updateOpQuestions() {
-    var opsToHideQuestion =[
-        133
-    ]
-    pu.hideOperationQuestion(opsToHideQuestion);
+
 }
 function addBasicDetailsToPage() {
    $('#runTime span').text(cu.getTotalRuntime());

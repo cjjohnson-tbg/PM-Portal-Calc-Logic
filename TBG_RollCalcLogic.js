@@ -1136,7 +1136,7 @@ function uiUpdates(product) {
     ]
     var opsWithCalculatedAnswer = [
         139,    //TBG Team
-        226     //TBG Special Customer
+        152     //TBG Special Customer
     ]
     pu.trimOperationItemNames(inkOpsWithDPI, ' - ');
     pu.trimOperationItemNames(opsToTrimWithUnderscore, '_');

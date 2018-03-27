@@ -43,6 +43,8 @@ var sfSheetCalcLogic = {
             //run meta field action
             metaFieldsActions.onQuoteUpdated(product);
 
+            checkForColorCriticalDevice(validation);
+
             if (cu.isSmallFormat(product)) { 
                 /************ ADD DIE LIST TO OUTSIDE FINISHING */
                 var outsideDieOp = fields.operation153;
@@ -123,6 +125,74 @@ var sfSheetCalcLogic = {
                 onQuoteUpdatedMessages = '';
             }
         }
+    }
+}
+
+function checkForColorCriticalDevice(validation) {
+    //If color cricital operation selected, toggle off Auto Device and select device
+
+    var getCriticalDeviceId = {
+        1688 : 9,  //Indigo 7k
+        1692 : 4,  //Indigo 10k
+        1693 : 24   //Jpress
+    }
+    var colorCriticalOp = fields.operation238;
+    var colorCriticalDevice = fields.operation237;
+    if (colorCriticalOp && colorCriticalDevice) {
+        //temp opacity on device - will hide after approved
+        $('#device').css('display','none');
+        $('#operation237 label').css('color', 'red');
+        var hasQtyError = false;
+        if (cu.hasValue(colorCriticalOp)) {
+            //Show special message if quantity of device not hit
+            if (calcValidation.hasErrorForField(validation, fields.quantity)) {
+                hasQtyError = true;
+            }
+            cu.showField(colorCriticalDevice);
+            cu.setLabel(colorCriticalOp,"Color Critical - Please Select Device");
+            //cu.setLabel(colorCriticalOp,"Color Critical - please indicate job # below");
+            if (cu.hasValue(colorCriticalDevice)) {
+                if (configureglobals.cdevicemgr.autoDeviceSwitch) {
+                    toggleAutoDeviceTypeButton();
+                    $('select[name="DEVICEDD"]').trigger('focus').trigger('change');
+                }
+                var criticalDeviceId = getCriticalDeviceId[cu.getValue(colorCriticalDevice)] ? getCriticalDeviceId[cu.getValue(colorCriticalDevice)] : null;
+                if (criticalDeviceId && !hasQtyError) {
+                    if (cu.getDeviceType() != criticalDeviceId) {
+                        setDevice(criticalDeviceId);
+                    }
+                }
+            }
+            if (hasQtyError) {
+                cu.alert('<p>The default settings for this device cannot run with these specifications. Resubmit the specs with your Color Critical requirements, but do not select a device. Instead, enter a press note with the device required</p>');
+            }
+        } else {
+            if (!configureglobals.cdevicemgr.autoDeviceSwitch) {
+                toggleAutoDeviceTypeButton();
+            }
+            pu.validateValue(colorCriticalDevice,'');
+            cu.hideField(colorCriticalDevice);
+            cu.setSelectedOptionText(colorCriticalOp,'No');
+        }
+    }
+}
+function toggleAutoDeviceTypeButton() {
+    $autoDeviceSelector = $('#device a.togglePreset');
+    $autoDeviceButton = $autoDeviceSelector.length == 1 ? $autoDeviceSelector[0] : null;
+    if ($autoDeviceButton) {
+        // toggle the calculator device type mode
+        // "click" the "Let me choose"/"Use best price" button by running it's href javascript
+        eval($autoDeviceButton.href);
+    }
+}
+function setDevice(deviceId) {
+    var $deviceSelect = $('select[name="DEVICEDD"]');
+    var availableValues = $.map($deviceSelect.children('option'), function(e) { return e.value; });
+    if ($.inArray(deviceId.toString(), availableValues) != -1) {
+        $deviceSelect.val(deviceId);
+        $deviceSelect.trigger('focus').trigger('change');
+    } else {
+        console.log('device not available');
     }
 }
 

@@ -1104,6 +1104,16 @@ function getOperationPrice(quote, opId) {
     return 0;
 }
 
+function maxQuotedJob() {
+    var jobQuote = configureglobals.cquote.jobTotalPrice;
+    var maxQuotaJobAmt = 5000;
+    if (jobQuote > maxQuotaJobAmt) {
+        $('#validation-message-container').html('<div class="ribbon-wrapper quote-warning">The total price of your job exceeds $' + maxQuotaJobAmt + '. Please contact Central Estimating to obtain a quote for your job.</div>')
+    } else {
+        $('#validation-message-container').html('');
+    }
+}
+
 function uiUpdates(product) {
     var planningOnlyOps = [
         99,  //TBGCutting
@@ -1149,6 +1159,7 @@ function uiUpdates(product) {
     canvasOperationDisplay();
     bannerFinishingOperationDisplay(product);
     bannerStandLogic();
+    maxQuotedJob();
 }
 
 

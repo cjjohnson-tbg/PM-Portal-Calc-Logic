@@ -210,13 +210,11 @@ function checkForColorCriticalDevice(validation) {
                     return true;
                 }
             }
+            if (!configureglobals.cdevicemgr.autoDeviceSwitch) {
+                toggleAutoDeviceTypeButton();
+            }
             cu.hideField(colorCriticalDevice);
             cu.setSelectedOptionText(colorCriticalOp,'No');
-             {
-                if (!configureglobals.cdevicemgr.autoDeviceSwitch) {
-                    toggleAutoDeviceTypeButton();
-                }
-            }
         }
     }
 }

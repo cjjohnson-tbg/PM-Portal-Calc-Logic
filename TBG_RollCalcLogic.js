@@ -1159,7 +1159,7 @@ function uiUpdates(product) {
     canvasOperationDisplay();
     bannerFinishingOperationDisplay(product);
     bannerStandLogic();
-    maxQuotedJob();
+    //maxQuotedJob();
 }
 
 

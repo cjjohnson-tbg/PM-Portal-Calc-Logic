@@ -882,7 +882,7 @@ function updateUI(product) {
     metaFieldsActions.onQuoteUpdated(product);
     updateOpQuestions();
     addBasicDetailsToPage();
-    maxQuotedJob();
+    //maxQuotedJob();
     pu.showMessages();
     renderExtendedCostBreakdown();
 }

@@ -1023,18 +1023,9 @@ function heatBendingRules() {
 }
 
 function fabrivuLogic(product) {
-    var fabrivuDirectMaterials = [
-        '398'   //Berger Flag Fabric White 4oz
-    ]
+    //set transfer paper to JETCOL DYE SUB TRANSFER PAPER, but leave none for planning to override
     var dyeSubTransferOp = fields.operation88;
-    if (cu.getPjcId(product) == 450) {
-        //Choose none option for dye sub transfer material if substrate in list
-        if (cu.isValueInSet(fields.printSubstrate,fabrivuDirectMaterials)) {
-                pu.validateValue(dyeSubTransferOp, 442, true);
-        } else {
-            pu.validateValue(dyeSubTransferOp, 428, true);
-        }
-    }
+    pu.validateValue(dyeSubTransferOp, 428, true);
 }
 
 function colorCritical() {

@@ -15,7 +15,8 @@ var boardCalcLogic = {
         metaFieldsActions.onCalcLoaded(product);
         $('#additionalProductFields .additionalInformation div label:contains("Override")').parent().addClass('overrideDevice');
         $('.overrideDevice').hide();
-
+        //run default team as last function on calcLoaded, will trigger update
+        setDefaultTeam();
     },
     onCalcChanged: function(updates, product) {
         console.log('onCalcChanged Start');
@@ -872,6 +873,40 @@ function getOperationPrice(quote, opHeader) {
         }
     }
     return 0;
+}
+
+function setDefaultTeam() {
+    //ran only on calculator load
+    var teamOp = fields.operation218;
+    var tbgTeams = {
+        "Team Andrew Clemens" : 1576,
+        "Team Andrew Dyson" : 1583,
+        "Team Beth Josub" : 1572,
+        "Team Cindy Johnson" : 1570,
+        "Team Craig Omdal" : 1575,
+        "Team Jim Olson" : 1580,
+        "Team John Pihaly" : 1578,
+        "Team Jordan Feddema" : 1574,
+        "Team Perry Ludwig" : 1584,
+        "Team Pete Ludwig" : 1568,
+        "Team Rick Behncke" : 1581,
+        "Team Rick Mirau" : 1585,
+        "Team Tony Jones" : 1582,
+        "Team Tracy Cogan" : 1577,
+        "Team Vito Lombardo" : 1571,
+        "Unassigned" : 1569
+    }
+    var userTeam = globalpageglobals.cuser.metadata["Default Team"];
+    if (userTeam) {
+        var teamId = tbgTeams[userTeam];
+        if (teamId) {
+            cu.changeField(teamOp, teamId, true);
+        } else {
+            console.log('User assigned team ' + userTeam + ' not in TBG Team set in logic file.');
+        }
+    } else {
+        console.log('User assigned team not assigned to default team');
+    }
 }
 
 //UI Updates

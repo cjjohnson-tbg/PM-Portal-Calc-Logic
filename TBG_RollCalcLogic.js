@@ -20,6 +20,8 @@ var rollCalcLogic = {
         uiUpdates(product);
         //run meta field action
         metaFieldsActions.onCalcLoaded();
+        //run default team as last function on calcLoaded, will trigger update
+        setDefaultTeam();
     },
     onCalcChanged: function(updates, product) {
         if (updates) {
@@ -1072,7 +1074,38 @@ function hardProofCheck(quote) {
         } 
     }
 }
-
+function setDefaultTeam() {
+    //ran only on calculator load
+    var teamOp = fields.operation139;
+    var tbgTeams = {
+        "Team Cindy Johnson" : 687,
+        "Team Andrew Clemens" : 689,
+        "Team Andrew Dyson" : 690,
+        "Team Beth Josub" : 691,
+        "Team Craig Omdal" : 692,
+        "Team Jim Olson" : 694,
+        "Team John Pihaly" : 695,
+        "Team Jordan Feddema" : 696,
+        "Team Perry Ludwig" : 697,
+        "Team Pete Ludwig" : 698,
+        "Team Rick Behncke" : 699,
+        "Team Rick Mirau" : 700,
+        "Team Tony Jones" : 701,
+        "Team Tracy Cogan" : 702,
+        "Team Vito Lombardo" : 703
+    }
+    var userTeam = globalpageglobals.cuser.metadata["Default Team"];
+    if (userTeam) {
+        var teamId = tbgTeams[userTeam];
+        if (teamId) {
+            cu.changeField(teamOp, teamId, true);
+        } else {
+            console.log('User assigned team ' + userTeam + ' not in TBG Team set in logic file.');
+        }
+    } else {
+        console.log('User assigned team not assigned to default team');
+    }
+}
 function setSpecialMarkupOps(quote) {
     //calculates job costs and inserts into special costing operation answers
     var teamCost = getOperationPrice(quote, 139);

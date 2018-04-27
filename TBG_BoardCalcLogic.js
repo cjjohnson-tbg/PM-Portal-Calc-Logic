@@ -914,6 +914,7 @@ function updateUI(product) {
     updateLabels();
     updateClasses();
     updateOpItems();
+    updateOpQuestions();
     metaFieldsActions.onQuoteUpdated(product);
     updateOpQuestions();
     addBasicDetailsToPage();
@@ -988,6 +989,29 @@ function updateOpItems() {
     pu.removeOperationItemsWithString(156,'Print');
 }
 function updateOpQuestions() {
+    colorWorkOpQuestion();
+
+    function colorWorkOpQuestion() {
+        var colorWorkOperations = [
+            243,    //Match Color to
+            244,    //Color will be used for this art
+            245,    //Evaluation Lighting
+            247     //Lighting Environment
+        ]
+        var colorWorkOpItemsToShowQuestion = [
+            '1711',  //LF Match Color To Other
+            '1712',  //LF Color will be used for this art Enter path to art file
+            '1715',  //LF Color will be used for this art No art file: Other
+            '1721',  //LF Evaluation Lighting Other
+            '1725'  //LF Lighting Environment Non-Backlit: Other
+        ]
+        for (var i = 0; i < colorWorkOperations.length; i++) {
+            var field = fields['operation' + colorWorkOperations[i]];
+            if (!cu.isValueInSet(field, colorWorkOpItemsToShowQuestion)) {
+                pu.hideOperationQuestion(colorWorkOperations[i]);
+            }
+        }
+    }
 
 }
 function addBasicDetailsToPage() {

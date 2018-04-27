@@ -5,6 +5,7 @@ var calcCount = 0;
 
 var onQuoteUpdatedMessages = '';
 
+var disableCheckoutReasons = [];
 
 
 var boardCalcLogic = {
@@ -84,7 +85,7 @@ var boardCalcLogic = {
 }
 
 function functionsRanInFullQuote(updates, validation, product, quote) {
-    checkForColorCriticalDevice(validation);
+    checkForColorCriticalDevice(validation, product);
     setInkConsumptionOps(quote);
     setCuttingOperations(quote);
     edgeBandingLogic();
@@ -167,7 +168,7 @@ function addOperationChoiceProperties() {
     }
 }
 
-function checkForColorCriticalDevice(validation) {
+function checkForColorCriticalDevice(validation, product) {
     //If color cricital operation selected, toggle off Auto Device and select device
     var getCriticalDeviceId = {
         1466 : 6,  //Vutek HS101
@@ -202,6 +203,11 @@ function checkForColorCriticalDevice(validation) {
                         setDevice(criticalDeviceId);
                     }
                 }
+            } else {
+                //require device selection 
+                disableCheckoutReasons.push('Please Select Color Critical Device');
+                colorCriticalDevice.css('color','red');
+                cu.setSelectedOptionText(colorCriticalDevice,'Select Device...')
             }
             if (hasQtyError) {
                 cu.alert('<p>The default settings for this device cannot run with these specifications. Resubmit the specs with your Color Critical requirements, but do not select a device. Instead, enter a press note with the device required</p>');
@@ -920,6 +926,7 @@ function updateUI(product) {
     addBasicDetailsToPage();
     maxQuotedJob();
     pu.showMessages();
+    validateConfig(disableCheckoutReasons);
     renderExtendedCostBreakdown();
 }
 function updateLabels() {
@@ -1055,6 +1062,28 @@ function checkForHardProofRequired() {
             }
         } 
     }
+}
+
+function validateConfig(reasons) {
+    //TEMP - skip if checkout already disabled by meta actions
+    if ($('button.continueButton').attr('onclick')) {
+        if (reasons.length > 0) {
+            $('button.continueButton').removeAttr('onclick');
+            var checkoutErrorMessage = '<h3>These issues must be resolved before continuing:</h3><ul>';
+            for (var i = 0; i < reasons.length; i++) {
+                checkoutErrorMessage += '<li>' + reasons[i] + '</li>'
+            }
+            checkoutErrorMessage += '</ul>';
+            $('button.continueButton').removeAttr('onclick');
+            $('button.continueButton').bind('click', function(event) {
+                cu.alert(checkoutErrorMessage);
+            });
+        } else {
+            $('button.continueButton').unbind('click');
+            $('button.continueButton').attr('onclick', 'common.continueClicked();');
+        }
+    }
+    disableCheckoutReasons = [];
 }
 
 

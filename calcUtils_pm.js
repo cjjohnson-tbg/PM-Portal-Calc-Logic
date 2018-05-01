@@ -204,5 +204,24 @@ var pmCalcUtil = {
             }
         }
         return opsWithValue
+    }, 
+    validateConfig: function (reasons) {
+        //call function at end of logic scripts
+        if (reasons.length > 0) {
+            $('button.continueButton').removeAttr('onclick');
+            var checkoutErrorMessage = '<h3>These issues must be resolved before continuing:</h3><ul>';
+            for (var i = 0; i < reasons.length; i++) {
+                checkoutErrorMessage += '<li>' + reasons[i] + '</li>'
+            }
+            checkoutErrorMessage += '</ul>';
+            $('button.continueButton').removeAttr('onclick');
+            $('button.continueButton').bind('click', function(event) {
+                cu.alert(checkoutErrorMessage);
+            });
+        } else {
+            $('button.continueButton').unbind('click');
+            $('button.continueButton').attr('onclick', 'common.continueClicked();');
+        }
+        disableCheckoutReasons = [];
     }
 }

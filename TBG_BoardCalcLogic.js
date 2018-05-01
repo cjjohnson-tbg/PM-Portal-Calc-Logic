@@ -926,7 +926,7 @@ function updateUI(product) {
     addBasicDetailsToPage();
     maxQuotedJob();
     pu.showMessages();
-    validateConfig(disableCheckoutReasons);
+    pu.validateConfig(disableCheckoutReasons);
     renderExtendedCostBreakdown();
 }
 function updateLabels() {
@@ -1063,29 +1063,6 @@ function checkForHardProofRequired() {
         } 
     }
 }
-
-function validateConfig(reasons) {
-    //TEMP - skip if checkout already disabled by meta actions
-    if ($('button.continueButton').attr('onclick')) {
-        if (reasons.length > 0) {
-            $('button.continueButton').removeAttr('onclick');
-            var checkoutErrorMessage = '<h3>These issues must be resolved before continuing:</h3><ul>';
-            for (var i = 0; i < reasons.length; i++) {
-                checkoutErrorMessage += '<li>' + reasons[i] + '</li>'
-            }
-            checkoutErrorMessage += '</ul>';
-            $('button.continueButton').removeAttr('onclick');
-            $('button.continueButton').bind('click', function(event) {
-                cu.alert(checkoutErrorMessage);
-            });
-        } else {
-            $('button.continueButton').unbind('click');
-            $('button.continueButton').attr('onclick', 'common.continueClicked();');
-        }
-    }
-    disableCheckoutReasons = [];
-}
-
 
 
 

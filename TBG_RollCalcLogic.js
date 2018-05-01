@@ -1,5 +1,6 @@
 // Message holder
 var onQuoteUpdatedMessages = '';
+var disableCheckoutReasons = [];
 
 // Operation Item Keys object - in window for testing
 var operationItemKeys = new Object();  
@@ -67,8 +68,6 @@ var rollCalcLogic = {
         setConfigGlobalProperties(quote);
         //Run Roll Imposition Engine
         cc.getUpdatedConfig(quote);
-        //run meta field action
-        metaFieldsActions.onQuoteUpdated(product);
 
         //Functions that are not inter-dependent
         controller.enterFullQuoteMode();
@@ -86,10 +85,6 @@ var rollCalcLogic = {
         //console.log('POD_LF post-full-quote changes triggered:',changeEventTriggered);
         
         uiUpdates(product);
-
-        //run meta field action
-        metaFieldsActions.onCalcLoaded();
-
         //focusLastUIChangedField();
 
         return changeEventTriggered;
@@ -1172,6 +1167,9 @@ function uiUpdates(product) {
         139,    //TBG Team
         152     //TBG Special Customer
     ]
+
+    metaFieldsActions.onQuoteUpdated(product);
+    
     pu.trimOperationItemNames(inkOpsWithDPI, ' - ');
     pu.trimOperationItemNames(opsToTrimWithUnderscore, '_');
     pu.removeOperationItemsWithString(104,'Print');
@@ -1183,6 +1181,8 @@ function uiUpdates(product) {
     canvasOperationDisplay();
     bannerFinishingOperationDisplay(product);
     bannerStandLogic();
+
+    pu.validateConfig(disableCheckoutReasons);
     maxQuotedJob();
 }
 

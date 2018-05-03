@@ -13,6 +13,8 @@ var coatingChoices = {  //standard item id : 10k item id
 var hasOutsideDieSelected;
 
 var onQuoteUpdatedMessages = '';
+var disableCheckoutReasons = [];
+
 var cu = calcUtil;
 var pu = pmCalcUtil;
 var sfSheetCalcLogic = {

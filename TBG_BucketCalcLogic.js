@@ -4,6 +4,7 @@ var cu = calcUtil;
 var pu = pmCalcUtil;
 
 var onQuoteUpdatedMessages = '';
+var disableCheckoutReasons = [];
 
 var bucketCalcLogic = {
     onCalcLoaded: function(product) {

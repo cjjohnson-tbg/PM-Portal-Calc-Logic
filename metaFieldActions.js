@@ -7,6 +7,8 @@ var metaFieldsActions = {
         characterMax();
         clearReorderMeta();
 
+        bindCalcReInit();
+
         function addMetaClassNames() {
             //ADD classes to metaFields
             var metaFieldClass = [
@@ -39,7 +41,7 @@ var metaFieldsActions = {
                 showAnim: "fold",
                 onClose: function(e) {
                     //initiate calc logic script
-                    configureEvents.onQuoteUpdated();
+                    //configureEvents.onQuoteUpdated();
                 }
             });
         }
@@ -75,6 +77,13 @@ var metaFieldsActions = {
                 $('.additionalInformation input').val('');
             }
         }
+        function bindCalcReInit() {
+            var metaFields = $('.additionalInformation div.optionWrapperOn');
+            var metaInputs = metaFields.find('input');
+            $('.additionalInformation div.optionWrapperOn input').blur(function() {
+                configureEvents.onQuoteUpdated();
+            });
+        }
     },
     onQuoteUpdated: function(product) {
         var metaMessage = '';
@@ -86,16 +95,33 @@ var metaFieldsActions = {
         showMessages();
 
         function hardProof() {
-            var hardProofInput = $('.hardProof input');
-            if (cu.getValue(fields.proof) == 40 || cu.getValue(fields.proof) == 43) {
-                $('.hardProof').show();
+            var hardProofDate = $('.hardProof');
+            var pmQty = $('.pmProofQty');
+            var estQtyMeta = $('.estFinalQty');
+            var hardProofOptions = [
+                '40',   //Printed Hard Proof - Internal
+                '43',   //Printed Hard Proof - External
+                '48',   //Prototype Proof - External
+                '51',    //Prototype Proof - Internal
+                '50'    //Printed Hard Proof - Unknown Quantity
+            ]
+            // hide items by default, show upon Require or other
+            hardProofDate.hide();
+            pmQty.hide();
+            estQtyMeta.hide();
+            
+            if (cu.isValueInSet(fields.proof, hardProofOptions)) {
+                //hide all dates but hard proof
+                $('.date').hide();
                 cu.setLabel(fields.proof,'Proof (Enter Hard Proof Due Date Below)');
-                $('.hardProof').css('color','red');
-                if (hardProofInput.val() == '') {
-                    disableCheckoutReasons.push('<p>Please enter a Hard Proof Date below</p>');
+                requireMetaField(hardProofDate, 'Please enter Hard Proof Date');
+                if (cu.getValue(fields.proof) == 50) {
+                    cu.setLabel(fields.proof,'Proof (Enter Estimated Qty Below)');
+                    requireMetaField(estQtyMeta, 'Please enter Estimate Final Quantity');
+                } else {
+                    requireMetaField(pmQty, 'Please Enter Proof Quantity');
                 }
-            } else {
-                $('.hardProof').hide();
+                
             }
         }
         function buyoutMaterial(product) {
@@ -143,15 +169,8 @@ var metaFieldsActions = {
                 }
             }
             if (hasBuyout) {
-                $('.buyout').show();
+                requireMetaField($('.buyout'), 'You have selected a Buy-out Material.  Please enter in a description of the material below or choose a different material.');
                 $('.actualId').show();
-                $('.buyout').css('color','red');
-                if (buyoutDescInput.val() =='') {
-                    disableCheckoutReasons.push('<p>You have selected a Buy-out Material.  Please enter in a description of the material below or choose a different material.</p>');
-                }
-                $('.buyout input').blur(function() {
-                    configureEvents.onQuoteUpdated();
-                });
             } else {
                 $('.buyout').hide();
                 $('.actualId').hide();
@@ -253,6 +272,14 @@ var metaFieldsActions = {
                 $('.colorCritical').hide();
             }
         }
+        function requireMetaField(metaField, message) {
+            var metaInput = $(metaField).find('input');
+            metaField.show();
+            metaField.css('color','red');
+            if (metaInput.val() == '') {
+                disableCheckoutReasons.push(message);
+            }
+        } 
         function showMessages() {
             if (metaMessage != '') {
                 cu.alert(metaMessage);

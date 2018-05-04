@@ -83,9 +83,6 @@ var rollCalcLogic = {
         /*changeEventTriggered = */
         functionsRanAfterFullQuote(updates, validation, product, quote);
         //console.log('POD_LF post-full-quote changes triggered:',changeEventTriggered);
-        
-        uiUpdates(product);
-        //focusLastUIChangedField();
 
         return changeEventTriggered;
 
@@ -1182,7 +1179,7 @@ function uiUpdates(product) {
     bannerFinishingOperationDisplay(product);
     bannerStandLogic();
 
-    pu.validateConfig(disableCheckoutReasons);
+    pu.validateConfig(disableCheckoutReasons, 'rollCalcLogic');
     maxQuotedJob();
 }
 

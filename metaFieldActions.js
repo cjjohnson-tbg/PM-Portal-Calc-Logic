@@ -111,17 +111,18 @@ var metaFieldsActions = {
             estQtyMeta.hide();
             
             if (cu.isValueInSet(fields.proof, hardProofOptions)) {
-                //hide all dates but hard proof
-                $('.date').hide();
-                cu.setLabel(fields.proof,'Proof (Enter Hard Proof Due Date Below)');
-                requireMetaField(hardProofDate, 'Please enter Hard Proof Date');
+
                 if (cu.getValue(fields.proof) == 50) {
+                    //hide all dates but hard proof and Ship By
+                    $('.date').hide();
+                    $('.shipDate').show();
                     cu.setLabel(fields.proof,'Proof (Enter Estimated Qty Below)');
                     requireMetaField(estQtyMeta, 'Please enter Estimate Final Quantity');
                 } else {
                     requireMetaField(pmQty, 'Please Enter Proof Quantity');
                 }
-                
+                cu.setLabel(fields.proof,'Proof (Enter Hard Proof Due Date Below)');
+                requireMetaField(hardProofDate, 'Please enter Hard Proof Date');
             }
         }
         function buyoutMaterial(product) {

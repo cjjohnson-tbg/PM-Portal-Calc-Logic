@@ -209,11 +209,12 @@ var pmCalcUtil = {
         //call function at end of logic scripts
         if (reasons.length > 0) {
             $('button.continueButton').removeAttr('onclick');
-            var checkoutErrorMessage = '<h3>These issues must be resolved before continuing:</h3><ul>';
+            $('button.continueButton').unbind('click');
+            var checkoutErrorMessage = '<p><strong>These issues must be resolved before continuing:</strong></p><div><ul>';
             for (var i = 0; i < reasons.length; i++) {
                 checkoutErrorMessage += '<li>' + reasons[i] + '</li>'
             }
-            checkoutErrorMessage += '</ul>';
+            checkoutErrorMessage += '</ul></div>'
             $('button.continueButton').removeAttr('onclick');
             $('button.continueButton').bind('click', function(event) {
                 cu.alert(checkoutErrorMessage);

@@ -28,7 +28,11 @@ var metaFieldsActions = {
                 ['Shipping Due Date','shipDate'],
                 ['Planning', 'planning'],
                 ['Estimated Final Quantity', 'estFinalQty'],
-                ['Proof Quantity for PM', 'pmProofQty']
+                ['Proof Quantity for PM', 'pmProofQty'],
+                ['Color will be used for this art', 'colorArt'],
+                ['Match to - Other', 'colorMatch'],
+                ['Evaluation lighting', 'evalLighting'],
+                ['Lighting environment', 'lightEnv']
             ]
             $.each(metaFieldClass , function (i, val) {
                 $('#additionalProductFields .additionalInformation div label:contains("' + val[0] + '")').parent().addClass(val[1]);
@@ -91,8 +95,9 @@ var metaFieldsActions = {
         hardProof();
         buyoutMaterial(product);
         outsourceOp();
-        colorCritical();
-        showMessages();
+        colorCriticalDevice();
+        colorWork(product);
+        showMessages(product);
 
         function hardProof() {
             var hardProofDate = $('.hardProof');
@@ -245,7 +250,7 @@ var metaFieldsActions = {
                 }
             }
         }
-        function colorCritical() {
+        function colorCriticalDevice() {
             //Only show Color Critial field when Color Critical Operations is selected
             var jobIsColorCritical = false;
             var colorCritialMeta = $('.colorCritical input');
@@ -299,7 +304,95 @@ var metaFieldsActions = {
             $('button.continueButton').unbind('click');
             $('button.continueButton').attr('onclick', 'common.continueClicked();');
         }
+        function colorWork(product) {
+            var smallFormat = cu.isSmallFormat(product);
+
+            var colorMatchOp = smallFormat ? fields.operation243 : fields.operation156;
+            var colorMatchOpItems = smallFormat ? ['1711'] : ['766'];
+            var colorArtOp = smallFormat ? fields.operation244 : fields.operation157;
+            var colorArtOpItems = smallFormat ? ['1712', '1715'] : ['767', '770'];
+            var evalLightOp = smallFormat ? fields.operation245 : fields.operation158;
+            var evalLightOpItems = smallFormat ? ['1721'] : ['776'];
+            var lightEnvOp = smallFormat ? fields.operation247 : fields.operation159;
+            var lightEnvOpItems = smallFormat ? ['1725'] : ['782'];
+
+            colorWorkOpCheck(colorArtOp, colorArtOpItems, $('.colorArt'), 'Please Enter Filepath below');
+            colorWorkOpCheck(colorMatchOp, colorMatchOpItems, $('.colorMatch'), 'Please Enter Match To Description below');
+            colorWorkOpCheck(evalLightOp, evalLightOpItems, $('.evalLighting'), 'Please Enter Evaluation Lighting Description below');
+            
+            lightingEnvironment();
+
+            function colorWorkOpCheck(op, items, metaQuestion, message) {
+                if (cu.isValueInSet(op, items)) {
+                    requireMetaField(metaQuestion, message);
+                } else {
+                    metaQuestion.hide();
+                }
+            }
+            function lightingEnvironment() {
+                var lightEnvOp = fields.operation247;
+                if (cu.getValue(lightEnvOp) == 1725) {
+                    colorWorkOpCheck(lightEnvOp, lightEnvOpItems, $('.lightEnv'), 'Please Enter Lighting Environment: Non-Backlit Other description below');
+                } else {
+                    $('.lightEnv').hide();
+                }
+            }
+        }
     }
 }
 
+var stockClassification = {
+    clear : [
+        'Buy-out',
+        '2681',  //Berger Samba Fabric UV - 6.87oz - Roll -
+        '3110',  //Catalina Clear Enviro Static Cling - 8mil - Roll -
+        '4491',  //Clear Orientated Polyester - 7mil - Roll -
+        '3150',  //Duratex Backlit - 8mil -
+        '2463',  //Duratex Backlit - 8mil -
+        '4072',  //Duratex Backlit - 8mil -
+        '3122',  //Duratex Film - 8mil - Roll -
+        '3124',  //Duratex Film - 8mil - Roll -
+        '3123',  //Duratex Film - 8mil - Roll -
+        '5644',  //IJ8150 Clear - 2mil - Roll -
+        '4477',  //IJ8150 Clearview Film - 2mil - Roll -
+        '3194',  //Kodak Backlit - 8mil - Roll -
+        '3193',  //Kodak Backlit - 8mil - Roll -
+        '3192',  //Kodak Backlit - 8mil - Roll -
+        '3580',  //Optix DA Digital Acrylic - .118 -
+        '3582',  //Optix DA Digital Acrylic - .220 -
+        '3772',  //PETG - .020 -
+        '5445',  //PETG - .020 -
+        '3774',  //PETG - .030 -
+        '5623',  //PETG - .030 -
+        '3773',  //PETG - .030 -
+        '3776',  //PETG - .030 -
+        '3777',  //PETG - .040 -
+        '5577',  //PETG - .040 -
+        '3778',  //PETG - .060 -
+        '3779',  //PETG - .060 -
+        '3780',  //PETG - .080 -
+        '3781',  //PETG - .118 -
+        '5688',  //PETG - .118 -
+        '3783',  //PETG - .177 -
+        '4514',  //PETG Non-Glare - .020 -
+        '3784',  //PETG Non-Glare - .040 -
+        '4370',  //PETG Transilwrap - .010 -
+        '5520',  //Renoir 109T Backlit Pro - 5oz - Roll -
+        '2743',  //Ritrama Crystal Clear - 2mil -
+        '3233',  //Ritrama Crystal Clear Remo - 2mil - Roll -
+        '3236',  //Ritrama Gloss Clear Remo GLCLR - 3.5mil - Roll -
+        '3235',  //Ritrama Gloss Clear Remo GLCLR - 3.5mil - Roll -
+        '5734',  //Static Cling GF - Clear - 7mil - Roll -
+        '5246',  //Static Cling GF - Clear - 7mil - Roll -
+        '4692',  //Static Cling Xcel Paper Liner- Clear - 8mil - Roll -
+        '5769',  //Styrene - Translucent - .015 -
+        '4252',  //Transilwrap Transpet - Clear - .010 - Roll -
+        '4265',  //Transilwrap Transpet - Clear - .010 - Roll -
+        '6201',  //Ultracanvas Backlit D280 - 8oz - Roll -
+        '5593',  //Ultraflex D280 Wht Fabric UV - 8oz - Roll -
+        '3274',  //Ultraflex Utralon Backlit Banner - 20oz - Roll -
+        '5535',  //Value Premium Backlit -  - Roll -
+        '5904',  //Vulite Pro Backlit Banner - 15oz - Roll -
+    ]
+}
 

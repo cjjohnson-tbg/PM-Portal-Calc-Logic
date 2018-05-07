@@ -224,5 +224,21 @@ var pmCalcUtil = {
             $('button.continueButton').attr('onclick', 'common.continueClicked();');
         }
         disableCheckoutReasons = [];
+    },
+    getMaterialReferenceId: function (type) {
+        var result = '';
+        if (configureglobals.cquote.lpjQuote) {
+            var material = configureglobals.cquote.lpjQuote.piece[type];
+            if (material) {
+                result = material.referenceId
+            }
+        } else if (configureglobals.cquote.pjQuote) {
+            //for now just search for press sheet
+            if (configureglobals.cquote.pjQuote.pressSheetQuote) {
+                var result = configureglobals.cquote.pjQuote.pressSheetQuote.pressSheet.referenceId;
+            }
+            
+        }
+        return result
     }
 }

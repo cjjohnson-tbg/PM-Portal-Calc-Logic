@@ -96,6 +96,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     setTopAndBottomPieceOps();
     mountAdhesive();
     jobCostSpoilage(quote);
+    colorWork();
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
@@ -856,6 +857,24 @@ function jobCostSpoilage(quote) {
     }
 }
 
+function colorWork() {
+
+    lightingEnvironmentColorWork();
+
+    function lightingEnvironmentColorWork() {
+        var lightEnvOp = fields.operation247;
+        if (lightEnvOp) {
+            var refId = pu.getMaterialReferenceId();
+            if (stockClassification.clear.indexOf(refId) == -1) {
+                cu.hideField(lightEnvOp);
+                pu.validateValue(lightEnvOp, '');
+            } else {
+                cu.showField(lightEnvOp);
+            }
+        }
+    }
+}
+
 //functions ran after completed full quote
 function setSpecialMarkupOps(quote) {
     //calculates job costs and inserts into special costing operation answers
@@ -920,9 +939,7 @@ function updateUI(product) {
     updateLabels();
     updateClasses();
     updateOpItems();
-    updateOpQuestions();
     metaFieldsActions.onQuoteUpdated(product);
-    updateOpQuestions();
     addBasicDetailsToPage();
     maxQuotedJob();
     pu.showMessages();
@@ -981,7 +998,7 @@ function updateClasses() {
     pu.removeClassFromOperation(205,'costingOnly');
 }
 function updateOpItems() {
-    var opsWithSubIds = [
+    var opsWithUnderscoreItems = [
         129,    //LF Pre-Printing Front Laminate
         130,    //LF Back Laminating
         131,    //LF Front Laminating
@@ -990,37 +1007,14 @@ function updateOpItems() {
         120,    //LF Tape, Mag, Velcro - Perimeter
         122,    //LF Tape, Mag, Velcro - Top Only
         124,     //LF Tape, Mag, Velcro - Top & Bottom
-        133      //LF Premask
+        133,    //LF Premask
+        248     //Can color team approve color without PM?
     ]
-    pu.trimOperationItemNames(opsWithSubIds,'_');
+    pu.trimOperationItemNames(opsWithUnderscoreItems,'_');
     pu.removeOperationItemsWithString(156,'Print');
 }
-function updateOpQuestions() {
-    colorWorkOpQuestion();
 
-    function colorWorkOpQuestion() {
-        var colorWorkOperations = [
-            243,    //Match Color to
-            244,    //Color will be used for this art
-            245,    //Evaluation Lighting
-            247     //Lighting Environment
-        ]
-        var colorWorkOpItemsToShowQuestion = [
-            '1711',  //LF Match Color To Other
-            '1712',  //LF Color will be used for this art Enter path to art file
-            '1715',  //LF Color will be used for this art No art file: Other
-            '1721',  //LF Evaluation Lighting Other
-            '1725'  //LF Lighting Environment Non-Backlit: Other
-        ]
-        for (var i = 0; i < colorWorkOperations.length; i++) {
-            var field = fields['operation' + colorWorkOperations[i]];
-            if (!cu.isValueInSet(field, colorWorkOpItemsToShowQuestion)) {
-                pu.hideOperationQuestion(colorWorkOperations[i]);
-            }
-        }
-    }
 
-}
 function addBasicDetailsToPage() {
    $('#runTime span').text(cu.getTotalRuntime());
     $('#totalPressSheets span').text(cu.getTotalPressSheets());

@@ -139,6 +139,8 @@ function functionsRanAfterFullQuote(updates, validation, product, quote) {
     //UI changes
     uiUpdates(product);
     renderExtendedCostBreakdown();
+    lightingEnvironmentColorWork();
+
     pu.showMessages();
 }
 
@@ -1041,6 +1043,18 @@ function colorCritical() {
         }
     }
 }
+function lightingEnvironmentColorWork() {
+    var lightEnvOp = fields.operation159;
+    if (lightEnvOp) {
+        var refId = pu.getMaterialReferenceId('aPrintSubstrate');
+        if (stockClassification.clear.indexOf(refId) == -1) {
+            cu.hideField(lightEnvOp);
+            pu.validateValue(lightEnvOp, '');
+        } else {
+            cu.showField(lightEnvOp);
+        }
+    }
+}
 
 function hardProofCheck(quote) {
     if (!window.hardProofMessageCount) {
@@ -1158,7 +1172,8 @@ function uiUpdates(product) {
         67,  //Pre-Printing Front Laminate
         84,  //Pre-Printing Back Laminate
         58,   //TBG Tape, Mag, Velcro
-        78  //LF Premask
+        78,  //LF Premask
+        160  //Can color team approve color without PM?
     ]
     var opsWithCalculatedAnswer = [
         139,    //TBG Team

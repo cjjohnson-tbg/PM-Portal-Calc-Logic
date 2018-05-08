@@ -970,6 +970,10 @@ function backlitDoubleStike() {
 
 function heatBendingRules() {
     var heatBendingOp = fields.operation117;
+    var hasFrontLam = cu.hasValue(fields.frontLaminate);
+    var hasBackLam = cu.hasValue(fields.backLaminate);
+    var hasMount = cu.hasValue(fields.mountSubstrate);
+    
     var substratesThatCanHeatBend =[
         '4',     //Styrene 020
         '5',     //Styrene 030
@@ -996,7 +1000,7 @@ function heatBendingRules() {
                 cu.changeField(heatBendingOp,'', true);
             }
             //No PreLam, Lam, Mount or Adhesive can be applied
-            if (hasFrontLam || hasBackLam || cu.hasValue(fields.mountSubstrate)) {
+            if (hasFrontLam || hasBackLam || hasMount) {
                 onQuoteUpdatedMessages += '<p>Heat Bending cannot be chosen with Laminating or mounting</p>';
                 cu.changeField(heatBendingOp,'',true);
             }

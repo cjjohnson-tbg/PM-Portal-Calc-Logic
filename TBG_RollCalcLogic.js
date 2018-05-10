@@ -800,7 +800,8 @@ function bannerFinishingOperationDisplay(product) {
         '174',   //Aberdeen Trinity
         '172',   //Top Value Heavy Knit
         '270',   //Heavy Kit Fabric - Top Value 7.3oz
-        '394'    //Aberdeen Triple White
+        '394',    //Aberdeen Triple White
+        '207'     //Buy-out
     ]
     var bannerFinishingOperations = [
         60,   //TBG Grommets
@@ -973,7 +974,7 @@ function heatBendingRules() {
     var hasFrontLam = cu.hasValue(fields.frontLaminate);
     var hasBackLam = cu.hasValue(fields.backLaminate);
     var hasMount = cu.hasValue(fields.mountSubstrate);
-    
+
     var substratesThatCanHeatBend =[
         '4',     //Styrene 020
         '5',     //Styrene 030
@@ -1037,6 +1038,12 @@ function colorCritical() {
             cu.setLabel(colorCriticalOp,"Color Critical - please indicate job # below");
             if (cu.getValue(colorCriticalOp) == 592) {
                 cu.setLabel(colorCriticalOp,"Color Critical (Enter in Job # To Match Below)");
+            }
+            //require color Critical device
+            if (!cu.hasValue(colorCriticalDevice)) {
+                colorCriticalDevice.css('color','red');
+                cu.setSelectedOptionText(colorCriticalDevice,'Select Device...')
+                disableCheckoutReasons.push('Please Select Color Critical Device.')
             }
         } else {
             if (cu.hasValue(colorCriticalDevice)) {

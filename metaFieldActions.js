@@ -119,8 +119,8 @@ var metaFieldsActions = {
 
                 if (cu.getValue(fields.proof) == 50) {
                     //hide all dates but hard proof and Ship By
-                    $('.date').hide();
-                    $('.shipDate').show();
+                    //$('.date').hide();
+                    //$('.shipDate').show();
                     cu.setLabel(fields.proof,'Proof (Enter Estimated Qty Below)');
                     requireMetaField(estQtyMeta, 'Please enter Estimate Final Quantity');
                 } else {
@@ -344,55 +344,55 @@ var metaFieldsActions = {
 var stockClassification = {
     clear : [
         'Buy-out',
-        '2681',  //Berger Samba Fabric UV - 6.87oz - Roll -
-        '3110',  //Catalina Clear Enviro Static Cling - 8mil - Roll -
-        '4491',  //Clear Orientated Polyester - 7mil - Roll -
-        '3150',  //Duratex Backlit - 8mil -
-        '2463',  //Duratex Backlit - 8mil -
-        '4072',  //Duratex Backlit - 8mil -
-        '3122',  //Duratex Film - 8mil - Roll -
-        '3124',  //Duratex Film - 8mil - Roll -
-        '3123',  //Duratex Film - 8mil - Roll -
-        '5644',  //IJ8150 Clear - 2mil - Roll -
-        '4477',  //IJ8150 Clearview Film - 2mil - Roll -
-        '3194',  //Kodak Backlit - 8mil - Roll -
-        '3193',  //Kodak Backlit - 8mil - Roll -
-        '3192',  //Kodak Backlit - 8mil - Roll -
-        '3580',  //Optix DA Digital Acrylic - .118 -
-        '3582',  //Optix DA Digital Acrylic - .220 -
-        '3772',  //PETG - .020 -
-        '5445',  //PETG - .020 -
-        '3774',  //PETG - .030 -
-        '5623',  //PETG - .030 -
-        '3773',  //PETG - .030 -
-        '3776',  //PETG - .030 -
-        '3777',  //PETG - .040 -
-        '5577',  //PETG - .040 -
-        '3778',  //PETG - .060 -
-        '3779',  //PETG - .060 -
-        '3780',  //PETG - .080 -
-        '3781',  //PETG - .118 -
-        '5688',  //PETG - .118 -
-        '3783',  //PETG - .177 -
-        '4514',  //PETG Non-Glare - .020 -
-        '3784',  //PETG Non-Glare - .040 -
-        '4370',  //PETG Transilwrap - .010 -
-        '5520',  //Renoir 109T Backlit Pro - 5oz - Roll -
-        '2743',  //Ritrama Crystal Clear - 2mil -
-        '3233',  //Ritrama Crystal Clear Remo - 2mil - Roll -
-        '3236',  //Ritrama Gloss Clear Remo GLCLR - 3.5mil - Roll -
-        '3235',  //Ritrama Gloss Clear Remo GLCLR - 3.5mil - Roll -
-        '5734',  //Static Cling GF - Clear - 7mil - Roll -
-        '5246',  //Static Cling GF - Clear - 7mil - Roll -
-        '4692',  //Static Cling Xcel Paper Liner- Clear - 8mil - Roll -
-        '5769',  //Styrene - Translucent - .015 -
-        '4252',  //Transilwrap Transpet - Clear - .010 - Roll -
-        '4265',  //Transilwrap Transpet - Clear - .010 - Roll -
-        '6201',  //Ultracanvas Backlit D280 - 8oz - Roll -
-        '5593',  //Ultraflex D280 Wht Fabric UV - 8oz - Roll -
-        '3274',  //Ultraflex Utralon Backlit Banner - 20oz - Roll -
-        '5535',  //Value Premium Backlit -  - Roll -
-        '5904',  //Vulite Pro Backlit Banner - 15oz - Roll -
+        '5883',  //Aberdeen Stretch Knit Backlit - 5.4oz - Roll - 
+        '3635',  //Acrylic Clear Cast - .118 - 
+        '3605',  //Acrylic Clear Extruded - .118 - 
+        '3608',  //Acrylic Clear Extruded - .220 - 
+        '2128',  //Acrylic Clear Extruded - .472 - 
+        '4058',  //Acrylic DP95 Frosted 2s - .236 - 
+        '3614',  //Acrylic DP95 Frosted 2s - .236 - 
+        '3642',  //Acrylic Mirror Clr - .125 - 
+        '3615',  //Acrylic P95 Frosted 1s - .118 - 
+        '3616',  //Acrylic P95 Frosted 1s - .236 - 
+        '2714',  //Berger Samba Fabric UV - 6.87oz - Roll - 
+        '2681',  //Berger Samba Fabric UV - 6.87oz - Roll - 
+        '3110',  //Catalina Clear Enviro Static Cling - 8mil - Roll - 
+        '4491',  //Clear Orientated Polyester - 7mil - Roll - 
+        '3150',  //Duratex Backlit - 8mil - 
+        '2463',  //Duratex Backlit - 8mil - 
+        '4072',  //Duratex Backlit - 8mil - 
+        '3122',  //Duratex Film - 8mil - Roll - 
+        '3124',  //Duratex Film - 8mil - Roll - 
+        '3123',  //Duratex Film - 8mil - Roll - 
+        '5644',  //IJ8150 Clear - 2mil - Roll - 
+        '4477',  //IJ8150 Clearview Film - 2mil - Roll - 
+        '3194',  //Kodak Backlit - 8mil - Roll - 
+        '3193',  //Kodak Backlit - 8mil - Roll - 
+        '3192',  //Kodak Backlit - 8mil - Roll - 
+        '3580',  //Optix DA Digital Acrylic - .118 - 
+        '3582',  //Optix DA Digital Acrylic - .220 - 
+        '3772',  //PETG - .020 - 
+        '5445',  //PETG - .020 - 
+        '3774',  //PETG - .030 - 
+        '5623',  //PETG - .030 - 
+        '3773',  //PETG - .030 - 
+        '3776',  //PETG - .030 - 
+        '3777',  //PETG - .040 - 
+        '5577',  //PETG - .040 - 
+        '3778',  //PETG - .060 - 
+        '3779',  //PETG - .060 - 
+        '3780',  //PETG - .080 - 
+        '3781',  //PETG - .118 - 
+        '5688',  //PETG - .118 - 
+        '3783',  //PETG - .177 - 
+        '4514',  //PETG Non-Glare - .020 - 
+        '3784',  //PETG Non-Glare - .040 - 
+        '4370',  //PETG Transilwrap - .010 - 
+        '5520',  //Renoir 109T Backlit Pro - 5oz - Roll - 
+        '2743',  //Ritrama Crystal Clear - 2mil - 
+        '3233',  //Ritrama Crystal Clear Remo - 2mil - Roll - 
+        '3236',  //Ritrama Gloss Clear Remo GLCLR - 3.5mil - Roll - 
+        '3235'  //Ritrama Gloss Clear Remo GLCLR - 3.5mil - Roll - 
     ]
 }
 

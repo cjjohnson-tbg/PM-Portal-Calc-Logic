@@ -1008,7 +1008,8 @@ function updateOpItems() {
         122,    //LF Tape, Mag, Velcro - Top Only
         124,     //LF Tape, Mag, Velcro - Top & Bottom
         133,    //LF Premask
-        248     //Can color team approve color without PM?
+        248,     //Can color team approve color without PM?
+        243     //Match Color to
     ]
     pu.trimOperationItemNames(opsWithUnderscoreItems,'_');
     pu.removeOperationItemsWithString(156,'Print');

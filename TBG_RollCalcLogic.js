@@ -1184,7 +1184,8 @@ function uiUpdates(product) {
         84,  //Pre-Printing Back Laminate
         58,   //TBG Tape, Mag, Velcro
         78,  //LF Premask
-        160  //Can color team approve color without PM?
+        160,  //Can color team approve color without PM?
+        156   //Match color to
     ]
     var opsWithCalculatedAnswer = [
         139,    //TBG Team

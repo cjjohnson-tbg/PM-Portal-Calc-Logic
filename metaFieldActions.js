@@ -107,8 +107,7 @@ var metaFieldsActions = {
                 '40',   //Printed Hard Proof - Internal
                 '43',   //Printed Hard Proof - External
                 '48',   //Prototype Proof - External
-                '51',    //Prototype Proof - Internal
-                '50'    //Printed Hard Proof - Unknown Quantity
+                '51'    //Prototype Proof - Internal
             ]
             // hide items by default, show upon Require or other
             hardProofDate.hide();
@@ -116,18 +115,16 @@ var metaFieldsActions = {
             estQtyMeta.hide();
             
             if (cu.isValueInSet(fields.proof, hardProofOptions)) {
-
-                if (cu.getValue(fields.proof) == 50) {
-                    //hide all dates but hard proof and Ship By
-                    //$('.date').hide();
-                    //$('.shipDate').show();
-                    cu.setLabel(fields.proof,'Proof (Enter Estimated Qty Below)');
-                    requireMetaField(estQtyMeta, 'Please enter Estimate Final Quantity');
-                } else {
-                    requireMetaField(pmQty, 'Please Enter Proof Quantity');
-                }
+                requireMetaField(pmQty, 'Please Enter Proof Quantity');
                 cu.setLabel(fields.proof,'Proof (Enter Hard Proof Due Date Below)');
                 requireMetaField(hardProofDate, 'Please enter Hard Proof Date');
+            } else if (cu.getValue(fields.proof) == 50) {
+                //hide all dates but hard proof and Ship By
+                $('.date').hide();
+                $('.shipDate').show();
+                $('.softProofDate').show();
+                cu.setLabel(fields.proof,'Proof (Enter Estimated Qty Below)');
+                requireMetaField(estQtyMeta, 'Please enter Estimate Final Quantity');
             }
         }
         function buyoutMaterial(product) {

@@ -1,4 +1,8 @@
 
+var metaMessageCounts = {
+    outsourcePriceMessageCount : 0
+}
+
 var metaFieldsActions = {
     onCalcLoaded: function() {
         
@@ -181,7 +185,6 @@ var metaFieldsActions = {
         }
         function outsourceOp() {
             ///Only show Fab Date if Fabrication operation selects OR Cut at Fab is selected for Cutting Operation AND sub out if Outsourced selects
-            var outsourcePriceMessageCount = 0;
             var outsourcePriceMessage = '<p>All outsourcing costing needs to be added to configured price.</p>';
             if (!cu.isSmallFormat(product)) {
                 var cuttingOp = fields.operation111;
@@ -191,9 +194,9 @@ var metaFieldsActions = {
                         $('.fabDate').show();
                         if (cu.hasValue(fabLfOp)) {
                             cu.setLabel(fabLfOp, 'Fabrication (please enter date below)');
-                            if (outsourcePriceMessageCount == 0) {
+                            if (metaMessageCounts.outsourcePriceMessageCount == 0) {
                                 metaMessage += outsourcePriceMessage;
-                                outsourcePriceMessageCount++;
+                                metaMessageCounts.outsourcePriceMessageCount++;
                             }
                         }
                     } else {
@@ -207,9 +210,9 @@ var metaFieldsActions = {
                     if (cu.hasValue(outsourceLfOp)) {
                         $('.subOutDate').show();
                         cu.setLabel(outsourceLfOp, 'Outsource (please enter date below)');
-                        if (outsourcePriceMessageCount == 0) {
+                        if (metaMessageCounts.outsourcePriceMessageCount == 0) {
                             metaMessage += outsourcePriceMessage;
-                            outsourcePriceMessageCount++;
+                            metaMessageCounts.outsourcePriceMessageCount++;
                         }
                     } else {
                         $('.subOutDate').hide();
@@ -222,9 +225,9 @@ var metaFieldsActions = {
                     if (cu.hasValue(fabOp)  || (cu.getValue(fields.operation170) == 1156)) {
                         $('.fabDate').show();
                         cu.setLabel(fabOp, 'Fabrication (please enter date below)');
-                        if (outsourcePriceMessageCount == 0) {
+                        if (metaMessageCounts.outsourcePriceMessageCount == 0) {
                             metaMessage += outsourcePriceMessage;
-                            outsourcePriceMessageCount++;
+                            metaMessageCounts.outsourcePriceMessageCount++;
                         }
                     } else {
                         $('.fabDate').hide();
@@ -236,9 +239,9 @@ var metaFieldsActions = {
                     if (cu.hasValue(outsourceOp)) {
                         $('.subOutDate').show();
                         cu.setLabel(outsourceOp, 'Outsource (please enter date below)');
-                        if (outsourcePriceMessageCount == 0) {
+                        if (metaMessageCounts.outsourcePriceMessageCount == 0) {
                             metaMessage += '<p>All outsourcing costing needs to be added to configured price.</p>';
-                            outsourcePriceMessageCount++;
+                            metaMessageCounts.outsourcePriceMessageCount++;
                         }
                     } else {
                         $('.subOutDate').hide();
@@ -335,7 +338,7 @@ var metaFieldsActions = {
                 }
             }
         }
-    }
+    },
 }
 
 var stockClassification = {

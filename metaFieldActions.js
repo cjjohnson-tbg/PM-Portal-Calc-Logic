@@ -36,7 +36,8 @@ var metaFieldsActions = {
                 ['Color will be used for this art', 'colorArt'],
                 ['Match to - Other', 'colorMatch'],
                 ['Evaluation lighting', 'evalLighting'],
-                ['Lighting environment', 'lightEnv']
+                ['Lighting environment', 'lightEnv'],
+                ['Add to Slug', 'slug']
             ]
             $.each(metaFieldClass , function (i, val) {
                 $('#additionalProductFields .additionalInformation div label:contains("' + val[0] + '")').parent().addClass(val[1]);
@@ -101,6 +102,7 @@ var metaFieldsActions = {
         outsourceOp();
         colorCriticalDevice();
         colorWork(product);
+        tileSlug();
         showMessages(product);
 
         function hardProof() {
@@ -278,6 +280,14 @@ var metaFieldsActions = {
                 $('.colorCritical').hide();
             }
         }
+        function tileSlug() {
+            var slugOp = fields.operation165;
+            if (cu.getValue(slugOp) == 817) {
+                requireMetaField($('.slug'), 'Please Enter Special Slug Size.')
+            } else {
+                $('.slug').hide();
+            }
+        }
         function requireMetaField(metaField, message) {
             var metaInput = $(metaField).find('input');
             metaField.show();
@@ -338,7 +348,8 @@ var metaFieldsActions = {
                 }
             }
         }
-    },
+        
+     },
 }
 
 var stockClassification = {

@@ -91,7 +91,8 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     edgeBandingLogic();
     setLamOps(quote);
     setFluteDirectionOp();
-    heatBendingRules(updates);
+    //heatBendingRules(updates);
+    heatBendingRules_new();
     twoSidedJobOp();
     setTopAndBottomPieceOps();
     mountAdhesive();
@@ -675,7 +676,6 @@ function setFluteDirectionOp() {
         }
     }
 }
-
 function heatBendingRules(updates) {
     /********* HEAT BENDING RULES */
     var heatBendingOp = fields.operation159;
@@ -780,6 +780,217 @@ function heatBendingRules(updates) {
                 heatBendMessage += '<p>Heat Bending is not allowed with Laminating or Mounting</p>';
             }
         }
+    }
+}
+
+function heatBendingRules_new(updates) {
+    
+    var heatBendMessage = '';
+    var heatBendingOpIds = [159, 249];
+    var heatBendingOpVert = fields.operation159;
+    var heatBendingOpVert_answer = fields.operation159_answer;
+    var heatBendingOpHoriz = fields.operation249;
+    var heatBendingOpHoriz_answer = fields.operation249_answer;
+    
+    var boardTypesThatCanHeatBend = [
+        '173',   // Styrene
+        '189',   // Styrene - white
+        '190',   // Styrene - black
+        '193',   // Styrene - translucent
+        '182',   // PETG
+        '228',   // PETG Non-Glare
+        '262',   // PETG Transilwrap
+        '183',   // Sintra Expanded PVC - white
+        '197',   // Sintra Expanded PVC - black
+        '231',   // Komatex Expanded PVC - White
+        '232',   // Komatex Expanded PVC - Black
+        '301',    //EPVC Komatex - White
+        '302',    //EPVC Komatex - Black
+        '303',    //EPVC Sintra - Black
+        '304',    //EPVC Sintra - White
+        '138',   // Acrylic - non TBG*
+        '185',   // Optix DA Digital Acrylic
+        '253',   // Acrylic P95 Frosted 1 Side
+        '255',   // Acrylic - White 3015
+        '259',   // Acrylic DP95 Frosted 2 Sides
+        '261',   // Acrylic Clear Extruded
+        '263',   // Acrylic Extruded
+        '264',   // Acrylic Black Extruded
+        '268',   // Acrylic Black Cast
+        '278',   // Acrylic White Extruded
+        '283'    // Acrylic Clear Cast
+    ];
+
+
+    if (heatBendingOpVert && heatBendingOpHoriz) {
+        //Do not allwow with Post printing lam and mounting operations
+        //var previousAllowHeatBend = allowHeatBend;
+        var allowHeatBend = true;
+        var heatBendErrors = [];
+        var hasMountLam = checkForNonHeatBendingOps([
+                fields.operation130,  //LF Back Laminating
+                fields.operation131,  //LF Front Laminating
+                fields.operation135   //LF Mounting
+            ]);
+
+        var hasHeatBending = (cu.hasValue(heatBendingOpVert) || cu.hasValue(heatBendingOpHoriz));
+    
+        pu.addClassToOperationItemsWithString(heatBendingOpIds, 'heat-bend-fab', 'Bend_TBG Fab');
+        pu.addClassToOperationItemsWithString(heatBendingOpIds, 'heat-bend-fab', 'Bends_TBG Fab');
+        pu.addClassToOperationItemsWithString(heatBendingOpIds, 'heat-bend-one', 'Bend_TBG1');
+        pu.addClassToOperationItemsWithString(heatBendingOpIds, 'heat-bend-one', 'Bends_TBG1');
+
+        var heatBendLocation = cu.getTotalQuantity() < 200 ? 'TBG1' : 'FAB';
+
+        if (hasHeatBending) {
+            if (cu.hasValue(heatBendingOpVert)) {
+                validateLocationValue(heatBendingOpVert, heatBendLocation);
+                validateJobConfig(heatBendingOpVert, 'vertical', hasMountLam);
+            }
+            if (cu.hasValue(heatBendingOpHoriz)) {
+                validateLocationValue(heatBendingOpHoriz, heatBendLocation);
+                validateJobConfig(heatBendingOpHoriz, 'horizontal', hasMountLam);
+            }
+
+            heatBendErrorMessage(heatBendErrors);
+            
+            var hasVertMinutes = setHeatBendMinutes(heatBendingOpVert, heatBendingOpVert_answer);
+            setHeatBendMinutes(heatBendingOpHoriz, heatBendingOpHoriz_answer, hasVertMinutes);
+        }
+
+        
+        updateBendOpItems(heatBendLocation);
+
+    }
+    function setHeatBendMinutes(op, answer, hasVertical) {
+        //calculate total estimated time to complete
+
+        if (cu.hasValue(op)) {
+            var choice = cu.getSelectedOptionText(op);
+            if (choice.indexOf('Fab estimate') != -1) {
+                //if has Fab estimate, set as 0 minutes
+                pu.validateValue(answer,0);
+            } else {
+                var setupMinutes = getSetupMinutes(choice, hasVertical);
+                var minsPerPiece = (choice.indexOf('Vertical') != -1) ? getMinutesPerPiece(cu.getHeight()) : getMinutesPerPiece(cu.getWidth());
+                var totalMinutes = setupMinutes + ( minsPerPiece * cu.getTotalQuantity() );
+                pu.validateValue(answer, totalMinutes);
+                return true
+            }
+
+        }
+    }
+    function getSetupMinutes(choice, hasVertical) {
+        //30 minutes setup for first bend, 15 for each thereafter
+        var nBends = (choice.indexOf('2 Bends') != -1) ? 2 : 1;
+        if (hasVertical) {
+            return nBends * 15
+        } else {
+            return 30 + ( (nBends - 1) * 15 )
+        }
+    }
+    function getMinutesPerPiece(len) {
+        if (len <= 18) {
+            return .4
+        } else if (len <= 24) {
+            return .6
+        } else if (len <= 36) {
+            return .8
+        } else if (len <= 40) {
+            return 1.2
+        }
+        return 0
+    }
+    function checkForNonHeatBendingOps(fields) {
+        for (var i = 0; i < fields.length; i++) {
+            if (cu.hasValue(fields[i])) {
+                return true
+            }
+        }
+    }
+    function validateJobConfig(op, orientation, hasMountLam) {
+        var bendLength = orientation == 'vertical' ? cu.getHeight() : cu.getWidth();
+        var substrateCaliper = cu.getPressSheetCaliper();
+        var maxSubstrateCaliper = .118;
+        var minSubstrateCaliper = hasMountLam ? .040 : .060;
+
+        //only approved materials
+        if (!cu.isValueInSet(fields.paperType, boardTypesThatCanHeatBend)) {
+            heatBendErrors.push('The substrate selected is not able to Heat Bend.');
+        }
+        //bend length cannot be greater than 40"
+        if (bendLength > 40) {
+            heatBendErrors.push('Heat bending is not available for pieces with Bend Length longer than 40".');
+        }
+        //bend length must be greater than 12"
+        if (bendLength < 12) {
+            heatBendErrors.push( 'Heat bending is not available for pieces with Bend Length shorter than 12".');
+        }
+        //caliper restrictions, only if present
+        if (substrateCaliper) {
+            //max caliper of .118
+            if (substrateCaliper > maxSubstrateCaliper) {
+                heatBendErrors.push( 'Substrates with calipers greater than .118" must be sent through central estimating.');
+            }
+            //Must be min .060 caliper for standard, .040 if mount
+            if (substrateCaliper < minSubstrateCaliper) {
+                heatBendErrors.push( 'Substrates with calipers less than ' + minSubstrateCaliper + '" must be sent through central estimating.');
+            }
+        }
+    }
+    function validateLocationValue(op, location) {
+        var opChoice = cu.getValue(op);
+        // TBG1 (value) : FAB (key)
+        var heatBendKeyPairs = {
+            1750 : 1736,  //vertical 1 bend
+            1751 : 1737,  //vertical 2 bend
+            1746 : 1744,  //horizontal 1 bend
+            1747 : 1745  //horizontal 2 bend
+        }
+        if (location == 'TBG1') {
+            //if TBG1 check to see if in key - , if in value then set as key
+            for (var key in heatBendKeyPairs) {
+                if (opChoice == key) {
+                    return
+                }
+                if (opChoice == heatBendKeyPairs[key]) {
+                    cu.changeField(op, key, true);
+                }
+            }
+        } else {
+            //else for FAB check to see if in value - , if in key then set as value
+            for (var key in heatBendKeyPairs) {
+                if (opChoice == heatBendKeyPairs[key]) {
+                    return
+                }
+                if (opChoice == key) {
+                    cu.changeField(op, heatBendKeyPairs[key], true);
+                }
+            }
+        }
+    }
+    function heatBendErrorMessage(errors) {
+        if (errors.length > 0) {
+            if (cu.getValue(heatBendingOpVert) != 1742 || cu.hasValue(heatBendingOpHoriz)) {
+                pu.validateValue(heatBendingOpVert,1742);
+                pu.validateValue(heatBendingOpHoriz, '');
+                
+                var errorMessage = '<p>Heat Bending with this configuration must be estimated through Central Estimating.  The Heat Bending Operation has been adjusted to account for this.</p><div><ul>';
+                for (var i = 0; i < errors.length; i++ ) {
+                    errorMessage += '<li>' + errors[i] + '</li>';
+                }
+                errorMessage += '</ul></div>'
+                onQuoteUpdatedMessages += errorMessage;
+            }
+        }
+    }
+    function updateBendOpItems(location) {
+        if (location == 'TBG1') {
+            $('option.heat-bend-fab').hide()
+        } else {
+            $('option.heat-bend-one').hide()
+        }
+        pu.trimOperationItemNames(heatBendingOpIds,'_');
     }
 }
 

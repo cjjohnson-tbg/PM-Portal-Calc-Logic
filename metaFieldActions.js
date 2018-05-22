@@ -102,7 +102,8 @@ var metaFieldsActions = {
 
         hardProof();
         buyoutMaterial(product);
-        outsourceOp();
+        fabDate(product);
+        subOutDate(product);
         colorCriticalDevice();
         colorWork(product);
         tileSlug();
@@ -188,71 +189,69 @@ var metaFieldsActions = {
                 $('.actualId').hide();
             }
         }
-        function outsourceOp() {
-            ///Only show Fab Date if Fabrication operation selects OR Cut at Fab is selected for Cutting Operation AND sub out if Outsourced selects
+        function subOutDate(product) {
+            var isSmallFormat = cu.isSmallFormat(product);
+            var outsourceOp = isSmallFormat ? fields.operation156 : fields.operation104;
             var outsourcePriceMessage = '<p>All outsourcing costing needs to be added to configured price.</p>';
-            if (!cu.isSmallFormat(product)) {
-                var cuttingOp = fields.operation111;
-                var fabLfOp = fields.operation113;
-                if (fabLfOp || cuttingOp) {
-                    if (cu.hasValue(fabLfOp) || (cu.getValue(cuttingOp) == 495)) {
-                        $('.fabDate').show();
-                        if (cu.hasValue(fabLfOp)) {
-                            cu.setLabel(fabLfOp, 'Fabrication (please enter date below)');
-                            if (metaMessageCounts.outsourcePriceMessageCount == 0) {
-                                metaMessage += outsourcePriceMessage;
-                                metaMessageCounts.outsourcePriceMessageCount++;
-                            }
-                        }
-                    } else {
-                        $('.fabDate').hide();
-                        $('.fabDate input').val('');
+            if (outsourceOp) {
+                if (cu.hasValue(outsourceOp)) {
+                    $('.subOutDate').show();
+                    cu.setLabel(outsourceOp, 'Outsource (please enter date below)');
+                    if (metaMessageCounts.outsourcePriceMessageCount == 0) {
+                        metaMessage += outsourcePriceMessage;
+                        metaMessageCounts.outsourcePriceMessageCount++;
                     }
+                } else {
+                    $('.subOutDate').hide();
+                    $('.subOutDate input').val('');
                 }
-                
-                var outsourceLfOp = fields.operation104;
-                if (outsourceLfOp) {
-                    if (cu.hasValue(outsourceLfOp)) {
-                        $('.subOutDate').show();
-                        cu.setLabel(outsourceLfOp, 'Outsource (please enter date below)');
-                        if (metaMessageCounts.outsourcePriceMessageCount == 0) {
-                            metaMessage += outsourcePriceMessage;
-                            metaMessageCounts.outsourcePriceMessageCount++;
-                        }
-                    } else {
-                        $('.subOutDate').hide();
-                        $('.subOutDate input').val('');
-                    }
+            }
+        }
+        function fabDate(product) {
+            //Only show Fab Date if Fabrication operation selects OR Cut at Fab is selected for Cutting Operation 
+            var hasFabChosen = false;
+            var requireFabDate = false;
+
+            var isSmallFormat = cu.isSmallFormat(product);
+            var fabOp = isSmallFormat ? fields.operation172 : fields.operation113;
+            var cuttingOp = isSmallFormat ? fields.operation170 : fields.operation111;
+
+            var heatBendingVertOp = isSmallFormat ? fields.operation156 : fields.operation117;
+            var headBendingHorizOp = isSmallFormat ? fields.operation249 : fields.operation162;
+
+            if (cu.hasValue(fabOp)) {
+                hasFabChosen = true;
+            }
+
+            if (cu.hasValue(cuttingOp)) {
+                var cutChoice = cu.getSelectedOptionText(cuttingOp);
+                if (cutChoice.indexOf('Fab') != -1) {
+                    hasFabChosen = true;
+                }
+            }
+
+            //if either heat bending options selected require 
+            if (cu.hasValue(heatBendingVertOp)) {
+                if (cu.getSelectedOptionText(heatBendingVertOp).indexOf('Fab') != -1) {
+                    requireFabDate = true
+                }
+            }
+            if (cu.hasValue(headBendingHorizOp)) {
+                if (cu.getSelectedOptionText(headBendingHorizOp).indexOf('Fab') != -1) {
+                    requireFabDate = true
+                }
+            }
+
+
+            if (hasFabChosen || requireFabDate) {
+                $('.fabDate').show();
+                cu.setLabel(fabOp, 'Fabrication (please enter date below)');
+                if (requireFabDate) {
+                    requireMetaField($('.fabDate'),'Please enter Fab Date below')
                 }
             } else {
-                var fabOp = fields.operation172;
-                if (fabOp) {
-                    if (cu.hasValue(fabOp)  || (cu.getValue(fields.operation170) == 1156)) {
-                        $('.fabDate').show();
-                        cu.setLabel(fabOp, 'Fabrication (please enter date below)');
-                        if (metaMessageCounts.outsourcePriceMessageCount == 0) {
-                            metaMessage += outsourcePriceMessage;
-                            metaMessageCounts.outsourcePriceMessageCount++;
-                        }
-                    } else {
-                        $('.fabDate').hide();
-                        $('.fabDate input').val('');
-                    }
-                }
-                var outsourceOp = fields.operation156;
-                if (outsourceOp) {
-                    if (cu.hasValue(outsourceOp)) {
-                        $('.subOutDate').show();
-                        cu.setLabel(outsourceOp, 'Outsource (please enter date below)');
-                        if (metaMessageCounts.outsourcePriceMessageCount == 0) {
-                            metaMessage += '<p>All outsourcing costing needs to be added to configured price.</p>';
-                            metaMessageCounts.outsourcePriceMessageCount++;
-                        }
-                    } else {
-                        $('.subOutDate').hide();
-                        $('.subOutDate input').val('');
-                    }
-                }
+                $('.fabDate').hide();
+                $('.fabDate input').val('');
             }
         }
         function colorCriticalDevice() {

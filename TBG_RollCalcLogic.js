@@ -19,6 +19,7 @@ var rollCalcLogic = {
     onCalcLoaded: function(product) {
         cu.initFields();
         uiUpdates(product);
+
         //run meta field action
         metaFieldsActions.onCalcLoaded();
         //run default team as last function on calcLoaded, will trigger update
@@ -1027,6 +1028,8 @@ function heatBendingRules() {
 function heatBendingRules_new(updates) {
     
     var heatBendMessage = '';
+    var totalBends = 0;
+
     var heatBendingOpIds = [117, 162];
     var heatBendingOpVert = fields.operation117;
     var heatBendingOpVert_answer = fields.operation117_answer;
@@ -1035,22 +1038,53 @@ function heatBendingRules_new(updates) {
     
     var substratesThatCanHeatBend =[
         '207',   //Buy-out
-        '4',     //Styrene 020
-        '5',     //Styrene 030
-        '178',   //Styrene 015
+        '211',     //Styrene 040
+        '221',     //Styrene 060
+        '7',     //Styrene 080
+        '191',   //Styrene 040 Black
+        '192',   //Styrene 060 Black
+        '380',   //EPVC Komatex - White - 3mm
+        '390',    //EPVC Sintra - black - 3mm
+        '386',   //EPVC Sintra - White - 1mm
+        '391',   //EPVC Sintra - White - 3mm
+        '388',   //EPVC Sintra - White - 2mm
+        '385',   //EPVC Komatex - White - 1mm
+        '379',   //EPVC Komatex - Black - 3mm
         '59',    //Expanded PVC Foamboard - .125in-3mm - White
         '188',   //Expanded PVC Foamboard 2 MM - White
         '113',   //Expanded PVC Foamboard 1 MM - White
         '117',   //Expanded PVC Foamboard - .125in-3mm - Black
         '354',   //Acrylic Clear Extruded .118
         '417',   //Acrylic Black Extruded .118"
-        '39',   //PETG .020
-        '158',   //PETG .030
-        '40',   //PETG .040
+        '40',    //PETG .040
         '199',   //PETG .040 Non-Glare
-        '41',   //PETG .060
-        '69',   //PETG .080
-        '159'   //PETG .118
+        '41',    //PETG .060
+        '69',    //PETG .080
+        '159'    //PETG .118
+    ]
+    var mountsThatCanHeatBend = [
+        '65',    //Buy-out
+        '61',    //EPVC - 1mm - White
+        '71',    //EPVC - 2mm - White
+        '46',    //EPVC - 3mm - Black
+        '124',    //EPVC - 3mm - Black
+        '32',    //EPVC - 3mm - White
+        '98',    //PETG .080 Clear
+        '1',     //Styrene 040
+        '49',    //Styrene 040 Black
+        '6',     //Styrene 060
+        '50',    //Styrene 060 Black
+        '7',    //Styrene 080
+        '58',    //Styrene 080 Black
+        '82',    //Acrylic Black Cast .118
+        '102'    //Acrylic Clear Cast .118
+    ]
+    var substratesThatCantBendWithLam = [
+        '385',   //EPVC Komatex - White - 1mm
+        '386',   //EPVC Sintra - White - 1mm
+        '211',     //Styrene 040
+        '199',   //PETG .040 Non-Glare
+        '113',   //Expanded PVC Foamboard 1 MM - White
     ]
 
 
@@ -1079,17 +1113,32 @@ function heatBendingRules_new(updates) {
                 validateJobConfig(heatBendingOpHoriz, 'horizontal', hasMountLam);
             }
 
+            nVertBends = getBendCount(heatBendingOpVert);
+            nHorizBends = getBendCount(heatBendingOpHoriz);
+            if (nVertBends + nHorizBends > 2) {
+                heatBendErrors.push('Cannot have more than 2 total bends.  Please go through central estimating for a valid price.');
+            }
+            
+            var hasVertMinutes = setHeatBendMinutes(heatBendingOpVert, heatBendingOpVert_answer, nVertBends);
+            var hasHorizMinutes = setHeatBendMinutes(heatBendingOpHoriz, heatBendingOpHoriz_answer, nHorizBends, hasVertMinutes);
+
             heatBendErrorMessage(heatBendErrors);
             
-            var hasVertMinutes = setHeatBendMinutes(heatBendingOpVert, heatBendingOpVert_answer);
-            var hasHorizMinutes = setHeatBendMinutes(heatBendingOpHoriz, heatBendingOpHoriz_answer, hasVertMinutes);
         }
 
         
         updateBendOpItems(heatBendLocation);
 
     }
-    function setHeatBendMinutes(op, answer, hasVertical) {
+    function getBendCount(op) {
+        var result = 0;
+        if (cu.hasValue(op)) {
+            var choice = cu.getSelectedOptionText(op);
+            result = (choice.indexOf('2 Bends') != -1) ? 2 : 1;
+        }
+        return result
+    }
+    function setHeatBendMinutes(op, answer, bends, hasVertical) {
         //calculate total estimated time to complete
 
         if (cu.hasValue(op)) {
@@ -1098,7 +1147,7 @@ function heatBendingRules_new(updates) {
                 //if has Fab estimate, set as 0 minutes
                 pu.validateValue(answer,0);
             } else {
-                var setupMinutes = getSetupMinutes(choice, hasVertical);
+                var setupMinutes = getSetupMinutes(choice, bends, hasVertical);
                 var minsPerPiece = (choice.indexOf('Vertical') != -1) ? getMinutesPerPiece(cu.getHeight()) : getMinutesPerPiece(cu.getWidth());
                 var totalMinutes = setupMinutes + ( minsPerPiece * cu.getTotalQuantity() );
                 pu.validateValue(answer, totalMinutes);
@@ -1107,13 +1156,12 @@ function heatBendingRules_new(updates) {
 
         }
     }
-    function getSetupMinutes(choice, hasVertical) {
+    function getSetupMinutes(choice, bends, hasVertical) {
         //30 minutes setup for first bend, 15 for each thereafter
-        var nBends = (choice.indexOf('2 Bends') != -1) ? 2 : 1;
         if (hasVertical) {
-            return nBends * 15
+            return bends * 15
         } else {
-            return 30 + ( (nBends - 1) * 15 )
+            return 30 + ( (bends - 1) * 15 )
         }
     }
     function getMinutesPerPiece(len) {
@@ -1137,13 +1185,15 @@ function heatBendingRules_new(updates) {
     }
     function validateJobConfig(op, orientation, hasMountLam) {
         var bendLength = orientation == 'vertical' ? cu.getHeight() : cu.getWidth();
-        var substrateCaliper = cu.getPressSheetCaliper();
         var maxSubstrateCaliper = .118;
         var minSubstrateCaliper = hasMountLam ? .040 : .060;
 
         //only approved materials
-        if (!cu.isValueInSet(fields.printSubstrate, substratesThatCanHeatBend)) {
+        if (!cu.isValueInSet(fields.printSubstrate, substratesThatCanHeatBend) && !cu.isValueInSet(fields.mountSubstrate, mountsThatCanHeatBend)) {
             heatBendErrors.push('The substrate selected is not able to Heat Bend.');
+        } 
+        if (hasMountLam && cu.isValueInSet(fields.printSubstrate, substratesThatCantBendWithLam) ) {
+            heatBendErrors.push('The substrate selected is not able to Heat Bend with Mount or Laminating.');
         }
         //bend length cannot be greater than 40"
         if (bendLength > 40) {
@@ -1152,17 +1202,6 @@ function heatBendingRules_new(updates) {
         //bend length must be greater than 12"
         if (bendLength < 12) {
             heatBendErrors.push( 'Heat bending is not available for pieces with Bend Length shorter than 12".');
-        }
-        //caliper restrictions, only if present
-        if (substrateCaliper) {
-            //max caliper of .118
-            if (substrateCaliper > maxSubstrateCaliper) {
-                heatBendErrors.push( 'Substrates with calipers greater than .118" must be sent through central estimating.');
-            }
-            //Must be min .060 caliper for standard, .040 if mount
-            if (substrateCaliper < minSubstrateCaliper) {
-                heatBendErrors.push( 'Substrates with calipers less than ' + minSubstrateCaliper + '" must be sent through central estimating.');
-            }
         }
     }
     function validateLocationValue(op, location) {
@@ -1353,6 +1392,53 @@ function maxQuotedJob() {
     }
 }
 
+function vutekInkOptGroups() {
+    var side1CommonInks = [
+        '366',   //CMYK + W + CMYK (Flood / Second Surface)
+        '406',   //CMYK + W + CMYK (Spot / First Surface)
+        '391',   //CMYK + W + CMYK (Spot / Second Surface)
+        '249',   //CMYK + W (Flood / Second Surface)
+        '476',   //CMYK + W (Spot / First Surface)
+        '389',   //CMYK + W (Spot / Second Surface)
+        '374',   //Standard CMYK (First Surface)
+        '261',   //Standard CMYK (First Surface)
+        '239',   //W + CMYK (Flood / First Surface)
+        '396',   //W + CMYK (Spot / First Surface)
+        '306',   //White Only (Spot / First Surface)
+        '418',   //White Only (Spot / Second Surface)
+        '398',   //W + W + CMYK (Spot / First Surface)
+        '382',   //W + W Only (Spot / First Surface)
+    ]
+    var side2CommonInks = [
+        '641'   //Standard CMYK (First Surface)
+    ]
+
+
+    insertOptGroup($('select#operation52'), side1CommonInks);
+    insertOptGroup($('select#operation137'), side2CommonInks);
+
+    function insertOptGroup(operation, list) {
+      
+      if (operation.find('optGroup').length > 0) {
+        return
+      }
+      var selectedEnv = operation.val();
+      var recommendedGroup = $('<optgroup label="Standard"></optGroup>');
+      var otherGroup = $('<optgroup label="Rare"></optgroup>');
+      var items = operation.find('option');
+      for (var i = 0; i < items.length; i++) {
+        if (list.indexOf(items[i].value) != -1) {
+            recommendedGroup.append(items[i]);
+        } else {
+            otherGroup.append(items[i])
+        }
+      }
+      recommendedGroup.appendTo(operation);
+      otherGroup.appendTo(operation);
+      operation.val(selectedEnv);
+   }
+}
+
 function uiUpdates(product) {
     var planningOnlyOps = [
         99,  //TBGCutting
@@ -1403,6 +1489,9 @@ function uiUpdates(product) {
     canvasOperationDisplay();
     bannerFinishingOperationDisplay(product);
     bannerStandLogic();
+
+    vutekInkOptGroups();
+
 
     pu.validateConfig(disableCheckoutReasons, 'rollCalcLogic');
     maxQuotedJob();

@@ -793,6 +793,7 @@ function heatBendingRules_new(updates) {
     var heatBendingOpHoriz_answer = fields.operation249_answer;
     
     var boardTypesThatCanHeatBend = [
+        '247',   //Buy-out
         '173',   // Styrene
         '189',   // Styrene - white
         '190',   // Styrene - black
@@ -852,17 +853,34 @@ function heatBendingRules_new(updates) {
                 validateJobConfig(heatBendingOpHoriz, 'horizontal', hasMountLam);
             }
 
+            nVertBends = getBendCount(heatBendingOpVert);
+            nHorizBends = getBendCount(heatBendingOpHoriz);
+            if (nVertBends + nHorizBends > 2) {
+                heatBendErrors.push('Cannot have more than 2 total bends.  Please go through central estimating for a valid price.');
+            }
+
             heatBendErrorMessage(heatBendErrors);
-            
-            var hasVertMinutes = setHeatBendMinutes(heatBendingOpVert, heatBendingOpVert_answer);
-            setHeatBendMinutes(heatBendingOpHoriz, heatBendingOpHoriz_answer, hasVertMinutes);
+
+            var hasVertMinutes = setHeatBendMinutes(heatBendingOpVert, heatBendingOpVert_answer, nVertBends);
+            var hasHorizMinutes = setHeatBendMinutes(heatBendingOpHoriz, heatBendingOpHoriz_answer, nHorizBends, hasVertMinutes);
+
         }
 
         
         updateBendOpItems(heatBendLocation);
 
     }
-    function setHeatBendMinutes(op, answer, hasVertical) {
+
+    function getBendCount(op) {
+        var result = 0;
+        if (cu.hasValue(op)) {
+            var choice = cu.getSelectedOptionText(op);
+            result = (choice.indexOf('2 Bends') != -1) ? 2 : 1;
+        }
+        return result
+    }
+
+    function setHeatBendMinutes(op, answer, bends, hasVertical) {
         //calculate total estimated time to complete
 
         if (cu.hasValue(op)) {
@@ -871,7 +889,7 @@ function heatBendingRules_new(updates) {
                 //if has Fab estimate, set as 0 minutes
                 pu.validateValue(answer,0);
             } else {
-                var setupMinutes = getSetupMinutes(choice, hasVertical);
+                var setupMinutes = getSetupMinutes(choice, bends, hasVertical);
                 var minsPerPiece = (choice.indexOf('Vertical') != -1) ? getMinutesPerPiece(cu.getHeight()) : getMinutesPerPiece(cu.getWidth());
                 var totalMinutes = setupMinutes + ( minsPerPiece * cu.getTotalQuantity() );
                 pu.validateValue(answer, totalMinutes);
@@ -880,13 +898,12 @@ function heatBendingRules_new(updates) {
 
         }
     }
-    function getSetupMinutes(choice, hasVertical) {
+    function getSetupMinutes(choice, bends, hasVertical) {
         //30 minutes setup for first bend, 15 for each thereafter
-        var nBends = (choice.indexOf('2 Bends') != -1) ? 2 : 1;
         if (hasVertical) {
-            return nBends * 15
+            return bends * 15
         } else {
-            return 30 + ( (nBends - 1) * 15 )
+            return 30 + ( (bends - 1) * 15 )
         }
     }
     function getMinutesPerPiece(len) {
@@ -913,6 +930,7 @@ function heatBendingRules_new(updates) {
         var substrateCaliper = cu.getPressSheetCaliper();
         var maxSubstrateCaliper = .118;
         var minSubstrateCaliper = hasMountLam ? .040 : .060;
+        var isBuyOut = cu.getValue(fields.paperType) == '247';
 
         //only approved materials
         if (!cu.isValueInSet(fields.paperType, boardTypesThatCanHeatBend)) {
@@ -927,7 +945,7 @@ function heatBendingRules_new(updates) {
             heatBendErrors.push( 'Heat bending is not available for pieces with Bend Length shorter than 12".');
         }
         //caliper restrictions, only if present
-        if (substrateCaliper) {
+        if (substrateCaliper && !isBuyOut) {
             //max caliper of .118
             if (substrateCaliper > maxSubstrateCaliper) {
                 heatBendErrors.push( 'Substrates with calipers greater than .118" must be sent through central estimating.');

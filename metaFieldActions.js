@@ -90,7 +90,10 @@ var metaFieldsActions = {
             var metaFields = $('.additionalInformation div.optionWrapperOn');
             var metaInputs = metaFields.find('input');
             $('.additionalInformation div.optionWrapperOn input').blur(function() {
-                configureEvents.onQuoteUpdated();
+                //short time to allow for datepicker to enter into input field
+                setTimeout(function() {
+                    configureEvents.onQuoteUpdated();
+                },100);
             });
         }
     },

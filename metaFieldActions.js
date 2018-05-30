@@ -93,7 +93,7 @@ var metaFieldsActions = {
                 //short time to allow for datepicker to enter into input field
                 setTimeout(function() {
                     configureEvents.onQuoteUpdated();
-                },100);
+                },200);
             });
         }
     },
@@ -216,8 +216,10 @@ var metaFieldsActions = {
             var fabOp = isSmallFormat ? fields.operation172 : fields.operation113;
             var cuttingOp = isSmallFormat ? fields.operation170 : fields.operation111;
 
-            var heatBendingVertOp = isSmallFormat ? fields.operation156 : fields.operation117;
-            var headBendingHorizOp = isSmallFormat ? fields.operation249 : fields.operation162;
+            var heatBendingVertOp = isSmallFormat ? fields.operation159 : fields.operation117;
+            var heatBendingHorizOp = isSmallFormat ? fields.operation249 : fields.operation162;
+
+            var heatBendFabOptions = isSmallFormat ? ['1736', '1737', '1744', '1745'] : ['796', '797', '802', '803'];
 
             if (cu.hasValue(fabOp)) {
                 hasFabChosen = true;
@@ -231,21 +233,16 @@ var metaFieldsActions = {
             }
 
             //if either heat bending options selected require 
-            if (cu.hasValue(heatBendingVertOp)) {
-                if (cu.getSelectedOptionText(heatBendingVertOp).indexOf('Fab') != -1) {
-                    requireFabDate = true
-                }
+            if (cu.isValueInSet(heatBendingVertOp, heatBendFabOptions)) {
+                requireFabDate = true
             }
-            if (cu.hasValue(headBendingHorizOp)) {
-                if (cu.getSelectedOptionText(headBendingHorizOp).indexOf('Fab') != -1) {
-                    requireFabDate = true
-                }
+            if (cu.isValueInSet(heatBendingHorizOp, heatBendFabOptions)) {
+                requireFabDate = true
             }
 
 
             if (hasFabChosen || requireFabDate) {
                 $('.fabDate').show();
-                cu.setLabel(fabOp, 'Fabrication (please enter date below)');
                 if (requireFabDate) {
                     requireMetaField($('.fabDate'),'Please enter Fab Date below')
                 }

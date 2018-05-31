@@ -91,8 +91,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     edgeBandingLogic();
     setLamOps(quote);
     setFluteDirectionOp();
-    //heatBendingRules(updates);
-    heatBendingRules_new();
+    heatBendingRules(updates);
     twoSidedJobOp();
     setTopAndBottomPieceOps();
     mountAdhesive();
@@ -676,114 +675,8 @@ function setFluteDirectionOp() {
         }
     }
 }
+
 function heatBendingRules(updates) {
-    /********* HEAT BENDING RULES */
-    var heatBendingOp = fields.operation159;
-    var boardTypesThatCanHeatBend = [
-        '173',   // Styrene
-        '189',   // Styrene - white
-        '190',   // Styrene - black
-        '193',   // Styrene - translucent
-        '182',   // PETG
-        '228',   // PETG Non-Glare
-        '262',   // PETG Transilwrap
-        '183',   // Sintra Expanded PVC - white
-        '197',   // Sintra Expanded PVC - black
-        '231',   // Komatex Expanded PVC - White
-        '232',   // Komatex Expanded PVC - Black
-        '301',    //EPVC Komatex - White
-        '302',    //EPVC Komatex - Black
-        '303',    //EPVC Sintra - Black
-        '304',    //EPVC Sintra - White
-        '138',   // Acrylic - non TBG*
-        '185',   // Optix DA Digital Acrylic
-        '253',   // Acrylic P95 Frosted 1 Side
-        '255',   // Acrylic - White 3015
-        '259',   // Acrylic DP95 Frosted 2 Sides
-        '261',   // Acrylic Clear Extruded
-        '263',   // Acrylic Extruded
-        '264',   // Acrylic Black Extruded
-        '268',   // Acrylic Black Cast
-        '278',   // Acrylic White Extruded
-        '283'    // Acrylic Clear Cast
-    ];
-    var boardWeightsThatCanHeatBend = [
-        '63',   // 1MM
-        '64',   // 2MM
-        '65',   // 3MM
-        '55',   // .015
-        '56',   // .020
-        '57',   // .030
-        '58',   // .040
-        '59',   // .060
-        '60',   // .080
-        '61',   // .125
-        '62',   // .118
-        '77',   // .065
-        '77',   // .065
-        '79'    // .010
-    ];
-    if (heatBendingOp) {
-        //Do not allwow with Post printing lam and mounting operations
-        //var previousAllowHeatBend = allowHeatBend;
-        var allowHeatBend = true;
-        var heatBendMessage = '';
-        //Do not allow with Lam or Mounting
-        var hasNonHeatBendOpSelected = false;
-        checkForNonHeatBendingOps([
-                fields.operation130,  //LF Back Laminating
-                fields.operation131,  //LF Front Laminating
-                fields.operation135   //LF Mounting
-            ]);
-        //only approved materials
-        if (!cu.isValueInSet(fields.paperType, boardTypesThatCanHeatBend)) {
-            allowHeatBend = false; 
-            heatBendMessage += '<p>The substrate selected is not able to Heat Bend.</p>';
-        }
-        //Cannot exceed 100 finished pieces.
-        if (cu.getTotalQuantity() > 100) {
-            allowHeatBend = false; 
-            heatBendMessage += '<p>Heat Bending is not allowed on quantities over 100 finishing pieces.</p>';
-        }
-        //Neither size dimension can exceed 40"
-        if (cu.getWidth() > 40 || cu.getHeight() > 40) {
-            allowHeatBend = false; 
-            heatBendMessage += '<p>Heat bending is not available for pieces with one edge longer than 40".</p>';
-        }
-        //must be .125 (3MM) or thinner boardWeightsThatCanHeatBend
-        if (!cu.isValueInSet(fields.paperWeight, boardWeightsThatCanHeatBend)) {
-            allowHeatBend = false; 
-            heatBendMessage += '<p>The substrate weight selected is not able to Heat Bend.</p>';
-        }
-
-        if (cu.hasValue(heatBendingOp)) {
-            if (!allowHeatBend) {
-                //onQuoteUpdatedMessages += heatBendMessage;
-                cu.alert(heatBendMessage);
-                cu.changeField(heatBendingOp,'',true);
-            }
-            if (cu.isLastChangedField(updates, heatBendingOp)) {
-                onQuoteUpdatedMessages += '<p>Because you selected the Heat Bending option you are required to provide art describing the piece and where the bend(s) goes. If you have any questions about this please speak to your training supervisor.</p>';
-            }
-            
-        }
-        if (allowHeatBend) {
-            cu.showField(heatBendingOp);
-        } else {
-            cu.hideField(heatBendingOp);
-        }
-    }
-    function checkForNonHeatBendingOps(fields) {
-        for (var i = 0; i < fields.length; i++) {
-            if (cu.hasValue(fields[i])) {
-                allowHeatBend = false; 
-                heatBendMessage += '<p>Heat Bending is not allowed with Laminating or Mounting</p>';
-            }
-        }
-    }
-}
-
-function heatBendingRules_new(updates) {
     
     var heatBendMessage = '';
     var heatBendingOpIds = [159, 249];
@@ -791,6 +684,7 @@ function heatBendingRules_new(updates) {
     var heatBendingOpVert_answer = fields.operation159_answer;
     var heatBendingOpHoriz = fields.operation249;
     var heatBendingOpHoriz_answer = fields.operation249_answer;
+    var customHeatBendOpItem = 1742;
     
     var boardTypesThatCanHeatBend = [
         '247',   //Buy-out
@@ -863,11 +757,16 @@ function heatBendingRules_new(updates) {
 
             var hasVertMinutes = setHeatBendMinutes(heatBendingOpVert, heatBendingOpVert_answer, nVertBends);
             var hasHorizMinutes = setHeatBendMinutes(heatBendingOpHoriz, heatBendingOpHoriz_answer, nHorizBends, hasVertMinutes);
+            pu.hideOperationQuestion(heatBendingOpIds);
 
         }
 
         
         updateBendOpItems(heatBendLocation);
+
+        if (cu.getValue(heatBendingOpVert) == customHeatBendOpItem) {
+            pu.validateValue(heatBendingOpHoriz,'');
+        }
 
     }
 
@@ -893,6 +792,7 @@ function heatBendingRules_new(updates) {
                 var minsPerPiece = (choice.indexOf('Vertical') != -1) ? getMinutesPerPiece(cu.getHeight()) : getMinutesPerPiece(cu.getWidth());
                 var totalMinutes = setupMinutes + ( minsPerPiece * cu.getTotalQuantity() );
                 pu.validateValue(answer, totalMinutes);
+                pu.hideOperationQuestion
                 return true
             }
 
@@ -929,9 +829,9 @@ function heatBendingRules_new(updates) {
         var bendLength = orientation == 'vertical' ? cu.getHeight() : cu.getWidth();
         var substrateCaliper = cu.getPressSheetCaliper();
         var maxSubstrateCaliper = .118;
-        var minSubstrateCaliper = hasMountLam ? .040 : .060;
-        var isBuyOut = cu.getValue(fields.paperType) == '247';
+        var minSubstrateCaliper = .040;
 
+        var isBuyOut = cu.getValue(fields.paperType) == '247';
         //only approved materials
         if (!cu.isValueInSet(fields.paperType, boardTypesThatCanHeatBend)) {
             heatBendErrors.push('The substrate selected is not able to Heat Bend.');
@@ -940,22 +840,27 @@ function heatBendingRules_new(updates) {
         if (bendLength > 40) {
             heatBendErrors.push('Heat bending is not available for pieces with Bend Length longer than 40".');
         }
-        //bend length must be greater than 12"
-        if (bendLength < 12) {
-            heatBendErrors.push( 'Heat bending is not available for pieces with Bend Length shorter than 12".');
+        if (isBuyOut) {
+            heatBendErrors.push('Heat bending for Buy-out materials must be sent through central estimating.');
         }
-        //caliper restrictions, only if present
+        //caliper restrictions, only if present and not a buyout
         if (substrateCaliper && !isBuyOut) {
             //max caliper of .118
             if (substrateCaliper > maxSubstrateCaliper) {
-                heatBendErrors.push( 'Substrates with calipers greater than .118" must be sent through central estimating.');
+                heatBendErrors.push( 'Substrates with calipers greater than ' + maxSubstrateCaliper + '" must be sent through central estimating.');
             }
-            //Must be min .060 caliper for standard, .040 if mount
-            if (substrateCaliper < minSubstrateCaliper) {
-                heatBendErrors.push( 'Substrates with calipers less than ' + minSubstrateCaliper + '" must be sent through central estimating.');
+            if (substrateCaliper <  minSubstrateCaliper) {
+                heatBendErrors.push( 'Substrates with calipers less than than ' + minSubstrateCaliper + '" must be sent through central estimating.');
+            }
+            if (bendLength >= 12 && substrateCaliper < .060) {
+                heatBendErrors.push( 'Substrates with calipers less than .060" must have a bend length 12" or less and must be sent through central estimating');
+            }
+            if (hasMountLam && substrateCaliper < .060) {
+                heatBendErrors.push( 'Substrates with calipers less than .060" and laminating or mounting must be sent through central estimating.');
             }
         }
     }
+
     function validateLocationValue(op, location) {
         var opChoice = cu.getValue(op);
         // TBG1 (value) : FAB (key)
@@ -989,15 +894,15 @@ function heatBendingRules_new(updates) {
     }
     function heatBendErrorMessage(errors) {
         if (errors.length > 0) {
-            if (cu.getValue(heatBendingOpVert) != 1742 || cu.hasValue(heatBendingOpHoriz)) {
-                pu.validateValue(heatBendingOpVert,1742);
+            if (cu.getValue(heatBendingOpVert) != customHeatBendOpItem || cu.hasValue(heatBendingOpHoriz)) {
+                pu.validateValue(heatBendingOpVert,customHeatBendOpItem);
                 pu.validateValue(heatBendingOpHoriz, '');
                 
-                var errorMessage = '<p>Heat Bending with this configuration must be estimated through Central Estimating.  The Heat Bending Operation has been adjusted to account for this.</p><div><ul>';
+                var errorMessage = '<p>Heat Bending with this configuration must be estimated through an Estimate Request. A choice is still needed so the Heat Bending Operations have been adjusted to account for this.</p><div><ul>';
                 for (var i = 0; i < errors.length; i++ ) {
                     errorMessage += '<li>' + errors[i] + '</li>';
                 }
-                errorMessage += '</ul></div>'
+                errorMessage += '</ul></div><p>For more information please visit the Help Tip.</p>'
                 onQuoteUpdatedMessages += errorMessage;
             }
         }
@@ -1174,6 +1079,8 @@ function updateUI(product) {
     pu.showMessages();
     pu.validateConfig(disableCheckoutReasons);
     renderExtendedCostBreakdown();
+    inkOptGroup_surface(product);
+    //inkOptGroup_common(product);
 }
 function updateLabels() {
     cu.setLabel(fields.paperType,'Substrate');
@@ -1243,7 +1150,123 @@ function updateOpItems() {
     pu.trimOperationItemNames(opsWithUnderscoreItems,'_');
     pu.removeOperationItemsWithString(156,'Print');
 }
+function inkOptGroup_surface(product) {
 
+    //Create opt groups only for TBG Board Printing
+    if (cu.getPjcId(product) != 832) {return}
+
+    insertOptGroup($('select[name="SIDE1DD"]'));
+    insertOptGroup($('select[name="SIDE2DD"]'));
+
+    var side1CommonInkTypes = [
+        '64',   //Standard CMYK (First Surface)
+        '58',   //Standard CMYK (Second Surface)
+        '42',   //CMYK + W (Flood / Second Surface)
+        '50',   //CMYK + W (Spot / Second Surface)
+        '43',   //W + CMYK (Flood / First Surface)
+        '51',   //W + CMYK (Spot / First Surface)
+        '53',   //W + W + CMYK (Spot / First Surface)
+        '60',   //W + W Only (Spot / First Surface)
+        '62',   //White Only (Spot / First Surface)
+        '55'   //CMYK (Backlit)
+    ]
+    var side2CommonInkTypes = [
+        '64',   //Standard CMYK (First Surface)
+    ]
+
+    function insertOptGroup(inkSelect) {
+      
+        //Create opt groups for inks with Surfact in name
+        //only for TBG Board Printing
+        if (inkSelect.find('optGroup').length > 0) {
+            return
+        }
+        var selectedOption = inkSelect.val();
+        var firstSurfaceGroup = $('<optgroup label="First Surface"></optGroup>');
+        var secondSurfaceGroup = $('<optgroup label="Second Surface"></optgroup>');
+        var otherGroup = $('<optgroup label="other"></optgroup>');
+        var items = inkSelect.find('option');
+        for (var i = 0; i < items.length; i++) {
+            //if none, push to top
+            if (items[i].value == '') {
+                inkSelect.append(items[i]);
+                continue
+            }
+            var optionText = items[i].text;
+            if (optionText.indexOf('First Surface') != -1) {
+                firstSurfaceGroup.append(items[i]);
+            } else if (optionText.indexOf('Second Surface') != -1) {
+                secondSurfaceGroup.append(items[i])
+            } else {
+                otherGroup.append(items[i])
+            }
+        }
+        firstSurfaceGroup.appendTo(inkSelect);
+        if (secondSurfaceGroup.find('option').length > 0) {
+            secondSurfaceGroup.appendTo(inkSelect);
+        }
+        if (otherGroup.find('option').length > 0) {
+            otherGroup.appendTo(inkSelect);
+        }
+
+      inkSelect.val(selectedOption);
+   }
+}
+function inkOptGroup_common(product) {
+    //Create opt groups for COMMON inks ink list
+    //only for TBG Board Printing
+    if (cu.getPjcId(product) != 832) {return}
+
+    var side1CommonInkTypes = [
+        '64',   //Standard CMYK (First Surface)
+        '58',   //Standard CMYK (Second Surface)
+        '42',   //CMYK + W (Flood / Second Surface)
+        '50',   //CMYK + W (Spot / Second Surface)
+        '43',   //W + CMYK (Flood / First Surface)
+        '51',   //W + CMYK (Spot / First Surface)
+        '53',   //W + W + CMYK (Spot / First Surface)
+        '60',   //W + W Only (Spot / First Surface)
+        '62',   //White Only (Spot / First Surface)
+        '55'   //CMYK (Backlit)
+    ]
+    var side2CommonInkTypes = [
+        '64',   //Standard CMYK (First Surface)
+    ]
+
+    insertOptGroup($('select[name="SIDE1DD"]'), side1CommonInkTypes);
+    insertOptGroup($('select[name="SIDE2DD"]'), side2CommonInkTypes);
+
+
+    function insertOptGroup(inkSelect, list) {
+        if (!inkSelect) { return }
+        if (inkSelect.find('optGroup').length > 0) {
+            return
+        }
+        var selectedOption = inkSelect.val();
+        var commonInkGroup = $('<optgroup label="Common Inks"></optGroup>');
+        var otherGroup = $('<optgroup label="other"></optgroup>');
+        var items = inkSelect.find('option');
+        for (var i = 0; i < items.length; i++) {
+            //if none, push to top
+            if (items[i].value == '') {
+                inkSelect.append(items[i]);
+                continue
+            }
+            if (list.indexOf(items[i].value) != -1) {
+                commonInkGroup.append(items[i]);
+            } else {
+                otherGroup.append(items[i])
+            }
+        }
+        if (commonInkGroup.find('option').length > 0) {
+            commonInkGroup.appendTo(inkSelect);
+        }
+        if (otherGroup.find('option').length > 0) {
+            otherGroup.appendTo(inkSelect);
+        }
+        inkSelect.val(selectedOption);
+   }
+}
 
 function addBasicDetailsToPage() {
    $('#runTime span').text(cu.getTotalRuntime());

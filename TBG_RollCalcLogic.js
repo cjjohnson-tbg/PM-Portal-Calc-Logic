@@ -126,8 +126,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     setVinylCuttingRules();
     fluteDirectionRules();
     backlitDoubleStike();
-    //heatBendingRules();
-    heatBendingRules_new();
+    heatBendingRules(updates);
     fabrivuLogic(product);
     colorCritical();
 
@@ -971,61 +970,7 @@ function backlitDoubleStike() {
     }
 }
 
-function heatBendingRules() {
-    var heatBendingOp = fields.operation117;
-    var hasFrontLam = cu.hasValue(fields.frontLaminate);
-    var hasBackLam = cu.hasValue(fields.backLaminate);
-    var hasMount = cu.hasValue(fields.mountSubstrate);
-
-    var substratesThatCanHeatBend =[
-        '207',   //Buy-out
-        '4',     //Styrene 020
-        '5',     //Styrene 030
-        '178',   //Styrene 015
-        '59',    //Expanded PVC Foamboard - .125in-3mm - White
-        '188',   //Expanded PVC Foamboard 2 MM - White
-        '113',   //Expanded PVC Foamboard 1 MM - White
-        '117',   //Expanded PVC Foamboard - .125in-3mm - Black
-        '354',   //Acrylic Clear Extruded .118
-        '417',   //Acrylic Black Extruded .118"
-        '39',   //PETG .020
-        '158',   //PETG .030
-        '40',   //PETG .040
-        '199',   //PETG .040 Non-Glare
-        '41',   //PETG .060
-        '69',   //PETG .080
-        '159'   //PETG .118
-    ]
-    if (heatBendingOp) {
-        if (cu.hasValue(heatBendingOp)) {
-            //cannot exceed 100 pieces
-            if (cu.getTotalQuantity() > 100) {
-                onQuoteUpdatedMessages += '<p>Heat Bending is limited to 100 pieces.  This option has been removed from your selects.</p>';
-                cu.changeField(heatBendingOp,'', true);
-            }
-            //No PreLam, Lam, Mount or Adhesive can be applied
-            if (hasFrontLam || hasBackLam || hasMount) {
-                onQuoteUpdatedMessages += '<p>Heat Bending cannot be chosen with Laminating or mounting</p>';
-                cu.changeField(heatBendingOp,'',true);
-            }
-            if (cu.hasValue(fields.operation84) || cu.hasValue(fields.operation67)) {
-                onQuoteUpdatedMessages += '<p>Heat Bending cannot be chosen with Laminating or mounting</p>';
-                cu.changeField(heatBendingOp,'',true);
-            }
-            //Neight side can be lower than 36"
-            if (cu.getWidth() > 36 || cu.getHeight() > 36) {
-                onQuoteUpdatedMessages += '<p>Heat Bending cannot be chosen with either side longer than 36"</p>';
-                cu.changeField(heatBendingOp,'',true);
-            }
-            //
-            if (substratesThatCanHeatBend.indexOf(cu.getValue(fields.printSubstrate)) == -1) {
-                onQuoteUpdatedMessages += '<p>Heat Bending can only be chosen for Styrene, EPVC, Acrylic, or PETG in calipers less than .125" (3MM).</p>';
-                cu.changeField(heatBendingOp,'',true);
-            }
-        }
-    }
-}
-function heatBendingRules_new(updates) {
+function heatBendingRules(updates) {
     
     var heatBendMessage = '';
     var totalBends = 0;
@@ -1035,6 +980,7 @@ function heatBendingRules_new(updates) {
     var heatBendingOpVert_answer = fields.operation117_answer;
     var heatBendingOpHoriz = fields.operation162;
     var heatBendingOpHoriz_answer = fields.operation162_answer;
+    var customHeatBendOpItem = 800;
     
     var substratesThatCanHeatBend =[
         '207',   //Buy-out
@@ -1079,7 +1025,7 @@ function heatBendingRules_new(updates) {
         '82',    //Acrylic Black Cast .118
         '102'    //Acrylic Clear Cast .118
     ]
-    var substratesThatCantBendWithLam = [
+    var thinHeatBendSubstrates = [
         '385',   //EPVC Komatex - White - 1mm
         '386',   //EPVC Sintra - White - 1mm
         '211',     //Styrene 040
@@ -1121,13 +1067,16 @@ function heatBendingRules_new(updates) {
             
             var hasVertMinutes = setHeatBendMinutes(heatBendingOpVert, heatBendingOpVert_answer, nVertBends);
             var hasHorizMinutes = setHeatBendMinutes(heatBendingOpHoriz, heatBendingOpHoriz_answer, nHorizBends, hasVertMinutes);
-
+            pu.hideOperationQuestion(heatBendingOpIds);
             heatBendErrorMessage(heatBendErrors);
-            
-        }
 
+        }
         
         updateBendOpItems(heatBendLocation);
+
+        if (cu.getValue(heatBendingOpVert) == customHeatBendOpItem) {
+            pu.validateValue(heatBendingOpHoriz,'');
+        }
 
     }
     function getBendCount(op) {
@@ -1176,40 +1125,41 @@ function heatBendingRules_new(updates) {
         }
         return 0
     }
-    function checkForNonHeatBendingOps(fields) {
-        for (var i = 0; i < fields.length; i++) {
-            if (cu.hasValue(fields[i])) {
-                return true
-            }
-        }
-    }
     function validateJobConfig(op, orientation, hasMountLam) {
         var bendLength = orientation == 'vertical' ? cu.getHeight() : cu.getWidth();
-        var maxSubstrateCaliper = .118;
-        var minSubstrateCaliper = hasMountLam ? .040 : .060;
-
-        //only approved materials
-        if (!cu.isValueInSet(fields.printSubstrate, substratesThatCanHeatBend) && !cu.isValueInSet(fields.mountSubstrate, mountsThatCanHeatBend)) {
-            heatBendErrors.push('The substrate selected is not able to Heat Bend.');
-        } 
-        if (hasMountLam && cu.isValueInSet(fields.printSubstrate, substratesThatCantBendWithLam) ) {
-            heatBendErrors.push('The substrate selected is not able to Heat Bend with Mount or Laminating.');
-        }
-        //bend length cannot be greater than 40"
+        var hasBuyoutMaterial = (cu.getValue(fields.printSubstrate) == '207' || cu.getValue(fields.mountSubstrate) == '65') ? true : false;
+        
         if (bendLength > 40) {
             heatBendErrors.push('Heat bending is not available for pieces with Bend Length longer than 40".');
         }
-        //bend length must be greater than 12"
-        if (bendLength < 12) {
-            heatBendErrors.push( 'Heat bending is not available for pieces with Bend Length shorter than 12".');
+        if (!cu.isValueInSet(fields.printSubstrate, substratesThatCanHeatBend)) {
+            heatBendErrors.push('The Print substrate selected is not able to Heat Bend.');
+        } 
+        if (cu.hasValue(fields.mountSubstrate) && !cu.isValueInSet(fields.mountSubstrate, mountsThatCanHeatBend)) {
+            heatBendErrors.push('The Mount substrate selected is not able to Heat Bend.');
         }
+        if (hasMountLam && cu.isValueInSet(fields.printSubstrate, thinHeatBendSubstrates) ) {
+            heatBendErrors.push('The substrate selected is not able to Heat Bend with Mount or Laminating.');
+        }
+        if (hasBuyoutMaterial) {
+            heatBendErrors.push('Heat bending for Buy-out materials must be sent through central estimating.');
+        } else {
+            //bend length must be less than 12" for thin materials
+            if (bendLength >= 12 && cu.isValueInSet(fields.printSubstrates,thinHeatBendSubstrates)) {
+                heatBendErrors.push( 'Substrates with calipers less than .060" must have a bend length 12" or less and must be sent through central estimating');
+            }
+            if (hasMountLam && cu.isValueInSet(fields.printSubstrates, thinHeatBendSubstrates)) {
+                heatBendErrors.push( 'Substrates with calipers less than .060" and laminating or mounting must be sent through central estimating.');
+            }
+        }
+
     }
     function validateLocationValue(op, location) {
         var opChoice = cu.getValue(op);
         // TBG1 (value) : FAB (key)
         var heatBendKeyPairs = {
-            851 : 796,  //vertical 1 bend
-            850 : 797,  //vertical 2 bend
+            821 : 796,  //vertical 1 bend
+            820 : 797,  //vertical 2 bend
             804 : 803,  //horizontal 1 bend
             801 : 802  //horizontal 2 bend
         }
@@ -1237,15 +1187,15 @@ function heatBendingRules_new(updates) {
     }
     function heatBendErrorMessage(errors) {
         if (errors.length > 0) {
-            if (cu.getValue(heatBendingOpVert) != 800 || cu.hasValue(heatBendingOpHoriz)) {
-                pu.validateValue(heatBendingOpVert, 800);
+            if (cu.getValue(heatBendingOpVert) != customHeatBendOpItem || cu.hasValue(heatBendingOpHoriz)) {
+                pu.validateValue(heatBendingOpVert, customHeatBendOpItem);
                 pu.validateValue(heatBendingOpHoriz, '');
                 
-                var errorMessage = '<p>Heat Bending with this configuration must be estimated through Central Estimating.  The Heat Bending Operation has been adjusted to account for this.</p><div><ul>';
+                var errorMessage = '<p>Heat Bending with this configuration must be estimated through an Estimate Request. A choice is still needed so the Heat Bending Operations have been adjusted to account for this.</p><div><ul>';
                 for (var i = 0; i < errors.length; i++ ) {
                     errorMessage += '<li>' + errors[i] + '</li>';
                 }
-                errorMessage += '</ul></div>'
+                errorMessage += '</ul></div><p>For more information please visit the Help Tip.</p>'
                 onQuoteUpdatedMessages += errorMessage;
             }
         }
@@ -1310,6 +1260,11 @@ function hardProofCheck(quote) {
     }
     // do not run if user is admin
     if ($('#page').hasClass('userIsAdministrator')) {
+        return
+    }
+    //return if first time through calculator (re-configuration or Re-order)
+    if (calcCount == 1) {
+        hardProofMessageCount = 1;
         return
     }
     var pieceWidth = quote.piece.width;
@@ -1419,23 +1374,75 @@ function vutekInkOptGroups() {
 
     function insertOptGroup(operation, list) {
       
-      if (operation.find('optGroup').length > 0) {
-        return
-      }
-      var selectedEnv = operation.val();
-      var recommendedGroup = $('<optgroup label="Standard"></optGroup>');
-      var otherGroup = $('<optgroup label="Rare"></optgroup>');
-      var items = operation.find('option');
-      for (var i = 0; i < items.length; i++) {
+    if (operation.find('optGroup').length > 0) {
+      return
+    }
+    var selectedOption = operation.val();
+    var recommendedGroup = $('<optgroup label="Standard"></optGroup>');
+    var otherGroup = $('<optgroup label="Rare"></optgroup>');
+    var items = operation.find('option');
+    for (var i = 0; i < items.length; i++) {
         if (list.indexOf(items[i].value) != -1) {
             recommendedGroup.append(items[i]);
         } else {
             otherGroup.append(items[i])
         }
-      }
-      recommendedGroup.appendTo(operation);
-      otherGroup.appendTo(operation);
-      operation.val(selectedEnv);
+    }
+    recommendedGroup.appendTo(operation);
+    otherGroup.appendTo(operation);
+    operation.val(selectedOption);
+   }
+}
+function vutekInkOptGroups_surface() {
+
+    //Create opt groups only for TBG Board Printing
+
+    var side1Ink = $('select#operation52');
+    var side2Ink = $('select#operation137');
+
+    if (side1Ink) {
+        insertOptGroup($('select#operation52'));
+    }
+    if (side2Ink) {
+        insertOptGroup($('select#operation52'));
+    }
+
+    function insertOptGroup(inkSelect) {
+      
+        //Create opt groups for inks with Surfact in name
+        //only for TBG Board Printing
+        if (inkSelect.find('optGroup').length > 0) {
+            return
+        }
+        var selectedOption = inkSelect.val();
+        var firstSurfaceGroup = $('<optgroup label="First Surface"></optGroup>');
+        var secondSurfaceGroup = $('<optgroup label="Second Surface"></optgroup>');
+        var otherGroup = $('<optgroup label="other"></optgroup>');
+        var items = inkSelect.find('option');
+        for (var i = 0; i < items.length; i++) {
+            //if none, push to top
+            if (items[i].value == '') {
+                inkSelect.append(items[i]);
+                continue
+            }
+            var optionText = items[i].text;
+            if (optionText.indexOf('First Surface') != -1) {
+                firstSurfaceGroup.append(items[i]);
+            } else if (optionText.indexOf('Second Surface') != -1) {
+                secondSurfaceGroup.append(items[i])
+            } else {
+                otherGroup.append(items[i])
+            }
+        }
+        firstSurfaceGroup.appendTo(inkSelect);
+        if (secondSurfaceGroup.find('option').length > 0) {
+            secondSurfaceGroup.appendTo(inkSelect);
+        }
+        if (otherGroup.find('option').length > 0) {
+            otherGroup.appendTo(inkSelect);
+        }
+
+      inkSelect.val(selectedOption);
    }
 }
 
@@ -1490,7 +1497,7 @@ function uiUpdates(product) {
     bannerFinishingOperationDisplay(product);
     bannerStandLogic();
 
-    vutekInkOptGroups();
+    vutekInkOptGroups_surface();
 
 
     pu.validateConfig(disableCheckoutReasons, 'rollCalcLogic');

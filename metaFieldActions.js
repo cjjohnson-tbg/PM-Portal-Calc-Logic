@@ -219,7 +219,7 @@ var metaFieldsActions = {
             var heatBendingVertOp = isSmallFormat ? fields.operation159 : fields.operation117;
             var heatBendingHorizOp = isSmallFormat ? fields.operation249 : fields.operation162;
 
-            var heatBendFabOptions = isSmallFormat ? ['1736', '1737', '1744', '1745'] : ['796', '797', '802', '803'];
+            var heatBendFabOptions = isSmallFormat ? ['1736', '1737', '1744', '1745', '1742'] : ['796', '797', '802', '803', '800'];
 
             if (cu.hasValue(fabOp)) {
                 hasFabChosen = true;

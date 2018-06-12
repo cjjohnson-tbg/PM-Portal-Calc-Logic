@@ -478,6 +478,13 @@ function setInkMaterialCosts() {
         54 : {
             'inkMaterialOpId' : 143,
             'defaultOpItem' : 720 //CMYK
+        },
+        50 : {
+            'inkMaterialOpId' : 132,
+            'inkMaterialOpIdSide2' : 136,
+            'inkConfigOpSide2' : 137,
+            'defaultOpItem' : 608, //TBG Vutek HS125
+            'defaultInkConfigSide2OpItem' : 641 //TBG Vutek HS125
         }
     }
     var devRunConfig = lfDeviceInk[deviceId];

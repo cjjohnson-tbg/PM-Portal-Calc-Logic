@@ -1048,13 +1048,13 @@ function heatBendingRules(updates) {
         var heatBendErrors = [];
         var hasMountLam = cu.hasValue(fields.mountSubstrate) || cu.hasValue(fields.frontLaminate) || cu.hasValue(fields.backLaminate);
         var hasHeatBending = (cu.hasValue(heatBendingOpVert) || cu.hasValue(heatBendingOpHoriz));
-    
+        var heatBendLocation = getBendLocation();
+        
         pu.addClassToOperationItemsWithString(heatBendingOpIds, 'heat-bend-fab', 'Bend_TBG Fab');
         pu.addClassToOperationItemsWithString(heatBendingOpIds, 'heat-bend-fab', 'Bends_TBG Fab');
         pu.addClassToOperationItemsWithString(heatBendingOpIds, 'heat-bend-one', 'Bend_TBG1');
         pu.addClassToOperationItemsWithString(heatBendingOpIds, 'heat-bend-one', 'Bends_TBG1');
 
-        var heatBendLocation = cu.getTotalQuantity() < 200 ? 'TBG1' : 'FAB';
 
         if (hasHeatBending) {
             if (cu.hasValue(heatBendingOpVert)) {
@@ -1085,6 +1085,23 @@ function heatBendingRules(updates) {
             pu.validateValue(heatBendingOpHoriz,'');
         }
 
+    }
+    function getBendLocation() {
+        var location = 'FAB';
+        if (cu.getTotalQuantity() < 200) {
+            location = 'TBG1';
+        }
+        if (cu.hasValue(heatBendingOpVert)) {
+            if (cu.getHeight() >= 3) {
+                location = 'TBG1';
+            }
+        }
+        if (cu.hasValue(heatBendingOpHoriz)) {
+            if (cu.getWidth() >= 3) {
+                location = 'TBG1';
+            }
+        }
+        return location
     }
     function getBendCount(op) {
         var result = 0;

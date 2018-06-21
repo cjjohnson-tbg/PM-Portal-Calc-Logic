@@ -686,6 +686,7 @@ function heatBendingRules(updates) {
     var heatBendingOpHoriz_answer = fields.operation249_answer;
     var customHeatBendOpItem = 1742;
     
+    
     var boardTypesThatCanHeatBend = [
         '247',   //Buy-out
         '173',   // Styrene
@@ -722,6 +723,8 @@ function heatBendingRules(updates) {
         //var previousAllowHeatBend = allowHeatBend;
         var allowHeatBend = true;
         var heatBendErrors = [];
+        var heatBendLocation = getBendLocation();
+
         var hasMountLam = checkForNonHeatBendingOps([
                 fields.operation130,  //LF Back Laminating
                 fields.operation131,  //LF Front Laminating
@@ -735,7 +738,6 @@ function heatBendingRules(updates) {
         pu.addClassToOperationItemsWithString(heatBendingOpIds, 'heat-bend-one', 'Bend_TBG1');
         pu.addClassToOperationItemsWithString(heatBendingOpIds, 'heat-bend-one', 'Bends_TBG1');
 
-        var heatBendLocation = cu.getTotalQuantity() < 200 ? 'TBG1' : 'FAB';
 
         if (hasHeatBending) {
             if (cu.hasValue(heatBendingOpVert)) {
@@ -770,6 +772,23 @@ function heatBendingRules(updates) {
 
     }
 
+    function getBendLocation() {
+        var location = 'FAB';
+        if (cu.getTotalQuantity() < 200) {
+            location = 'TBG1';
+        }
+        if (cu.hasValue(heatBendingOpVert)) {
+            if (cu.getHeight() >= 3) {
+                location = 'TBG1';
+            }
+        }
+        if (cu.hasValue(heatBendingOpHoriz)) {
+            if (cu.getWidth() >= 3) {
+                location = 'TBG1';
+            }
+        }
+        return location
+    }
     function getBendCount(op) {
         var result = 0;
         if (cu.hasValue(op)) {
@@ -826,8 +845,8 @@ function heatBendingRules(updates) {
         }
     }
     function validateJobConfig(op, orientation, hasMountLam) {
-        var bendLength = orientation == 'vertical' ? cu.getHeight() : cu.getWidth();
         var substrateCaliper = cu.getPressSheetCaliper();
+        var bendLength = orientation == 'vertical' ? cu.getHeight() : cu.getWidth();
         var maxSubstrateCaliper = .118;
         var minSubstrateCaliper = .040;
 

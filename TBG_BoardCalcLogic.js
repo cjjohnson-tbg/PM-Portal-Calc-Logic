@@ -773,18 +773,18 @@ function heatBendingRules(updates) {
     }
 
     function getBendLocation() {
-        var location = 'FAB';
-        if (cu.getTotalQuantity() < 200) {
-            location = 'TBG1';
+        var location = 'TBG1';
+        if (cu.getTotalQuantity() > 200) {
+            location = 'FAB';
         }
         if (cu.hasValue(heatBendingOpVert)) {
-            if (cu.getHeight() >= 3) {
-                location = 'TBG1';
+            if (cu.getHeight() <= 3) {
+                location = 'FAB';
             }
         }
         if (cu.hasValue(heatBendingOpHoriz)) {
-            if (cu.getWidth() >= 3) {
-                location = 'TBG1';
+            if (cu.getWidth() <= 3) {
+                location = 'FAB';
             }
         }
         return location

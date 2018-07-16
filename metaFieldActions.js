@@ -317,7 +317,7 @@ var metaFieldsActions = {
             var smallFormat = cu.isSmallFormat(product);
 
             var colorMatchOp = smallFormat ? fields.operation243 : fields.operation156;
-            var colorMatchOpItems = smallFormat ? ['1711'] : ['766'];
+            var colorMatchOpItems = smallFormat ? ['1711', '1709'] : ['766', '764'];;
             var colorArtOp = smallFormat ? fields.operation244 : fields.operation157;
             var colorArtOpItems = smallFormat ? ['1712', '1715'] : ['767', '770'];
             var evalLightOp = smallFormat ? fields.operation245 : fields.operation158;

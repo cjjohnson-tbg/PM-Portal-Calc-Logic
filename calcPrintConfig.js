@@ -96,10 +96,11 @@ var configHelper = {
 		var results = [];
 		for (var i = 0; i < configs.length; i++) {
 			var vertical_piece_orienation = false;
-			var horizConfig = this.getPrintConfig(configs[i], quote, dat, vertical_piece_orienation);
+			var tiled = configureglobals.clpjc.tiled;
+			var horizConfig = this.getPrintConfig(configs[i], quote, dat, vertical_piece_orienation, tiled);
 			results.push(horizConfig);
 			//toggle orientation and rerun if sides different
-			if (quote.piece.width != quote.piece.height) {
+			if (quote.piece.width != quote.piece.height && !tiled) {
 				vertical_piece_orienation = true;
 				var vertConfig = this.getPrintConfig(configs[i], quote, dat, vertical_piece_orienation);
 				results.push(vertConfig);
@@ -107,9 +108,9 @@ var configHelper = {
 		}
 		return results
 	},
-	getPrintConfig: function(materials, quote, dat, vertical_piece_orienation) {
+	getPrintConfig: function(materials, quote, dat, vertical_piece_orienation, tiled) {
 		var results = {};
-		var jobDetails = this.getConfigDetails(materials, quote.piece, dat, vertical_piece_orienation);
+		var jobDetails = this.getConfigDetails(materials, quote.piece, dat, vertical_piece_orienation, tiled);
 		results.details = jobDetails;
 		var configMaterials = this.getConfigMaterials(materials); //removes empty materials
 		var matCalculatedFields = matHelper.getMaterialCalculedFields(configMaterials, jobDetails, quote, dat);
@@ -136,36 +137,38 @@ var configHelper = {
 		costs.totalCost = totalCost;
 		return costs
 	},
-	getConfigDetails: function(mats, piece, dat, vertical_piece_orienation) {
+	getConfigDetails: function(mats, piece, dat, vertical_piece_orienation, tiled) {
 		var details = {};
 		details.vertPiece = vertical_piece_orienation;
-		var pieceWidth = vertical_piece_orienation ? piece.height : piece.width;
-		var pieceHeight = vertical_piece_orienation ? piece.width : piece.height;
+		//Going to assume tiled vertically until needing extra complexity
+		var nTiles = this.getTileCount(piece, tiled);
+		var flatWidth = this.getFlatWidth(piece, vertical_piece_orienation, nTiles);
+		var flatHeight = vertical_piece_orienation ? piece.width : piece.height;
+		
+		details.flatWidth = flatWidth; 
+		details.flatHeight = flatHeight;
 
-		details.pieceWidth = pieceWidth;
-		details.pieceHeight = pieceHeight;
-
-		details.productionQty = dat.productionQty;
+		details.productionQty = dat.productionQty * nTiles;
 		details.sides = piece.sides;
 		//set printable width as smallest width of all materials
 		details.formWidth = this.getSignatureDim(mats, 'width');
 		details.printableWidth = details.formWidth - (2 * dat.devDefaults.margin);
 
-		details.formLengthMax = this.getFormLength(mats, pieceHeight);
+		details.formLengthMax = this.getFormLength(mats, flatHeight);
 		details.printableLength = details.formLengthMax - (2 * dat.devDefaults.margin);
 
-		details.nAcrossForm = Math.floor( details.printableWidth / (pieceWidth + ( (dat.devDefaults.bleed + dat.devDefaults.gutter) * 2)) );
-		details.nDownForm = Math.floor( details.printableLength / (pieceHeight + ( (dat.devDefaults.bleed + dat.devDefaults.gutter) * 2)) );
+		details.nAcrossForm = Math.floor( details.printableWidth / (flatWidth + ( (dat.devDefaults.bleed + dat.devDefaults.gutter) * 2)) );
+		details.nDownForm = Math.floor( details.printableLength / (flatHeight + ( (dat.devDefaults.bleed + dat.devDefaults.gutter) * 2)) );
 		details.nUpPerForm = details.nAcrossForm * details.nDownForm;
 		details.nDownTotal = Math.ceil(dat.productionQty / details.nAcrossForm);
-		details.formLength = details.nDownForm * (pieceHeight + ( (dat.devDefaults.bleed + dat.devDefaults.gutter) * 2) );
+		details.formLength = details.nDownForm * (flatHeight + ( (dat.devDefaults.bleed + dat.devDefaults.gutter) * 2) );
 
 		//production quantity must round up if not equal to # across to fill up 1 full signature
 		details.totalForms = Math.ceil( dat.productionQty / details.nUpPerForm );
 		details.totalFormLF = details.totalForms * details.formLength / 12;
 		details.totalFullForms = Math.floor( details.nDownTotal / details.nDownForm );
 		details.nDownLastForm =  details.nDownTotal % details.nDownForm;
-		details.lastPartialFormLF = details.nDownLastForm * (pieceHeight + (2 * (dat.devDefaults.bleed + dat.devDefaults.gutter) )) / 12;
+		details.lastPartialFormLF = details.nDownLastForm * (flatHeight + (2 * (dat.devDefaults.bleed + dat.devDefaults.gutter) )) / 12;
 		details.valid_quote = (details.nAcrossForm > 0 && details.nDownForm > 0) ? true : false;
 
 		//Attrition for Lamainating
@@ -173,6 +176,23 @@ var configHelper = {
 		details.lamLfWithSpoilage = roundTo(this.getLamWithSpoilage(details.lamLf), 1);
 
 		return details
+	},
+	getTileCount: function(piece, tiled) {
+		var maxTileWidth = 52;
+		if (tiled) {
+			return Math.ceil(piece.flatWidth / maxTileWidth);
+		} else {
+			return 1
+		} 
+	},
+	getFlatWidth: function (piece, vertical_piece_orienation, nTiles) {
+		if (nTiles > 1) {
+			return roundTo(piece.flatWidth / nTiles, 3)
+		} else if (vertical_piece_orienation) {
+			return piece.flatHeight
+		} else {
+			return piece.flatWidth
+		}
 	},
 	getLamWithSpoilage: function(matLength) {
 		var spoilPoints = [[999, .06],[1999, .04],[2999, .03],[3999,.025],[4999,.02],[5000,.015]];
@@ -297,7 +317,7 @@ var matHelper = {
 		props.leadWasteLF = dat.devDefaults.leadWasteLF;
 		props.printableRollLen = printSubstrate.length - (props.leadWasteLF * 12);
 		props.formsPerRoll = Math.floor(props.printableRollLen / details.formLength);
-		props.fullRolls = Math.floor(details.totalForms / props.formsPerRoll);
+		props.fullRolls = Math.floor(details.totalFullForms / props.formsPerRoll);
 		props.totalRolls = Math.ceil(details.totalForms / props.formsPerRoll);
 
 		props.formsOnLastRoll = details.totalForms % props.formsPerRoll;

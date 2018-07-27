@@ -653,14 +653,30 @@ function setFluteDirectionOp() {
     var fluteDirectionOp = fields.operation152;
     var flutedSubstrateNames = [
         'Coroplast',
-        'Flute'
+        'Flute',
+        'Brushed Silver'
     ];
+    var prePrintingLamOps = [
+        129,
+        144
+    ]
     if (fluteDirectionOp) {
         var substrateName = $('#pressSheetType select[name="PRESSSHEETTYPEDD"] option:selected').text();
         var hasFlutes = false;
         for (names in flutedSubstrateNames) {
             if (substrateName.indexOf(flutedSubstrateNames[names]) != -1) {
                 hasFlutes = true;
+            }
+            //if in Pre-lam ops
+            for (op in prePrintingLamOps) {
+                if ($('#operation'+prePrintingLamOps[op])) {
+                    var optionText = $('select#operation'+prePrintingLamOps[op]+' option:selected').text();
+                    if (optionText) {
+                        if (optionText.indexOf(flutedSubstrateNames[names]) != -1) {
+                            hasFlutes = true;
+                        }
+                    }
+                }
             }
         }
         if (hasFlutes) {

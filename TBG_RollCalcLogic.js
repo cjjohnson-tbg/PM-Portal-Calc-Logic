@@ -931,7 +931,8 @@ function fluteDirectionRules() {
     var fluteDirectionOp = fields.operation101;
     var flutedSubstrateNames = [
         'Coroplast',
-        'Flute'
+        'Flute',
+        'Brushed Silver'
     ]
     if (fluteDirectionOp) {
         var hasFlutes = false;

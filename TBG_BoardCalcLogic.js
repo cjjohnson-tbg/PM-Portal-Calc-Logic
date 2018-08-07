@@ -1126,6 +1126,7 @@ function updateClasses() {
     var planningOnlyOperations = [
         150,    //LF Cutting
         154,    //LF Guillotine Cutting
+        274,    //LF Guillotine Slip Sheets
         155,    //LF Fotoba Cutting
         102,    //LF Zund Cutting
         140,     //LF Mounting Adhesive

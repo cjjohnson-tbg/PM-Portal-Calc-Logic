@@ -129,6 +129,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     heatBendingRules(updates);
     fabrivuLogic(product);
     colorCritical();
+    woodDowelQtyMax();
 
 }
 
@@ -786,6 +787,17 @@ function canvasOperationDisplay() {
         pu.addClassToOperation(canvasOperations, 'planning');
         pu.validateValue(fields.operation65,'');
         pu.validateValue(fields.operation66,'');
+    }
+}
+function woodDowelQtyMax() {
+    var woodDowelOp = fields.operation172;
+    if (cu.hasValue(woodDowelOp)) {
+        var pieceQty = cu.getTotalQuantity();
+        var dowelQty = cu.getValue(fields.operation172_answer);
+        if ( (pieceQty * dowelQty) > 200 ) {
+            onQuoteUpdatedMessages += '<p>Your total Dowel quantity for this job is over 200.  Please route this finishing operation through Central Estimating or Purchasing</p>';
+            cu.changeField(woodDowelOp,'', true);
+        }
     }
 }
 
@@ -1471,6 +1483,17 @@ function vutekInkOptGroups_surface() {
    }
 }
 
+function operationQuestionTextChange() {
+    var applicationOps = [
+        120,   //TBG Film Tape Application
+        121,   //TBG Magnet Application
+        122,   //TBG Velcro Application
+        183   //TBG Foam Tape Application
+    ];
+    var applicationQuestion = 'How many linear inches is needed per piece?';
+    pu.updateOperationQuestion(applicationOps, applicationQuestion);
+}
+
 function uiUpdates(product) {
     var planningOnlyOps = [
         99,  //TBGCutting
@@ -1526,9 +1549,9 @@ function uiUpdates(product) {
     canvasOperationDisplay();
     bannerFinishingOperationDisplay(product);
     bannerStandLogic();
+    operationQuestionTextChange();
 
     vutekInkOptGroups_surface();
-
 
     pu.validateConfig(disableCheckoutReasons, 'rollCalcLogic');
     maxQuotedJob();

@@ -1180,7 +1180,26 @@ function updateOpItems() {
         124,     //LF Tape, Mag, Velcro - Top & Bottom
         133,    //LF Premask
         248,     //Can color team approve color without PM?
-        243     //Match Color to
+        243,     //Match Color to
+        176,   //LF Film Tape Application - Perimeter
+        177,   //LF Film Tape Application - Top Only
+        178,   //LF Film Tape Application - Top & Bottom
+        179,   //LF Magnet Application - Perimeter
+        180,   //LF Velcro Application - Top Only
+        181,   //LF Magnet Application - Top & Bottom
+        182,   //LF Velcro Application - Perimeter
+        183,   //LF Magnet Application - Top Only
+        184,   //LF Velcro Application - Top & Bottom
+        263,   //LF Foam Tape Application - Perimeter
+        264,   //LF Foam Tape Application - Top & Bottom
+        265,   //LF Foam Tape Application - Top Only
+        266,   //LF Bump-ons Application
+        267,   //LF Sleeves Application
+        268,   //LF Misc Hand Application
+        269,   //LF Film Tape Application - Custom
+        270,   //LF Foam Tape Application - Custom
+        271,   //LF Magnet Tape Application - Custom
+        272   //LF Velcro Tape Application - Custom
     ]
     pu.trimOperationItemNames(opsWithUnderscoreItems,'_');
     pu.removeOperationItemsWithString(156,'Print');

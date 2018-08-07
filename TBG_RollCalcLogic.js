@@ -1501,7 +1501,12 @@ function uiUpdates(product) {
         58,   //TBG Tape, Mag, Velcro
         78,  //LF Premask
         160,  //Can color team approve color without PM?
-        156   //Match color to
+        156,   //Match color to
+        120,   //TBG Film Tape Application
+        121,   //TBG Magnet Application
+        122,     //TBG Velcro Application
+        183,    //TBG Foam Tape Application
+        186     //TBG Bump-on Application
     ]
     var opsWithCalculatedAnswer = [
         139,    //TBG Team

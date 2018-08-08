@@ -100,8 +100,7 @@ var pmCalcUtil = {
             opList = [opList];
         }
         for (var i = 0; i < opList.length; i++) {
-            var opQuestion = $('#operation' + opList[i] + ' label.opQuestion');
-            var opQuestion = $('#operation186 label.opQuestion');
+            var opQuestion = $('#operation' + opList[i] + ' div.op div label.opQuestion');
             if (opQuestion) {
                 var opQuestionText = $(opQuestion).text(questionText);
             }

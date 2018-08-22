@@ -19,9 +19,6 @@ var cu = calcUtil;
 var pu = pmCalcUtil;
 var sfSheetCalcLogic = {
     onCalcLoaded: function(product) {
-        // $('.operation66').addClass('hideIt');
-        // $('.operation67').addClass('hideIt');
-        $('#operation141').removeClass('costingOnly');
         //run meta field action
         metaFieldsActions.onCalcLoaded(product);
     },
@@ -116,6 +113,7 @@ var sfSheetCalcLogic = {
 
             }  // END SMALL FORMAT      
         }
+        updateUI(updates, product);
         showMessages();
         
         /********************************************* ALERTS */
@@ -128,6 +126,46 @@ var sfSheetCalcLogic = {
             }
         }
     }
+}
+
+function updateUI(updates, product) {
+
+    $('#operation141').removeClass('costingOnly');
+
+    var applicationOps = [
+        176,  //LF Film Tape Application - Perimeter
+        177,  //LF Film Tape Application - Top Only
+        178,  //LF Film Tape Application - Top & Bottom
+        179,  //LF Magnet Application - Perimeter
+        180,  //LF Velcro Application - Top Only
+        181,  //LF Magnet Application - Top & Bottom
+        182,  //LF Velcro Application - Perimeter
+        183,  //LF Magnet Application - Top Only
+        184,  //LF Velcro Application - Top & Bottom
+        263,  //LF Foam Tape Application - Perimeter
+        264,  //LF Foam Tape Application - Top & Bottom
+        265,  //LF Foam Tape Application - Top Only
+        269,  //LF Film Tape Application - Custom
+        270,  //LF Foam Tape Application - Custom
+        271,  //LF Magnet Tape Application - Custom
+        272  //LF Velcro Tape Application - Custom
+    ]
+    appendAppOpLabels(applicationOps);
+
+    function appendAppOpLabels(opList) {
+        if (!opList) {return}
+        var textToAppend = ' at TBG1';
+        for (var i = 0; i < opList.length; i++) {
+            if ($('div#operation' + opList[i])) {
+                var label = $('div#operation' + opList[i]  + ' label').text();
+                if (label) {
+                    $('div#operation' + opList[i]  + ' label').text(label + textToAppend);
+                }
+            }
+            
+        }
+    }
+
 }
 
 function checkForColorCriticalDevice(validation) {

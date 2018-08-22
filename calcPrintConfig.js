@@ -145,6 +145,8 @@ var configHelper = {
 		var flatWidth = this.getFlatWidth(piece, vertical_piece_orienation, nTiles);
 		var flatHeight = vertical_piece_orienation ? piece.width : piece.height;
 		
+		details.tiled = tiled;
+		details.nTiles = nTiles;
 		details.flatWidth = flatWidth; 
 		details.flatHeight = flatHeight;
 
@@ -160,11 +162,11 @@ var configHelper = {
 		details.nAcrossForm = Math.floor( details.printableWidth / (flatWidth + ( (dat.devDefaults.bleed + dat.devDefaults.gutter) * 2)) );
 		details.nDownForm = Math.floor( details.printableLength / (flatHeight + ( (dat.devDefaults.bleed + dat.devDefaults.gutter) * 2)) );
 		details.nUpPerForm = details.nAcrossForm * details.nDownForm;
-		details.nDownTotal = Math.ceil(dat.productionQty / details.nAcrossForm);
+		details.nDownTotal = Math.ceil(details.productionQty / details.nAcrossForm);
 		details.formLength = details.nDownForm * (flatHeight + ( (dat.devDefaults.bleed + dat.devDefaults.gutter) * 2) );
 
 		//production quantity must round up if not equal to # across to fill up 1 full signature
-		details.totalForms = Math.ceil( dat.productionQty / details.nUpPerForm );
+		details.totalForms = Math.ceil( details.productionQty / details.nUpPerForm );
 		details.totalFormLF = details.totalForms * details.formLength / 12;
 		details.totalFullForms = Math.floor( details.nDownTotal / details.nDownForm );
 		details.nDownLastForm =  details.nDownTotal % details.nDownForm;

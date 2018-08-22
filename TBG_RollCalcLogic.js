@@ -130,7 +130,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     fabrivuLogic(product);
     colorCritical();
     woodDowelQtyMax();
-
+    kederSewingLogic(updates);
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
@@ -800,6 +800,19 @@ function woodDowelQtyMax() {
         }
     }
 }
+function kederSewingLogic(updates) {
+    var kederSew = fields.operation63;
+    var testFit = fields.operation187;
+    if (cu.hasValue(kederSew)) {
+        if (cu.isLastChangedField(updates, kederSew)) {
+            if (!cu.hasValue(testFit)) {
+                cu.changeField(testFit,965,true);
+            }
+        }
+    } else {
+        pu.validateValue(testFit,'');
+    }
+}
 
 function bannerFinishingOperationDisplay(product) {
     var substratesWithBannerFinishing = [
@@ -827,7 +840,7 @@ function bannerFinishingOperationDisplay(product) {
         60,   //TBG Grommets
         61,   //TBG Hemming
         62,   //TBG Pole Pockets
-        63,   //TBG Keder Sewing
+        //63,   //TBG Keder Sewing
         73    //TBG Grommet Color
     ]
     //always show with Dye Sub materials

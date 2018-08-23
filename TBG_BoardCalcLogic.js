@@ -87,7 +87,11 @@ var boardCalcLogic = {
 function functionsRanInFullQuote(updates, validation, product, quote) {
     checkForColorCriticalDevice(validation, product);
     setInkConsumptionOps(quote);
-    setCuttingOperations(quote);
+    if (cu.getPjcId(product) == 1638) {
+        test_setCuttingOperations(quote);
+    } else {
+        setCuttingOperations(quote);
+    }
     edgeBandingLogic();
     setLamOps(quote);
     setFluteDirectionOp();
@@ -297,14 +301,22 @@ function setCuttingOperations(quote) {
         1082: 'outsourceDieCut' , //Outsource Die-Cut
         1083: 'zund' , //Zund Cut
         1084: 'guillotineCut' , //Guillotine Cut
-        1156: 'fabCut'  //Fab to Cut
+        1156: 'fabCut',  //Fab to Cut
+        1794: 'fabLaser',  //Fab to Cut
+        1790: 'sfGuillotine',
+        1791: 'sfMotion',
+        1793: 'fabCNC'
     }
+    //default to zund
+    var cutMethod = 'zund';
     var cuttingOp = fields.operation170;
     if (cu.hasValue(cuttingOp)) {
-        cutMethod = cutMethodId[cu.getValue(cuttingOp)];
-    } else {
-        cutMethod = 'zund'
+        userCutSelection = cutMethodId[cu.getValue(cuttingOp)];
     }
+    if (userCutSelection) {
+        cutMethod = userCutSelection;
+    }
+    
     var zundCuttingOp = fields.operation102;
     var zundLoadingOp = fields.operation104;
     var zundUnloadingOp = fields.operation105;
@@ -336,11 +348,13 @@ function setCuttingOperations(quote) {
         pu.validateValue(noCutOp,'');
     }
     //Fab cut
-    if (cutMethod == 'fabCut') {
-        if (!cu.hasValue(fabCutOp)) {cu.changeField(fabCutOp, 1108, true); }
+    if (cutMethod == 'fabCut' || cutMethod == 'fabLaser') {
+        if (!cu.hasValue(fabCutOp)) {
+            //cu.changeField(fabCutOp, 1108, true); 
+        }
         pu.removeClassFromOperation(174, 'planning');
         //if Fab Laser Cut is chosen, force Pre-mask 2 sides=
-        if (cu.getValue(fabCutOp) == 1162) {
+        if (cutMethod == 'fabLaser') {
             if (cu.getValue(fields.operation133) != 761) {
                 cu.changeField(fields.operation133, 761, true);
                 onQuoteUpdatedMessages += '<p>Fab Laser Cut requires Premask on both sides.  This has been chosen on your behalf.</p>';
@@ -350,7 +364,7 @@ function setCuttingOperations(quote) {
         pu.validateValue(fabCutOp,'');
     }
     //outsourced
-    if (cutMethod == 'outsourceCut' || cutMethod == 'outsourceDieCut') {
+/*    if (cutMethod == 'outsourceCut' || cutMethod == 'outsourceDieCut') {
         if (cutMethod == 'outsourceCut') {
             pu.validateValue(outsourceCutOp, 911);
         }
@@ -367,6 +381,123 @@ function setCuttingOperations(quote) {
             }
         }
         pu.removeOperationItemsWithString(156,'Cut');
+    }*/
+}
+
+function test_setCuttingOperations(quote) {
+    /********* CUTTING LOGIC */
+    var userDeclareCutOp = fields.operation170;
+
+    var zundFactors = {
+        "K1" : {"name" : "Knife 1", "loadingOpItem" : 645, "unloadingOpItem" : 606 , "runOpItem": 593, "intCutOpItem": 773, "userChoiceItem" : 1970, "rank" : 1},
+        "K2" : {"name" : "Knife 2", "loadingOpItem" : 645, "unloadingOpItem" : 606 , "runOpItem": 594, "intCutOpItem": 774, "userChoiceItem" : 1971, "rank" : 2},
+        "R1" : {"name" : "Router 1", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 595, "intCutOpItem": 775, "userChoiceItem" : 1972, "rank" : 3},
+        "R2" : {"name" : "Router 2", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 596, "intCutOpItem": 776, "userChoiceItem" : 1973, "rank" : 4},
+        "R3" : {"name" : "Router 3", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 597, "intCutOpItem": 777, "userChoiceItem" : 1974, "rank" : 5},
+        "R4" : {"name" : "Router 4", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 598, "intCutOpItem": 778, "userChoiceItem" : 1975, "rank" : 6}
+    }
+    var fabCutOptions = [
+        1793,  //Fab CNC
+        1794,  //Fab Laser
+        1792   //Fab Saw
+    ]
+    var isFabCut = cu.isValueInSet(userDeclareCutOp, fabCutOptions);
+    var isFabLaser = cu.getValue(userDeclareCutOp) == 1794;
+    var fabCutOp = fields.operation174;
+
+    var isZundCut = cu.getSelectedOptionText(userDeclareCutOp).indexOf('Zund') != -1;
+
+    var altCutMethodId = {
+        1079: 'noCut' , //No Cutting
+        1081: 'outsourceCut' , //Outsource Cut
+        1082: 'outsourceDieCut' //Outsource Die-Cut
+    }
+
+    var altCutMethod = altCutMethodId[cu.getValue(userDeclareCutOp)] ? altCutMethodId[cu.getValue(userDeclareCutOp)] : null;
+    var setZundCost = altCutMethod ? false : true;
+
+    var zundCuttingOp = fields.operation102;
+    var zundLoadingOp = fields.operation104;
+    var zundUnloadingOp = fields.operation105;
+    var outsourceCutOp = fields.operation156;
+    
+    //zund Cutting
+    if (setZundCost) {
+        //default zundFactor to K1, and check materials for largest index
+        var zundChoice = zundFactors.K1;
+        //check print substrate A and Mount for highest ranked factor
+        if (quote.pressSheetQuote.pressSheet.zundFactor) {
+            zundChoice = zundFactors[quote.pressSheetQuote.pressSheet.zundFactor];
+        }
+        pu.validateValue(zundLoadingOp, zundChoice.loadingOpItem);
+        pu.validateValue(zundUnloadingOp, zundChoice.unloadingOpItem);
+        pu.validateValue(zundCuttingOp, zundChoice.runOpItem)
+
+        validateZundOption();
+
+    } else {
+        pu.validateValue(zundLoadingOp,'');
+        pu.validateValue(zundCuttingOp,'');
+        pu.validateValue(zundUnloadingOp,'');
+    }
+
+    //Fab cut
+    if (isFabCut) {
+        pu.removeClassFromOperation(174, 'planning');
+        //if Fab Laser Cut is chosen, force Pre-mask 2 sides=
+        if (isFabLaser) {
+            if (cu.getValue(fields.operation133) != 761) {
+                cu.changeField(fields.operation133, 761, true);
+                onQuoteUpdatedMessages += '<p>Fab Laser Cut requires Premask on both sides.  This has been chosen on your behalf.</p>';
+            }
+        }
+    } else {
+        pu.validateValue(fabCutOp,'');
+    }
+
+    //outsource
+    if (altCutMethod) {
+        if (altCutMethod == 'outsourceCut' || altCutMethod == 'outsourceDieCut') {
+            if (altCutMethod == 'outsourceCut') {
+                pu.validateValue(outsourceCutOp, 911);
+            }
+            if (altCutMethod == 'outsourceDieCut') {
+                pu.validateValue(outsourceCutOp, 1096);
+                pu.validateValue(guillotineCutOp, 907);
+            } else {
+                pu.validateValue(guillotineCutOp, '');
+            }
+        } else {
+            if (cu.getSelectedOptionText(outsourceCutOp).indexOf('Cut') != -1) {
+                if (cu.hasValue(outsourceCutOp)) {
+                    cu.changeField(outsourceCutOp,'',true);
+                }
+            }
+            pu.removeOperationItemsWithString(156,'Cut');
+        }
+    } else {
+        if (cu.getSelectedOptionText(outsourceCutOp).indexOf('Cut') != -1) {
+            if (cu.hasValue(outsourceCutOp)) {
+                cu.changeField(outsourceCutOp,'',true);
+            }
+        }
+        pu.removeOperationItemsWithString(156,'Cut');
+    }
+    hideInvalidZundOptions();
+
+    function validateZundOption() {
+        if (zundChoice) {
+            if (isZundCut) {
+                pu.validateValue(userDeclareCutOp, zundChoice.userChoiceItem);
+            }
+
+        }
+    }
+    function hideInvalidZundOptions() {
+        pu.addClassToOperationItemsWithString(170,'hide','Zund');
+        //show availabel zund option
+        $('option[value="' + zundChoice.userChoiceItem + '"]').removeClass('hide');
+        pu.trimOperationItemNames(170,'_');
     }
 }
 

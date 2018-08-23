@@ -115,7 +115,11 @@ function addJobMaterialProperties(quote) {
 function functionsRanInFullQuote(updates, validation, product, quote) {
     createOperationItemKey(quote);
     setWasteOperationCosts(quote);
-    setCuttingOps(quote, product);
+    if (cu.getPjcId(product) == 492) {
+        test_setCuttingOps(quote, updates, product);
+    } else {
+        setCuttingOps(quote, product);
+    }    
 
     setRollChangeCost(cc.printConfig);
 
@@ -254,6 +258,7 @@ function setRollChangeCost(printConfig) {
 }
 
 /**** CUTTING */
+
 function setCuttingOps(quote, product) {
     var cutMethod = getCutMethod();
     setZundOps(quote, cutMethod);
@@ -276,7 +281,7 @@ function getCutMethod() {
         return result;
     }
     if (cu.hasValue(userDeclareCutOp)) {
-        userDeclaredCutMethod = cutMethodId[cu.getValue(fields.operation111)];
+        var userDeclaredCutMethod = cutMethodId[cu.getValue(fields.operation111)];
         if (userDeclaredCutMethod) {
             var result = userDeclaredCutMethod;
             return result
@@ -284,12 +289,98 @@ function getCutMethod() {
     }
     return result
 }
+function setOutsourceCutOps(cutMethod) {
+    var outsourceCutOp = fields.operation104;
+    if (cutMethod =='outsourcedCut' || cutMethod == 'outsourceDieCut') {
+        //outourced cut set to default if nothing chosen yet
+        if (!cu.hasValue(outsourceCutOp)) {
+            if (cutMethod == 'outsourcedCut') {
+                cu.changeField(outsourceCutOp,412,true);    
+            } else if (cutMethod == 'outsourceDieCut') {
+                cu.changeField(outsourceCutOp,463,true);    
+            }
+        }
+    } else {
+        pu.removeOperationItemsWithString(104,'Cut');
+        if (cu.getSelectedOptionText(outsourceCutOp).indexOf('Cut') != -1) {
+            cu.changeField(outsourceCutOp,'', true);
+        }
+    }
+}
+/**** NEW CUTTING */
+function test_setCuttingOps(quote, updates, product) {
+        var userDeclareCutOp = fields.operation111;
+
+        var isZundCut = cu.getSelectedOptionText(userDeclareCutOp).indexOf('Zund') != -1;
+
+        var altCutMethodId = {
+            450 : 'noCutting',
+            452 : 'outsourcedCut',
+            866 : 'outsourceDieCut'
+        }
+        var altCutMethod = altCutMethodId[cu.getValue(fields.operation111)] ? altCutMethodId[cu.getValue(fields.operation111)] : null;
+
+        var setZundCost = altCutMethod ? false : true;
+
+        test_setZundOps(quote, setZundCost, isZundCut);
+        setAltCutMethod(updates, altCutMethod);
+        
+}
+function test_setZundOps(quote, setZundCost, isZundCut) {
+    var zundLoading = fields.operation53;
+    var zundCutting = fields.operation55;
+    var zundUnloading = fields.operation56;
+    
+    var zundFactors = {
+        "K1" : {"name" : "Knife 1", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 195, "intCutOpItem": 773, "userChoiceItem" : 968, "rank" : 1},
+        "K2" : {"name" : "Knife 2", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 196, "intCutOpItem": 774, "userChoiceItem" : 969, "rank" : 2},
+        "R1" : {"name" : "Router 1", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 197, "intCutOpItem": 775, "userChoiceItem" : 970, "rank" : 3},
+        "R2" : {"name" : "Router 2", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 198, "intCutOpItem": 776, "userChoiceItem" : 971, "rank" : 4},
+        "R3" : {"name" : "Router 3", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 199, "intCutOpItem": 777, "userChoiceItem" : 972, "rank" : 5},
+        "R4" : {"name" : "Router 4", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 200, "intCutOpItem": 778, "userChoiceItem" : 973, "rank" : 6}
+    }
+
+    var zundChoice = getZundChoice(quote, zundFactors);
+
+    if (setZundCost) {
+        if (zundChoice) {
+            pu.validateValue(zundLoading, zundChoice.loadingOpItem);
+            pu.validateValue(zundCutting, zundChoice.runOpItem);
+            pu.validateValue(zundUnloading,zundChoice.unloadingOpItem);
+        }
+    } else {
+        pu.validateValue(zundLoading,'');
+        pu.validateValue(zundCutting,'');
+        pu.validateValue(zundUnloading,'');
+        pu.validateValue(fields.operation179,'');
+    }
+
+    validateZundOption();
+    hideInvalidZundOptions();
+
+    function validateZundOption() {
+        if (zundChoice) {
+            if (isZundCut) {
+                pu.validateValue(fields.operation111, zundChoice.userChoiceItem);
+            }
+
+        }
+    }
+    function hideInvalidZundOptions() {
+        pu.addClassToOperationItemsWithString(111,'hide','Zund');
+        //show availabel zund option
+        $('option[value="' + zundChoice.userChoiceItem + '"]').removeClass('hide');
+        pu.trimOperationItemNames(111,'_');
+    }
+}
+
 function setZundOps(quote, cutMethod) {
     var zundLoading = fields.operation53;
     var zundCutting = fields.operation55;
     var zundUnloading = fields.operation56;
     var intCutOp = fields.operation112;
     var userItCutOpAnswer = fields.operation180_answer;
+
 
     if (cutMethod == 'zund') {
         var zundFactors = {
@@ -307,15 +398,7 @@ function setZundOps(quote, cutMethod) {
             pu.validateValue(zundCutting, zundChoice.runOpItem);
             pu.validateValue(zundUnloading,zundChoice.unloadingOpItem);
         }
-        //INTERNAL CUTTING - map to choice item and enter answer 
-        /*if (userItCutOpAnswer) {
-            var intCutInches = cu.getValue(userItCutOpAnswer);
-            //must run 2 times: 1 to set operation, 2 to set answer value
-            //pu.validateValue(fields.operation179, zundChoice.intCutOpItem);
-            if (fields.operation179_answer) {
-                pu.validateValue(fields.operation179_answer, intCutInches);
-            }
-        } */
+
     } else {
         pu.validateValue(zundLoading,'');
         pu.validateValue(zundCutting,'');
@@ -403,20 +486,7 @@ function setZundInCutOp(cutMethod, zundChoice) {
         }
     }
 }
-function setOutsourceCutOps(cutMethod) {
-    var outsourceCutOp = fields.operation104;
-    if (cutMethod =='outsourcedCut') {
-        //outourced cut set to default if nothing chosen yet
-        if (!cu.hasValue(outsourceCutOp)) {
-            cu.changeField(outsourceCutOp,412,true);
-        }
-    } else {
-        pu.removeOperationItemsWithString(104,'Cut');
-        if (cu.getSelectedOptionText(outsourceCutOp).indexOf('Cut') != -1) {
-            cu.changeField(outsourceCutOp,'', true);
-        }
-    }
-}
+
 function setMCTCutOp(cutMethod) {
     var mctCutting = fields.operation127;
     var mctLoading = fields.operation128;
@@ -457,6 +527,28 @@ function setNoCutOp(cutMethod) {
         pu.validateValue(noCutOp,448);
     } else {
         pu.validateValue(noCutOp,'');
+    }
+}
+function setAltCutMethod(updates, cutMethod) {
+    var cuttingOp = fields.operation111;
+    var outsourceCutOp = fields.operation104;
+    
+    if (cutMethod =='outsourcedCut' || cutMethod == 'outsourceDieCut') {
+        //outourced cut set to default if nothing chosen yet
+        if (cu.isLastChangedField(updates, cuttingOp)) {
+            if (!cu.hasValue(outsourceCutOp)) {
+                if (cutMethod == 'outsourcedCut') {
+                    cu.changeField(outsourceCutOp,412,true);    
+                } else if (cutMethod == 'outsourceDieCut') {
+                    cu.changeField(outsourceCutOp,463,true);    
+                }
+            }
+        }
+    } else {
+        pu.removeOperationItemsWithString(104,'Cut');
+        if (cu.getSelectedOptionText(outsourceCutOp).indexOf('Cut') != -1) {
+            cu.changeField(outsourceCutOp,'', true);
+        }
     }
 }
 /*** END CUTTING */

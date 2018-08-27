@@ -421,14 +421,15 @@ function test_setCuttingOperations(quote) {
     var zundUnloadingOp = fields.operation105;
     var outsourceCutOp = fields.operation156;
     
+    //default zundFactor to K1, and check materials for largest index
+    var zundChoice = zundFactors.K1;
+    //check print substrate A and Mount for highest ranked factor
+    if (quote.pressSheetQuote.pressSheet.zundFactor) {
+        zundChoice = zundFactors[quote.pressSheetQuote.pressSheet.zundFactor];
+    }
+
     //zund Cutting
     if (setZundCost) {
-        //default zundFactor to K1, and check materials for largest index
-        var zundChoice = zundFactors.K1;
-        //check print substrate A and Mount for highest ranked factor
-        if (quote.pressSheetQuote.pressSheet.zundFactor) {
-            zundChoice = zundFactors[quote.pressSheetQuote.pressSheet.zundFactor];
-        }
         pu.validateValue(zundLoadingOp, zundChoice.loadingOpItem);
         pu.validateValue(zundUnloadingOp, zundChoice.unloadingOpItem);
         pu.validateValue(zundCuttingOp, zundChoice.runOpItem)

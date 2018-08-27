@@ -1621,7 +1621,8 @@ function uiUpdates(product) {
         121,   //TBG Magnet Application
         122,     //TBG Velcro Application
         183,    //TBG Foam Tape Application
-        186     //TBG Bump-on Application
+        186,     //TBG Bump-on Application
+        63    //Keder Sewing
     ]
     var opsWithCalculatedAnswer = [
         139,    //TBG Team

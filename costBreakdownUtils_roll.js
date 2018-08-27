@@ -231,20 +231,23 @@ function renderExtendedCostBreakdown () {
         function buildPrintConfigurationTable() {
             var $wrapper = $('<div class="print-material-configuration"><h4>Print Material Configuration Details</h4></div>');
             
-            if (window.printConfig) {
-                var pc = window.printConfig;
-                if (pc.valid_quote) {
+            if (window.cc.printConfig) {
+                var pc = window.cc.printConfig;
+                if (pc.details.valid_quote) {
+                    var configDetails = pc.details;
+                    var configMaterials = pc.materials;
+                    var configQuote = pc.quote;
                     //loop through each printConfig property to check if xCost is in pc.quote and create materials, else push into general config table
-                    var $configContainer = $('<div><h5>General Roll Configuration</h5></div>');
+                    var $configContainer = $('<div><h5>Job Configuration</h5></div>');
                     var $deviceContainer = $('<div><h6>Device Configuration</h6></div>');
                     var quote = configureglobals.cquote.lpjQuote ? configureglobals.cquote.lpjQuote : null;
                     if (quote.device) {
                         if (quote.device.customProperties) {
                             var $table = $('<table class="debug-table print-specifications-table"><tr><th class="cell-property">Property</th><th class="cell-property-value">Item</th></tr></table>');
                             var rows = '';
-                            var devProp = quote.device.customProperties;
-                            for (prop in devProp) {
-                                rows += '<tr><td class="cell-property">' + prop + '</td><td class="cell-property-value">' +devProp[prop] + '</td></tr>';
+                            var devProperties = quote.device.customProperties;
+                            for (prop in devProperties) {
+                                rows += '<tr><td class="cell-property">' + prop + '</td><td class="cell-property-value">' + devProperties[prop] + '</td></tr>';
                             }
                             $table.append(rows);
                             $deviceContainer.append($table);
@@ -253,26 +256,24 @@ function renderExtendedCostBreakdown () {
                     var $matConfigContainer = $('<div><h5>Material Details</h5></div>');
                     var $configTable = $('<table class="debug-table"><tr><th>Property</th><th>Value</th></tr></table>');
                     var configRows = '';
-                    for (mat in pc) {
-                        var costProp = mat + 'Cost';
-                        if (pc.quote[costProp]) {
+                    for (prop in configDetails) {
+                        configRows += '<tr><td class="cell-property">' + prop + '</td><td class="cell-property-value">' + roundTo(configDetails[prop],2) + '</td></tr>';
+                    }
+                    for (mat in configMaterials) {
+                        if (!jQuery.isEmptyObject(configMaterials[mat])) {
                             var $tableContainer = $('<div><h6>' + mat + '</h6></div>');
                             var $table = $('<table class="debug-table print-specifications-table"><tr><th class="cell-property">Property</th><th class="cell-property-value">Item</th></tr></table>');
-                            var rows = '';
-                            var matDetail = pc[mat];
-                            for (prop in matDetail) {
-                                if (matDetail[prop]) {
-                                    rows += '<tr><td class="cell-property">' + prop + '</td><td class="cell-property-value">' +roundTo(matDetail[prop],2) + '</td></tr>';
+                            var materialRows = '';
+                            var material = configMaterials[mat];
+                            for (prop in material) {
+                                if (material[prop]) {
+                                    materialRows += '<tr><td class="cell-property">' + prop + '</td><td class="cell-property-value">' +roundTo(material[prop],2) + '</td></tr>';
                                 }
                             }
-                            $table.append(rows);
+                            
+                            $table.append(materialRows);
                             $tableContainer.append($table);
                             $matConfigContainer.append($tableContainer);
-                        } else {
-                            // if not material, push into config table
-                            if (typeof pc[mat] != 'object') {
-                                configRows += '<tr><td class="cell-property">' + mat + '</td><td class="cell-property-value">' + roundTo(pc[mat],2) + '</td></tr>';
-                            }
                         }
                     }
                     $configTable.append(configRows);

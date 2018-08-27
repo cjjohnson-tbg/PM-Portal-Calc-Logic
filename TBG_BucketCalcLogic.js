@@ -4,6 +4,7 @@ var cu = calcUtil;
 var pu = pmCalcUtil;
 
 var onQuoteUpdatedMessages = '';
+var disableCheckoutReasons = [];
 
 var bucketCalcLogic = {
     onCalcLoaded: function(product) {
@@ -513,7 +514,7 @@ function isNowBeforeCSTCutoffTime(hour24, minutes) {
 
 function sizeLimitation(product) {
     var pjcSizeMax = {
-        495 : 37
+        495 : 30
     }
     var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
     if (isNaN(totalSquareFeet)) {

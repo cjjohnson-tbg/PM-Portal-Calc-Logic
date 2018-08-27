@@ -5,6 +5,9 @@ var calcCount = 0;
 
 var onQuoteUpdatedMessages = '';
 
+var disableCheckoutReasons = [];
+
+
 var boardCalcLogic = {
     onCalcLoaded: function(product) {
         cu.initFields();
@@ -13,7 +16,8 @@ var boardCalcLogic = {
         metaFieldsActions.onCalcLoaded(product);
         $('#additionalProductFields .additionalInformation div label:contains("Override")').parent().addClass('overrideDevice');
         $('.overrideDevice').hide();
-
+        //run default team as last function on calcLoaded, will trigger update
+        setDefaultTeam();
     },
     onCalcChanged: function(updates, product) {
         console.log('onCalcChanged Start');
@@ -81,16 +85,22 @@ var boardCalcLogic = {
 }
 
 function functionsRanInFullQuote(updates, validation, product, quote) {
-    checkForColorCriticalDevice(validation);
+    checkForColorCriticalDevice(validation, product);
     setInkConsumptionOps(quote);
-    setCuttingOperations(quote);
+    if (cu.getPjcId(product) == 1638) {
+        test_setCuttingOperations(quote);
+    } else {
+        setCuttingOperations(quote);
+    }
     edgeBandingLogic();
-    setLamOps();
+    setLamOps(quote);
     setFluteDirectionOp();
     heatBendingRules(updates);
     twoSidedJobOp();
     setTopAndBottomPieceOps();
     mountAdhesive();
+    jobCostSpoilage(quote);
+    colorWork();
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
@@ -163,7 +173,7 @@ function addOperationChoiceProperties() {
     }
 }
 
-function checkForColorCriticalDevice(validation) {
+function checkForColorCriticalDevice(validation, product) {
     //If color cricital operation selected, toggle off Auto Device and select device
     var getCriticalDeviceId = {
         1466 : 6,  //Vutek HS101
@@ -198,6 +208,11 @@ function checkForColorCriticalDevice(validation) {
                         setDevice(criticalDeviceId);
                     }
                 }
+            } else {
+                //require device selection 
+                disableCheckoutReasons.push('Please Select Color Critical Device');
+                colorCriticalDevice.css('color','red');
+                cu.setSelectedOptionText(colorCriticalDevice,'Select Device...')
             }
             if (hasQtyError) {
                 cu.alert('<p>The default settings for this device cannot run with these specifications. Resubmit the specs with your Color Critical requirements, but do not select a device. Instead, enter a press note with the device required</p>');
@@ -209,13 +224,11 @@ function checkForColorCriticalDevice(validation) {
                     return true;
                 }
             }
+            if (!configureglobals.cdevicemgr.autoDeviceSwitch) {
+                toggleAutoDeviceTypeButton();
+            }
             cu.hideField(colorCriticalDevice);
             cu.setSelectedOptionText(colorCriticalOp,'No');
-             {
-                if (!configureglobals.cdevicemgr.autoDeviceSwitch) {
-                    toggleAutoDeviceTypeButton();
-                }
-            }
         }
     }
 }
@@ -273,65 +286,67 @@ function setInkConsumptionOps(quote) {
 
 function setCuttingOperations(quote) {
     /********* CUTTING LOGIC */
+    var userDeclareCutOp = fields.operation170;
+
     var zundFactors = {
-        "K1" : {"name" : "Knife 1", "loadingOpItem" : 645, "unloadingOpItem" : 606 , "runOpItem": 593, "intCutOpItem": 773, "rank" : 1},
-        "K2" : {"name" : "Knife 2", "loadingOpItem" : 645, "unloadingOpItem" : 606 , "runOpItem": 594, "intCutOpItem": 774, "rank" : 2},
-        "R1" : {"name" : "Router 1", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 595, "intCutOpItem": 775, "rank" : 3},
-        "R2" : {"name" : "Router 2", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 596, "intCutOpItem": 776, "rank" : 4},
-        "R3" : {"name" : "Router 3", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 597, "intCutOpItem": 777, "rank" : 5},
-        "R4" : {"name" : "Router 4", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 598, "intCutOpItem": 778, "rank" : 6}
+        "K1" : {"name" : "Knife 1", "loadingOpItem" : 645, "unloadingOpItem" : 606 , "runOpItem": 593, "intCutOpItem": 773, "userChoiceItem" : 1970, "rank" : 1},
+        "K2" : {"name" : "Knife 2", "loadingOpItem" : 645, "unloadingOpItem" : 606 , "runOpItem": 594, "intCutOpItem": 774, "userChoiceItem" : 1971, "rank" : 2},
+        "R1" : {"name" : "Router 1", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 595, "intCutOpItem": 775, "userChoiceItem" : 1972, "rank" : 3},
+        "R2" : {"name" : "Router 2", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 596, "intCutOpItem": 776, "userChoiceItem" : 1973, "rank" : 4},
+        "R3" : {"name" : "Router 3", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 597, "intCutOpItem": 777, "userChoiceItem" : 1974, "rank" : 5},
+        "R4" : {"name" : "Router 4", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 598, "intCutOpItem": 778, "userChoiceItem" : 1975, "rank" : 6}
     }
-    var cutMethodId = {
+    var fabCutOptions = [
+        1793,  //Fab CNC
+        1794,  //Fab Laser
+        1792   //Fab Saw
+    ]
+    var isFabCut = cu.isValueInSet(userDeclareCutOp, fabCutOptions);
+    var isFabLaser = cu.getValue(userDeclareCutOp) == 1794;
+    var fabCutOp = fields.operation174;
+
+    var isZundCut = cu.getSelectedOptionText(userDeclareCutOp).indexOf('Zund') != -1;
+
+    var altCutMethodId = {
         1079: 'noCut' , //No Cutting
-        1080: 'zund' , //Cut
         1081: 'outsourceCut' , //Outsource Cut
-        1082: 'outsourceDieCut' , //Outsource Die-Cut
-        1083: 'zund' , //Zund Cut
-        1084: 'guillotineCut' , //Guillotine Cut
-        1156: 'fabCut'  //Fab to Cut
+        1082: 'outsourceDieCut' //Outsource Die-Cut
     }
-    var cuttingOp = fields.operation170;
-    if (cu.hasValue(cuttingOp)) {
-        cutMethod = cutMethodId[cu.getValue(cuttingOp)];
-    } else {
-        cutMethod = 'zund'
-    }
+
+    var altCutMethod = altCutMethodId[cu.getValue(userDeclareCutOp)] ? altCutMethodId[cu.getValue(userDeclareCutOp)] : null;
+    var setZundCost = altCutMethod ? false : true;
+
     var zundCuttingOp = fields.operation102;
     var zundLoadingOp = fields.operation104;
     var zundUnloadingOp = fields.operation105;
-    var noCutOp = fields.operation168;
     var outsourceCutOp = fields.operation156;
-    var guillotineCutOp = fields.operation154;
-    var fabCutOp = fields.operation174;
+    
+    //default zundFactor to K1, and check materials for largest index
+    var zundChoice = zundFactors.K1;
+    //check print substrate A and Mount for highest ranked factor
+    if (quote.pressSheetQuote.pressSheet.zundFactor) {
+        zundChoice = zundFactors[quote.pressSheetQuote.pressSheet.zundFactor];
+    }
+
     //zund Cutting
-    if (cutMethod == 'zund') {
-        //default zundFactor to K1, and check materials for largest index
-        var zundChoice = zundFactors.K1;
-        //check print substrate A and Mount for highest ranked factor
-        if (quote.pressSheetQuote.pressSheet.zundFactor) {
-            zundChoice = zundFactors[quote.pressSheetQuote.pressSheet.zundFactor];
-        }
+    if (setZundCost) {
         pu.validateValue(zundLoadingOp, zundChoice.loadingOpItem);
         pu.validateValue(zundUnloadingOp, zundChoice.unloadingOpItem);
         pu.validateValue(zundCuttingOp, zundChoice.runOpItem)
+
+        validateZundOption();
 
     } else {
         pu.validateValue(zundLoadingOp,'');
         pu.validateValue(zundCuttingOp,'');
         pu.validateValue(zundUnloadingOp,'');
     }
-    //no cutting -- ENTER IN NO CUT FOR noCut AND fabCut
-    if (cutMethod == 'noCut') {
-        pu.validateValue(noCutOp, 1076);
-    } else {
-        pu.validateValue(noCutOp,'');
-    }
+
     //Fab cut
-    if (cutMethod == 'fabCut') {
-        if (!cu.hasValue(fabCutOp)) {cu.changeField(fabCutOp, 1108, true); }
+    if (isFabCut) {
         pu.removeClassFromOperation(174, 'planning');
         //if Fab Laser Cut is chosen, force Pre-mask 2 sides=
-        if (cu.getValue(fabCutOp) == 1162) {
+        if (isFabLaser) {
             if (cu.getValue(fields.operation133) != 761) {
                 cu.changeField(fields.operation133, 761, true);
                 onQuoteUpdatedMessages += '<p>Fab Laser Cut requires Premask on both sides.  This has been chosen on your behalf.</p>';
@@ -340,16 +355,23 @@ function setCuttingOperations(quote) {
     } else {
         pu.validateValue(fabCutOp,'');
     }
-    //outsourced
-    if (cutMethod == 'outsourceCut' || cutMethod == 'outsourceDieCut') {
-        if (cutMethod == 'outsourceCut') {
-            pu.validateValue(outsourceCutOp, 911);
-        }
-        if (cutMethod == 'outsourceDieCut') {
-            pu.validateValue(outsourceCutOp, 1096);
-            pu.validateValue(guillotineCutOp, 907);
+
+    //outsource
+    if (altCutMethod) {
+        if (altCutMethod == 'outsourceCut' || altCutMethod == 'outsourceDieCut') {
+            if (altCutMethod == 'outsourceCut') {
+                pu.validateValue(outsourceCutOp, 911);
+            }
+            if (altCutMethod == 'outsourceDieCut') {
+                pu.validateValue(outsourceCutOp, 1096);
+            }
         } else {
-            pu.validateValue(guillotineCutOp, '');
+            if (cu.getSelectedOptionText(outsourceCutOp).indexOf('Cut') != -1) {
+                if (cu.hasValue(outsourceCutOp)) {
+                    cu.changeField(outsourceCutOp,'',true);
+                }
+            }
+            pu.removeOperationItemsWithString(156,'Cut');
         }
     } else {
         if (cu.getSelectedOptionText(outsourceCutOp).indexOf('Cut') != -1) {
@@ -358,6 +380,21 @@ function setCuttingOperations(quote) {
             }
         }
         pu.removeOperationItemsWithString(156,'Cut');
+    }
+    hideInvalidZundOptions();
+
+    function validateZundOption() {
+        if (zundChoice) {
+            if (isZundCut) {
+                pu.validateValue(userDeclareCutOp, zundChoice.userChoiceItem);
+            }
+        }
+    }
+    function hideInvalidZundOptions() {
+        pu.addClassToOperationItemsWithString(170,'hide','Zund');
+        //show availabel zund option
+        $('option[value="' + zundChoice.userChoiceItem + '"]').removeClass('hide');
+        pu.trimOperationItemNames(170,'_');
     }
 }
 
@@ -392,7 +429,7 @@ function edgeBandingLogic() {
     }
 }
 
-function setLamOps() {
+function setLamOps(quote) {
     /************************* ADD LAMINATING RUN 1 AND 2 FOR LAMINATING, MOUNTING, AND PREMASK */
     var frontLamOp = fields.operation131;
     var backLamOp = fields.operation130;
@@ -402,11 +439,12 @@ function setLamOps() {
     var hasBackLam = cu.hasValue(backLamOp);
     var hasMount = cu.hasValue(mountOp);
     var hasPremask = cu.hasValue(premaskOp);
-    
+
     var sfPrePrintLamOps = [
         '129',   //LF Pre-Printing Front Laminate
         '144'    //LF Pre-Printing Back Laminate
     ]
+    var sfPreLaminating = cu.findOperationFromSet(sfPrePrintLamOps);
 
     if (frontLamOp) {
         var hasColdFront = fields.operation131.choice ? fields.operation131.choice.frontLamType == 'Cold' : false;
@@ -420,16 +458,20 @@ function setLamOps() {
     }
     var laminatingRun = fields.operation135;
     var laminatingRun2 = fields.operation221;
-    if (laminatingRun && laminatingRun2) {
-        setLamRunOperations();
-    }
-    /************************* ADD PRE- PRINTING LAMINATING SETUP FEE AND RUN WHEN FRONT AND/OR BACK LAM CHOSEN */
-    var sfPreLaminating = cu.findOperationFromSet(sfPrePrintLamOps);
-    if (cu.hasValue(sfPreLaminating)) {
-        pu.validateValue(fields.operation151, 898);
-    } else {
-        pu.validateValue(fields.operation151,'');
-    }
+    var laminatingRun3 = fields.operation227;
+    var laminatingRun_answer = fields.operation135_answer;
+    var laminatingRun2_answer = fields.operation221_answer;
+    var laminatingRun3_answer = fields.operation227_answer;
+    var lamRollChangeOp = fields.operation232;
+    var lamRollChangeOpAnswer = fields.operation232_answer;
+
+    var boardLength = quote.pressSheetQuote.height ? quote.pressSheetQuote.height : 120;
+    var boardCount = quote.pressSheetQuote.pressSheetCount;
+    var totalBoardLF = pu.roundTo(boardLength * boardCount / 12, 1);
+
+    setPreLamRunCosts(sfPrePrintLamOps, totalBoardLF);
+    setLamMatCosts(totalBoardLF);
+    setLamRunOperations();
 
     function setLamRunOperations() {
         if (hasMount || hasFrontLam || hasBackLam || hasPremask) {
@@ -438,32 +480,41 @@ function setLamOps() {
                     if (!hasFrontLam && !hasBackLam) { // 1. Premask / Adhesive  2. Mount
                         pu.validateValue(laminatingRun, 1600);
                         pu.validateValue(laminatingRun2, 1604);
+                        pu.validateValue(laminatingRun3, '');
                     } else if (hasHotFront) { //  1. Hot / Adhesive  2. Mount + Premask
                         pu.validateValue(laminatingRun, 1598);
                         pu.validateValue(laminatingRun2, 1605);
-                    } else if (hasColdFront) { //  1. Cold / Adhesive  2. Mount + Premask
+                        pu.validateValue(laminatingRun3, '');
+                    } else if (hasColdFront) { //  1. Cold / Adhesive 2. Mount / Premask
                         pu.validateValue(laminatingRun, 1597);
                         pu.validateValue(laminatingRun2, 1605);
+                        pu.validateValue(laminatingRun3, '');
                     } else { // 1. Premask / Adhesive  2. Mount  --CATCH ALL UNFORESEEN
                         pu.validateValue(laminatingRun, 1600);
                         pu.validateValue(laminatingRun2, 1604);
+                        pu.validateValue(laminatingRun3, '');
                     } 
                 } else {  //mounted but no premask
                    if (!hasFrontLam && !hasBackLam) { // 1. Adhesive  2. Mount
                         pu.validateValue(laminatingRun, 1595);
                         pu.validateValue(laminatingRun2, 1604);
+                        pu.validateValue(laminatingRun3, '');
                     } else if (hasHotFront) { //  1. Hot / Adhesive  2. Mount
                         pu.validateValue(laminatingRun, 1598);
                         pu.validateValue(laminatingRun2, 1604);
+                        pu.validateValue(laminatingRun3, '');
                     } else if (hasColdFront) { //  1. Cold / Adhesive  2. Mount
                         pu.validateValue(laminatingRun, 1597);
                         pu.validateValue(laminatingRun2, 1604);
+                        pu.validateValue(laminatingRun3, '');
                     } else if (hasAdhesiveFront || hasAdhesiveFront) { // 1. Adhesive  2. Mount
                         pu.validateValue(laminatingRun, 1597);
                         pu.validateValue(laminatingRun2, 1604);
+                        pu.validateValue(laminatingRun3, '');
                     } else { // 1. Adhesive  2. Mount  --CATCH ALL UNFORESEEN
                         pu.validateValue(laminatingRun, 1595);
                         pu.validateValue(laminatingRun2, 1604);
+                        pu.validateValue(laminatingRun3, '');
                     }
                 }
             } else {  //everything not mounted
@@ -472,68 +523,157 @@ function setLamOps() {
                         if (hasAdhesiveBack) { // 1. Hot / Adhesive 2. Premask
                             pu.validateValue(laminatingRun, 1598);
                             pu.validateValue(laminatingRun2,1606);
+                            pu.validateValue(laminatingRun3, '');
                         } else if (hasHotBack) { // 1. Hot / Hot 2. Premask
                             pu.validateValue(laminatingRun, 1529);
                             pu.validateValue(laminatingRun2,1606);
+                            pu.validateValue(laminatingRun3, '');
                         } else { // 1. Hot / Hot 2. Premask
                             pu.validateValue(laminatingRun, 1529);
                             pu.validateValue(laminatingRun2,1606);
+                            pu.validateValue(laminatingRun3, '');
                         }
                     } else if (hasColdFront) {
-                        if (hasColdBack) {  // 1. Cold  2. Premask
+                        if (hasColdBack) {  // 1. Cold  2. Cold 3. Premask
                             pu.validateValue(laminatingRun, 777);
-                            pu.validateValue(laminatingRun2,1606);
+                            pu.validateValue(laminatingRun2,1602);
+                            pu.validateValue(laminatingRun3, 1641);
                         } else if (hasAdhesiveBack) { // 1. Cold / Adhesive 2. Premask
                             pu.validateValue(laminatingRun, 1597);
                             pu.validateValue(laminatingRun2,1606);
+                            pu.validateValue(laminatingRun3, '');
                         } else { // 1. Cold  2. Pre-mask
                             pu.validateValue(laminatingRun, 777);
                             pu.validateValue(laminatingRun2,1606);
+                            pu.validateValue(laminatingRun3, '');
                         }
                     } else if (hasAdhesiveBack || hasAdhesiveFront) { // 1. Adhesive  2. Premask
                         pu.validateValue(laminatingRun, 1595);
                         pu.validateValue(laminatingRun2,1606);
+                        pu.validateValue(laminatingRun3, '');
                     } else { // 1. Premask
                         pu.validateValue(laminatingRun, 1601);
                         pu.validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun3, '');
                     }
                 } else {  // no mount, no premask
                     if (hasHotFront) {
                         if (hasHotBack) { // 1. Hot / Hot
                             pu.validateValue(laminatingRun, 1529);
                             pu.validateValue(laminatingRun2,'');
+                            pu.validateValue(laminatingRun3, '');
                         } else if (hasAdhesiveBack) {  // 1. Hot / Adhesive
                             pu.validateValue(laminatingRun, 1598);
                             pu.validateValue(laminatingRun2,'');
+                            pu.validateValue(laminatingRun3, '');
                         } else { // WARNING
                             onQuoteUpdatedMessages += '<p> Must have a Hot Lam, Adhesive, or Mount on back side</p>';
                             cu.changeField(backLamOp, '', true);
+                            pu.validateValue(laminatingRun3, '');
                         }
                     } else if (hasColdFront) {
                         if (hasColdBack) {  // 1. Cold  2. Cold
                             pu.validateValue(laminatingRun, 777);
                             pu.validateValue(laminatingRun2, 1602); 
+                            pu.validateValue(laminatingRun3, '');
                         } else if (hasAdhesiveBack) { // 1. Adhesive
                             pu.validateValue(laminatingRun, 1595);
                             pu.validateValue(laminatingRun2,'');
+                            pu.validateValue(laminatingRun3, '');
                         } else if (hasHotBack) {
                             onQuoteUpdatedMessages += '<p>You have selected a Cold Front Lam and Hot Back Laminate. Please contact estimating for a special quote.</p>'
                             cu.changeField(backLamOp,'', true);
                         } else {  // 1. Cold
                             pu.validateValue(laminatingRun, 777);
-                            pu.validateValue(laminatingRun2, ''); 
+                            pu.validateValue(laminatingRun2, '');
+                            pu.validateValue(laminatingRun3, ''); 
                         }
                     } else if (hasAdhesiveBack || hasAdhesiveFront) { // 1. Adhesive
                         pu.validateValue(laminatingRun, 1595);
                         pu.validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun3, '');
                     }
                 }
             }
+            //insert total LF of boards into operation answer
+            if (laminatingRun_answer) {
+                pu.validateValue(laminatingRun_answer, totalBoardLF);
+            }
+            if (laminatingRun2_answer) {
+                pu.validateValue(laminatingRun2_answer, totalBoardLF);
+            }
+            if (laminatingRun2_answer) {
+                pu.validateValue(laminatingRun3_answer, totalBoardLF);
+            }
+            setLamRollChangeLabor(quote, lamRollChangeOp, lamRollChangeOpAnswer);
         } else {
             pu.validateValue(laminatingRun,'');
             pu.validateValue(laminatingRun2,'');
+            pu.validateValue(laminatingRun3, '');
+            pu.validateValue(lamRollChangeOp, '');
         }
     }
+}
+function setLamRollChangeLabor(quote, rollChangeOp, answer) {
+    var rollChangeMins = getLamRollChangeOp(quote);
+    if (rollChangeMins > 0) {
+        pu.validateValue(rollChangeOp, 1664);
+        if (answer) {
+            pu.validateValue(answer, rollChangeMins);
+        }
+    } else {
+        pu.validateValue(rollChangeOp,'');
+    }
+
+}
+function getLamRollChangeOp(quote) {
+    var result = 0;
+    var rollChanges = 0;
+    var minutesPerChange = 15;
+    var rollLF = 150;
+    var boardLength = quote.pressSheetQuote.height;
+    var boards = quote.pressSheetQuote.pressSheetCount;
+    rollChanges = Math.ceil(boards * boardLength / (rollLF * 12)) - 1;
+
+    result = minutesPerChange * rollChanges;
+    return result
+}
+
+function setPreLamRunCosts(pLamOps, lf) {
+    var prePrintLamRunOp = fields.operation151;
+    var prePrintLamRunOp_answer = fields.operation151_answer;
+    var passes = 0;
+    if (pLamOps) {
+        passes = pu.countHasValueFromOpSet(pLamOps);
+    }
+    if (passes == 2) {
+        pu.validateValue(prePrintLamRunOp, 1642);
+    } else if (passes == 1) {
+        pu.validateValue(prePrintLamRunOp, 898);
+    } else {
+        pu.validateValue(prePrintLamRunOp, '');
+    }
+    //insert LF into Answer
+    if (prePrintLamRunOp_answer) {
+        pu.validateValue(prePrintLamRunOp_answer, lf)
+    }
+}
+
+function setLamMatCosts(lf) {
+    var lamOpAnswers = [
+        fields.operation129_answer,  //LF Pre-Printing Front Laminate
+        fields.operation144_answer,  //LF Pre-Printing Back Laminate
+        fields.operation131_answer,  //LF Front Laminating
+        fields.operation130_answer,   //LF Back Laminating
+        fields.operation133_answer,   //LF Premask
+    ]
+
+    for (var i = 0; i < lamOpAnswers.length; i++) {
+        if (lamOpAnswers[i]) {
+            pu.validateValue(lamOpAnswers[i],lf);
+        }
+    }
+
 }
 
 function setFluteDirectionOp() {
@@ -541,14 +681,30 @@ function setFluteDirectionOp() {
     var fluteDirectionOp = fields.operation152;
     var flutedSubstrateNames = [
         'Coroplast',
-        'Flute'
+        'Flute',
+        'Brushed Silver'
     ];
+    var prePrintingLamOps = [
+        129,
+        144
+    ]
     if (fluteDirectionOp) {
         var substrateName = $('#pressSheetType select[name="PRESSSHEETTYPEDD"] option:selected').text();
         var hasFlutes = false;
         for (names in flutedSubstrateNames) {
             if (substrateName.indexOf(flutedSubstrateNames[names]) != -1) {
                 hasFlutes = true;
+            }
+            //if in Pre-lam ops
+            for (op in prePrintingLamOps) {
+                if ($('#operation'+prePrintingLamOps[op])) {
+                    var optionText = $('select#operation'+prePrintingLamOps[op]+' option:selected').text();
+                    if (optionText) {
+                        if (optionText.indexOf(flutedSubstrateNames[names]) != -1) {
+                            hasFlutes = true;
+                        }
+                    }
+                }
             }
         }
         if (hasFlutes) {
@@ -565,9 +721,18 @@ function setFluteDirectionOp() {
 }
 
 function heatBendingRules(updates) {
-    /********* HEAT BENDING RULES */
-    var heatBendingOp = fields.operation159;
+    
+    var heatBendMessage = '';
+    var heatBendingOpIds = [159, 249];
+    var heatBendingOpVert = fields.operation159;
+    var heatBendingOpVert_answer = fields.operation159_answer;
+    var heatBendingOpHoriz = fields.operation249;
+    var heatBendingOpHoriz_answer = fields.operation249_answer;
+    var customHeatBendOpItem = 1742;
+    
+    
     var boardTypesThatCanHeatBend = [
+        '247',   //Buy-out
         '173',   // Styrene
         '189',   // Styrene - white
         '190',   // Styrene - black
@@ -595,79 +760,223 @@ function heatBendingRules(updates) {
         '278',   // Acrylic White Extruded
         '283'    // Acrylic Clear Cast
     ];
-    var boardWeightsThatCanHeatBend = [
-        '63',   // 1MM
-        '64',   // 2MM
-        '65',   // 3MM
-        '55',   // .015
-        '56',   // .020
-        '57',   // .030
-        '58',   // .040
-        '59',   // .060
-        '60',   // .080
-        '61',   // .125
-        '62',   // .118
-        '77',   // .065
-        '77',   // .065
-        '79'    // .010
-    ];
-    if (heatBendingOp) {
+
+
+    if (heatBendingOpVert && heatBendingOpHoriz) {
         //Do not allwow with Post printing lam and mounting operations
         //var previousAllowHeatBend = allowHeatBend;
         var allowHeatBend = true;
-        var heatBendMessage = '';
-        //Do not allow with Lam or Mounting
-        var hasNonHeatBendOpSelected = false;
-        checkForNonHeatBendingOps([
+        var heatBendErrors = [];
+        var heatBendLocation = getBendLocation();
+
+        var hasMountLam = checkForNonHeatBendingOps([
                 fields.operation130,  //LF Back Laminating
                 fields.operation131,  //LF Front Laminating
                 fields.operation135   //LF Mounting
             ]);
-        //only approved materials
-        if (!cu.isValueInSet(fields.paperType, boardTypesThatCanHeatBend)) {
-            allowHeatBend = false; 
-            heatBendMessage += '<p>The substrate selected is not able to Heat Bend.</p>';
-        }
-        //Cannot exceed 100 finished pieces.
-        if (cu.getTotalQuantity() > 100) {
-            allowHeatBend = false; 
-            heatBendMessage += '<p>Heat Bending is not allowed on quantities over 100 finishing pieces.</p>';
-        }
-        //Neither size dimension can exceed 40"
-        if (cu.getWidth() > 40 || cu.getHeight() > 40) {
-            allowHeatBend = false; 
-            heatBendMessage += '<p>Heat bending is not available for pieces with one edge longer than 40".</p>';
-        }
-        //must be .125 (3MM) or thinner boardWeightsThatCanHeatBend
-        if (!cu.isValueInSet(fields.paperWeight, boardWeightsThatCanHeatBend)) {
-            allowHeatBend = false; 
-            heatBendMessage += '<p>The substrate weight selected is not able to Heat Bend.</p>';
+
+        var hasHeatBending = (cu.hasValue(heatBendingOpVert) || cu.hasValue(heatBendingOpHoriz));
+    
+        pu.addClassToOperationItemsWithString(heatBendingOpIds, 'heat-bend-fab', 'Bend_TBG Fab');
+        pu.addClassToOperationItemsWithString(heatBendingOpIds, 'heat-bend-fab', 'Bends_TBG Fab');
+        pu.addClassToOperationItemsWithString(heatBendingOpIds, 'heat-bend-one', 'Bend_TBG1');
+        pu.addClassToOperationItemsWithString(heatBendingOpIds, 'heat-bend-one', 'Bends_TBG1');
+
+
+        if (hasHeatBending) {
+            if (cu.hasValue(heatBendingOpVert)) {
+                validateLocationValue(heatBendingOpVert, heatBendLocation);
+                validateJobConfig(heatBendingOpVert, 'vertical', hasMountLam);
+            }
+            if (cu.hasValue(heatBendingOpHoriz)) {
+                validateLocationValue(heatBendingOpHoriz, heatBendLocation);
+                validateJobConfig(heatBendingOpHoriz, 'horizontal', hasMountLam);
+            }
+
+            nVertBends = getBendCount(heatBendingOpVert);
+            nHorizBends = getBendCount(heatBendingOpHoriz);
+            if (nVertBends + nHorizBends > 2) {
+                heatBendErrors.push('Cannot have more than 2 total bends.  Please go through central estimating for a valid price.');
+            }
+
+            heatBendErrorMessage(heatBendErrors);
+
+            var hasVertMinutes = setHeatBendMinutes(heatBendingOpVert, heatBendingOpVert_answer, nVertBends);
+            var hasHorizMinutes = setHeatBendMinutes(heatBendingOpHoriz, heatBendingOpHoriz_answer, nHorizBends, hasVertMinutes);
+            pu.hideOperationQuestion(heatBendingOpIds);
+
         }
 
-        if (cu.hasValue(heatBendingOp)) {
-            if (!allowHeatBend) {
-                //onQuoteUpdatedMessages += heatBendMessage;
-                cu.alert(heatBendMessage);
-                cu.changeField(heatBendingOp,'',true);
-            }
-            if (cu.isLastChangedField(updates, heatBendingOp)) {
-                onQuoteUpdatedMessages += '<p>Because you selected the Heat Bending option you are required to provide art describing the piece and where the bend(s) goes. If you have any questions about this please speak to your training supervisor.</p>';
-            }
-            
+        
+        updateBendOpItems(heatBendLocation);
+
+        if (cu.getValue(heatBendingOpVert) == customHeatBendOpItem) {
+            pu.validateValue(heatBendingOpHoriz,'');
         }
-        if (allowHeatBend) {
-            cu.showField(heatBendingOp);
+
+    }
+
+    function getBendLocation() {
+        var location = 'TBG1';
+        if (cu.getTotalQuantity() > 200) {
+            location = 'FAB';
+        }
+        if (cu.hasValue(heatBendingOpVert)) {
+            if (cu.getHeight() <= 3) {
+                location = 'FAB';
+            }
+        }
+        if (cu.hasValue(heatBendingOpHoriz)) {
+            if (cu.getWidth() <= 3) {
+                location = 'FAB';
+            }
+        }
+        return location
+    }
+    function getBendCount(op) {
+        var result = 0;
+        if (cu.hasValue(op)) {
+            var choice = cu.getSelectedOptionText(op);
+            result = (choice.indexOf('2 Bends') != -1) ? 2 : 1;
+        }
+        return result
+    }
+
+    function setHeatBendMinutes(op, answer, bends, hasVertical) {
+        //calculate total estimated time to complete
+
+        if (cu.hasValue(op)) {
+            var choice = cu.getSelectedOptionText(op);
+            if (choice.indexOf('Fab estimate') != -1) {
+                //if has Fab estimate, set as 0 minutes
+                pu.validateValue(answer,0);
+            } else {
+                var setupMinutes = getSetupMinutes(choice, bends, hasVertical);
+                var minsPerPiece = (choice.indexOf('Vertical') != -1) ? getMinutesPerPiece(cu.getHeight()) : getMinutesPerPiece(cu.getWidth());
+                var totalMinutes = setupMinutes + ( minsPerPiece * cu.getTotalQuantity() );
+                pu.validateValue(answer, totalMinutes);
+                pu.hideOperationQuestion
+                return true
+            }
+
+        }
+    }
+    function getSetupMinutes(choice, bends, hasVertical) {
+        //30 minutes setup for first bend, 15 for each thereafter
+        if (hasVertical) {
+            return bends * 15
         } else {
-            cu.hideField(heatBendingOp);
+            return 30 + ( (bends - 1) * 15 )
         }
+    }
+    function getMinutesPerPiece(len) {
+        if (len <= 18) {
+            return .4
+        } else if (len <= 24) {
+            return .6
+        } else if (len <= 36) {
+            return .8
+        } else if (len <= 40) {
+            return 1.2
+        }
+        return 0
     }
     function checkForNonHeatBendingOps(fields) {
         for (var i = 0; i < fields.length; i++) {
             if (cu.hasValue(fields[i])) {
-                allowHeatBend = false; 
-                heatBendMessage += '<p>Heat Bending is not allowed with Laminating or Mounting</p>';
+                return true
             }
         }
+    }
+    function validateJobConfig(op, orientation, hasMountLam) {
+        var substrateCaliper = cu.getPressSheetCaliper();
+        var bendLength = orientation == 'vertical' ? cu.getHeight() : cu.getWidth();
+        var maxSubstrateCaliper = .118;
+        var minSubstrateCaliper = .040;
+
+        var isBuyOut = cu.getValue(fields.paperType) == '247';
+        //only approved materials
+        if (!cu.isValueInSet(fields.paperType, boardTypesThatCanHeatBend)) {
+            heatBendErrors.push('The substrate selected is not able to Heat Bend.');
+        }
+        //bend length cannot be greater than 40"
+        if (bendLength > 40) {
+            heatBendErrors.push('Heat bending is not available for pieces with Bend Length longer than 40".');
+        }
+        if (isBuyOut) {
+            heatBendErrors.push('Heat bending for Buy-out materials must be sent through central estimating.');
+        }
+        //caliper restrictions, only if present and not a buyout
+        if (substrateCaliper && !isBuyOut) {
+            //max caliper of .118
+            if (substrateCaliper > maxSubstrateCaliper) {
+                heatBendErrors.push( 'Substrates with calipers greater than ' + maxSubstrateCaliper + '" must be sent through central estimating.');
+            }
+            if (substrateCaliper <  minSubstrateCaliper) {
+                heatBendErrors.push( 'Substrates with calipers less than than ' + minSubstrateCaliper + '" must be sent through central estimating.');
+            }
+            if (bendLength > 12 && substrateCaliper < .060) {
+                heatBendErrors.push( 'Substrates with calipers less than .060" must have a bend length 12" or less and must be sent through central estimating');
+            }
+            if (hasMountLam && substrateCaliper < .060) {
+                heatBendErrors.push( 'Substrates with calipers less than .060" and laminating or mounting must be sent through central estimating.');
+            }
+        }
+    }
+
+    function validateLocationValue(op, location) {
+        var opChoice = cu.getValue(op);
+        // TBG1 (value) : FAB (key)
+        var heatBendKeyPairs = {
+            1750 : 1736,  //vertical 1 bend
+            1751 : 1737,  //vertical 2 bend
+            1746 : 1744,  //horizontal 1 bend
+            1747 : 1745  //horizontal 2 bend
+        }
+        if (location == 'TBG1') {
+            //if TBG1 check to see if in key - , if in value then set as key
+            for (var key in heatBendKeyPairs) {
+                if (opChoice == key) {
+                    return
+                }
+                if (opChoice == heatBendKeyPairs[key]) {
+                    cu.changeField(op, key, true);
+                }
+            }
+        } else {
+            //else for FAB check to see if in value - , if in key then set as value
+            for (var key in heatBendKeyPairs) {
+                if (opChoice == heatBendKeyPairs[key]) {
+                    return
+                }
+                if (opChoice == key) {
+                    cu.changeField(op, heatBendKeyPairs[key], true);
+                }
+            }
+        }
+    }
+    function heatBendErrorMessage(errors) {
+        if (errors.length > 0) {
+            if (cu.getValue(heatBendingOpVert) != customHeatBendOpItem || cu.hasValue(heatBendingOpHoriz)) {
+                pu.validateValue(heatBendingOpVert,customHeatBendOpItem);
+                pu.validateValue(heatBendingOpHoriz, '');
+                
+                var errorMessage = '<p>Heat Bending with this configuration must be estimated through an Estimate Request. A choice is still needed so the Heat Bending Operations have been adjusted to account for this.</p><div><ul>';
+                for (var i = 0; i < errors.length; i++ ) {
+                    errorMessage += '<li>' + errors[i] + '</li>';
+                }
+                errorMessage += '</ul></div><p>For more information please visit the Help Tip.</p>'
+                onQuoteUpdatedMessages += errorMessage;
+            }
+        }
+    }
+    function updateBendOpItems(location) {
+        if (location == 'TBG1') {
+            $('option.heat-bend-fab').hide()
+        } else {
+            $('option.heat-bend-one').hide()
+        }
+        pu.trimOperationItemNames(heatBendingOpIds,'_');
     }
 }
 
@@ -733,6 +1042,35 @@ function mountAdhesive() {
     }
     pu.validateValue(adhesiveOp, adhesiveMatItem);
 }
+function jobCostSpoilage(quote) {
+    var spoilageOp = fields.operation233;
+    var spoilageOpAns = fields.operation233_answer;
+    var spoilageCost = quote.jobCostPrice ? quote.jobCostPrice : 0;
+    if (spoilageOp) {
+        if (!cu.hasValue(spoilageOp)) {
+            cu.changeField(spoilageOp, 1666, true);
+        }
+        pu.validateValue(spoilageOpAns, spoilageCost)
+    }
+}
+
+function colorWork() {
+
+    lightingEnvironmentColorWork();
+
+    function lightingEnvironmentColorWork() {
+        var lightEnvOp = fields.operation247;
+        if (lightEnvOp) {
+            var refId = pu.getMaterialReferenceId();
+            if (stockClassification.clear.indexOf(refId) == -1) {
+                cu.hideField(lightEnvOp);
+                pu.validateValue(lightEnvOp, '');
+            } else {
+                cu.showField(lightEnvOp);
+            }
+        }
+    }
+}
 
 //functions ran after completed full quote
 function setSpecialMarkupOps(quote) {
@@ -759,16 +1097,53 @@ function getOperationPrice(quote, opHeader) {
     return 0;
 }
 
+function setDefaultTeam() {
+    //ran only on calculator load
+    var teamOp = fields.operation218;
+    var tbgTeams = {
+        "Team Andrew Clemens" : 1576,
+        "Team Andrew Dyson" : 1583,
+        "Team Beth Josub" : 1572,
+        "Team Cindy Johnson" : 1570,
+        "Team Craig Omdal" : 1575,
+        "Team Jim Olson" : 1580,
+        "Team John Pihaly" : 1578,
+        "Team Jordan Feddema" : 1574,
+        "Team Perry Ludwig" : 1584,
+        "Team Pete Ludwig" : 1568,
+        "Team Rick Behncke" : 1581,
+        "Team Rick Mirau" : 1585,
+        "Team Tony Jones" : 1582,
+        "Team Tracy Cogan" : 1577,
+        "Team Vito Lombardo" : 1571,
+        "Unassigned" : 1569
+    }
+    var userTeam = globalpageglobals.cuser.metadata["Default Team"];
+    if (userTeam) {
+        var teamId = tbgTeams[userTeam];
+        if (teamId) {
+            cu.changeField(teamOp, teamId, true);
+        } else {
+            console.log('User assigned team ' + userTeam + ' not in TBG Team set in logic file.');
+        }
+    } else {
+        console.log('User assigned team not assigned to default team');
+    }
+}
+
 //UI Updates
 function updateUI(product) {
     updateLabels();
     updateClasses();
     updateOpItems();
     metaFieldsActions.onQuoteUpdated(product);
-    updateOpQuestions();
     addBasicDetailsToPage();
+    maxQuotedJob();
     pu.showMessages();
+    pu.validateConfig(disableCheckoutReasons);
     renderExtendedCostBreakdown();
+    inkOptGroup_surface(product);
+    //inkOptGroup_common(product);
 }
 function updateLabels() {
     cu.setLabel(fields.paperType,'Substrate');
@@ -779,6 +1154,7 @@ function updateClasses() {
     var planningOnlyOperations = [
         150,    //LF Cutting
         154,    //LF Guillotine Cutting
+        274,    //LF Guillotine Slip Sheets
         155,    //LF Fotoba Cutting
         102,    //LF Zund Cutting
         140,     //LF Mounting Adhesive
@@ -793,7 +1169,7 @@ function updateClasses() {
         215     //LF Gutter
     ]
     var estimstingOnlyOperations = [
-        218    //TBG Team Factor (temporary)
+        //218    //TBG Team Factor (temporary)
     ]
     var opsWithOther = [
         129,
@@ -803,15 +1179,26 @@ function updateClasses() {
         139,
         133
     ]
+    var opsWithCalculatedAnswer = [
+        133,    //Premask
+        218,    //TBG Team
+        226,    //TBG Special Customer
+        129,    //Pre-Printing Front Laminate
+        144,    //Pre-Printing Back Laminate
+        131,    //Front Laminating
+        130,    //Back Laminating
+        139    //Mounting
+    ]
 
     pu.addClassToOperation(planningOnlyOperations,'planning');
     pu.addClassToOperation(estimstingOnlyOperations,'estimating');
     pu.addClassToOperationItemsWithString(opsWithOther, 'otherOpItem', 'Other');
+    pu.addClassToOperation(opsWithCalculatedAnswer,'calculatedAnswer');
     pu.removeClassFromOperation(170,'costingOnly');
     pu.removeClassFromOperation(205,'costingOnly');
 }
 function updateOpItems() {
-    var opsWithSubIds = [
+    var opsWithUnderscoreItems = [
         129,    //LF Pre-Printing Front Laminate
         130,    //LF Back Laminating
         131,    //LF Front Laminating
@@ -820,17 +1207,150 @@ function updateOpItems() {
         120,    //LF Tape, Mag, Velcro - Perimeter
         122,    //LF Tape, Mag, Velcro - Top Only
         124,     //LF Tape, Mag, Velcro - Top & Bottom
-        133      //LF Premask
+        133,    //LF Premask
+        248,     //Can color team approve color without PM?
+        243,     //Match Color to
+        176,   //LF Film Tape Application - Perimeter
+        177,   //LF Film Tape Application - Top Only
+        178,   //LF Film Tape Application - Top & Bottom
+        179,   //LF Magnet Application - Perimeter
+        180,   //LF Velcro Application - Top Only
+        181,   //LF Magnet Application - Top & Bottom
+        182,   //LF Velcro Application - Perimeter
+        183,   //LF Magnet Application - Top Only
+        184,   //LF Velcro Application - Top & Bottom
+        263,   //LF Foam Tape Application - Perimeter
+        264,   //LF Foam Tape Application - Top & Bottom
+        265,   //LF Foam Tape Application - Top Only
+        266,   //LF Bump-ons Application
+        267,   //LF Sleeves Application
+        268,   //LF Misc Hand Application
+        269,   //LF Film Tape Application - Custom
+        270,   //LF Foam Tape Application - Custom
+        271,   //LF Magnet Tape Application - Custom
+        272   //LF Velcro Tape Application - Custom
     ]
-    pu.trimOperationItemNames(opsWithSubIds,'_');
+    pu.trimOperationItemNames(opsWithUnderscoreItems,'_');
     pu.removeOperationItemsWithString(156,'Print');
 }
-function updateOpQuestions() {
-    var opsToHideQuestion =[
-        133
+function inkOptGroup_surface(product) {
+
+    //Create opt groups only for TBG Board Printing
+    if (cu.getPjcId(product) != 832) {return}
+
+    insertOptGroup($('select[name="SIDE1DD"]'));
+    insertOptGroup($('select[name="SIDE2DD"]'));
+
+    var side1CommonInkTypes = [
+        '64',   //Standard CMYK (First Surface)
+        '58',   //Standard CMYK (Second Surface)
+        '42',   //CMYK + W (Flood / Second Surface)
+        '50',   //CMYK + W (Spot / Second Surface)
+        '43',   //W + CMYK (Flood / First Surface)
+        '51',   //W + CMYK (Spot / First Surface)
+        '53',   //W + W + CMYK (Spot / First Surface)
+        '60',   //W + W Only (Spot / First Surface)
+        '62',   //White Only (Spot / First Surface)
+        '55'   //CMYK (Backlit)
     ]
-    pu.hideOperationQuestion(opsToHideQuestion);
+    var side2CommonInkTypes = [
+        '64',   //Standard CMYK (First Surface)
+    ]
+
+    function insertOptGroup(inkSelect) {
+      
+        //Create opt groups for inks with Surfact in name
+        //only for TBG Board Printing
+        if (inkSelect.find('optGroup').length > 0) {
+            return
+        }
+        var selectedOption = inkSelect.val();
+        var firstSurfaceGroup = $('<optgroup label="First Surface"></optGroup>');
+        var secondSurfaceGroup = $('<optgroup label="Second Surface"></optgroup>');
+        var otherGroup = $('<optgroup label="other"></optgroup>');
+        var items = inkSelect.find('option');
+        for (var i = 0; i < items.length; i++) {
+            //if none, push to top
+            if (items[i].value == '') {
+                inkSelect.append(items[i]);
+                continue
+            }
+            var optionText = items[i].text;
+            if (optionText.indexOf('First Surface') != -1) {
+                firstSurfaceGroup.append(items[i]);
+            } else if (optionText.indexOf('Second Surface') != -1) {
+                secondSurfaceGroup.append(items[i])
+            } else {
+                otherGroup.append(items[i])
+            }
+        }
+        firstSurfaceGroup.appendTo(inkSelect);
+        if (secondSurfaceGroup.find('option').length > 0) {
+            secondSurfaceGroup.appendTo(inkSelect);
+        }
+        if (otherGroup.find('option').length > 0) {
+            otherGroup.appendTo(inkSelect);
+        }
+
+      inkSelect.val(selectedOption);
+   }
 }
+function inkOptGroup_common(product) {
+    //Create opt groups for COMMON inks ink list
+    //only for TBG Board Printing
+    if (cu.getPjcId(product) != 832) {return}
+
+    var side1CommonInkTypes = [
+        '64',   //Standard CMYK (First Surface)
+        '58',   //Standard CMYK (Second Surface)
+        '42',   //CMYK + W (Flood / Second Surface)
+        '50',   //CMYK + W (Spot / Second Surface)
+        '43',   //W + CMYK (Flood / First Surface)
+        '51',   //W + CMYK (Spot / First Surface)
+        '53',   //W + W + CMYK (Spot / First Surface)
+        '60',   //W + W Only (Spot / First Surface)
+        '62',   //White Only (Spot / First Surface)
+        '55'   //CMYK (Backlit)
+    ]
+    var side2CommonInkTypes = [
+        '64',   //Standard CMYK (First Surface)
+    ]
+
+    insertOptGroup($('select[name="SIDE1DD"]'), side1CommonInkTypes);
+    insertOptGroup($('select[name="SIDE2DD"]'), side2CommonInkTypes);
+
+
+    function insertOptGroup(inkSelect, list) {
+        if (!inkSelect) { return }
+        if (inkSelect.find('optGroup').length > 0) {
+            return
+        }
+        var selectedOption = inkSelect.val();
+        var commonInkGroup = $('<optgroup label="Common Inks"></optGroup>');
+        var otherGroup = $('<optgroup label="other"></optgroup>');
+        var items = inkSelect.find('option');
+        for (var i = 0; i < items.length; i++) {
+            //if none, push to top
+            if (items[i].value == '') {
+                inkSelect.append(items[i]);
+                continue
+            }
+            if (list.indexOf(items[i].value) != -1) {
+                commonInkGroup.append(items[i]);
+            } else {
+                otherGroup.append(items[i])
+            }
+        }
+        if (commonInkGroup.find('option').length > 0) {
+            commonInkGroup.appendTo(inkSelect);
+        }
+        if (otherGroup.find('option').length > 0) {
+            otherGroup.appendTo(inkSelect);
+        }
+        inkSelect.val(selectedOption);
+   }
+}
+
 function addBasicDetailsToPage() {
    $('#runTime span').text(cu.getTotalRuntime());
     $('#totalPressSheets span').text(cu.getTotalPressSheets());
@@ -841,8 +1361,21 @@ function addBasicDetailsToPage() {
     $('#smallFormatPrintSpecs').show();
     $('#pressSheetName span').text(cu.getPressSheetName()); 
 }
+function maxQuotedJob() {
+    var jobQuote = configureglobals.cquote.jobTotalPrice;
+    var maxQuotaJobAmt = 5000;
+    if (jobQuote > maxQuotaJobAmt) {
+        $('#validation-message-container').html('<div class="ribbon-wrapper quote-warning">The total price of your job exceeds $' + maxQuotaJobAmt + '. Please contact Central Estimating to obtain a quote for your job.</div>')
+    } else {
+        $('#validation-message-container').html('');
+    }
+}
 function checkForHardProofRequired() {
     // SHOW HARD PROOF MESSAGE ON THROUGHPUT THRESHOLDS 
+    // do not run if user is admin
+    if ($('#page').hasClass('userIsAdministrator')) {
+        return
+    }
     if (!window.hardProofMessageCount) {
         window.hardProofMessageCount = 0;
     }
@@ -860,7 +1393,6 @@ function checkForHardProofRequired() {
         } 
     }
 }
-
 
 
 

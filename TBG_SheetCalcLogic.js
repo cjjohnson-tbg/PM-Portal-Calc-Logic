@@ -13,12 +13,12 @@ var coatingChoices = {  //standard item id : 10k item id
 var hasOutsideDieSelected;
 
 var onQuoteUpdatedMessages = '';
+var disableCheckoutReasons = [];
+
 var cu = calcUtil;
+var pu = pmCalcUtil;
 var sfSheetCalcLogic = {
     onCalcLoaded: function(product) {
-        // $('.operation66').addClass('hideIt');
-        // $('.operation67').addClass('hideIt');
-        $('#operation141').removeClass('costingOnly');
         //run meta field action
         metaFieldsActions.onCalcLoaded(product);
     },
@@ -41,6 +41,8 @@ var sfSheetCalcLogic = {
 
             //run meta field action
             metaFieldsActions.onQuoteUpdated(product);
+
+            checkForColorCriticalDevice(validation);
 
             if (cu.isSmallFormat(product)) { 
                 /************ ADD DIE LIST TO OUTSIDE FINISHING */
@@ -96,6 +98,9 @@ var sfSheetCalcLogic = {
                 if (cu.getPjcId(product) == 971) {
                     $('#operation14 label.opQuestion').text('How many sets to shrink wrap together');
                 }
+
+                ulineLabelDimSelector(updates, product);
+
                 /********* Display Run Time information on Estimating Site for LF Board Estimating */
                 $('#runTime span').text(cu.getTotalRuntime());
                 $('#totalPressSheets span').text(cu.getTotalPressSheets());
@@ -108,6 +113,7 @@ var sfSheetCalcLogic = {
 
             }  // END SMALL FORMAT      
         }
+        updateUI(updates, product);
         showMessages();
         
         /********************************************* ALERTS */
@@ -117,6 +123,137 @@ var sfSheetCalcLogic = {
                 onQuoteUpdatedMessages += submessage;
                 cu.alert(onQuoteUpdatedMessages);
                 onQuoteUpdatedMessages = '';
+            }
+        }
+    }
+}
+
+function updateUI(updates, product) {
+
+    $('#operation141').removeClass('costingOnly');
+
+    var applicationOps = [
+        176,  //LF Film Tape Application - Perimeter
+        177,  //LF Film Tape Application - Top Only
+        178,  //LF Film Tape Application - Top & Bottom
+        179,  //LF Magnet Application - Perimeter
+        180,  //LF Velcro Application - Top Only
+        181,  //LF Magnet Application - Top & Bottom
+        182,  //LF Velcro Application - Perimeter
+        183,  //LF Magnet Application - Top Only
+        184,  //LF Velcro Application - Top & Bottom
+        263,  //LF Foam Tape Application - Perimeter
+        264,  //LF Foam Tape Application - Top & Bottom
+        265,  //LF Foam Tape Application - Top Only
+        269,  //LF Film Tape Application - Custom
+        270,  //LF Foam Tape Application - Custom
+        271,  //LF Magnet Tape Application - Custom
+        272  //LF Velcro Tape Application - Custom
+    ]
+    appendAppOpLabels(applicationOps);
+
+    function appendAppOpLabels(opList) {
+        if (!opList) {return}
+        var textToAppend = ' at TBG1';
+        for (var i = 0; i < opList.length; i++) {
+            if ($('div#operation' + opList[i])) {
+                var label = $('div#operation' + opList[i]  + ' label').text();
+                if (label) {
+                    $('div#operation' + opList[i]  + ' label').text(label + textToAppend);
+                }
+            }
+            
+        }
+    }
+
+}
+
+function checkForColorCriticalDevice(validation) {
+    //If color cricital operation selected, toggle off Auto Device and select device
+
+    var getCriticalDeviceId = {
+        1688 : 9,  //Indigo 7k
+        1692 : 4,  //Indigo 10k
+        1693 : 24   //Jpress
+    }
+    var colorCriticalOp = fields.operation238;
+    var colorCriticalDevice = fields.operation237;
+    if (colorCriticalOp && colorCriticalDevice) {
+        //temp opacity on device - will hide after approved
+        $('#device').css('display','none');
+        $('#operation237 label').css('color', 'red');
+        var hasQtyError = false;
+        if (cu.hasValue(colorCriticalOp)) {
+            //Show special message if quantity of device not hit
+            if (calcValidation.hasErrorForField(validation, fields.quantity)) {
+                hasQtyError = true;
+            }
+            cu.showField(colorCriticalDevice);
+            cu.setLabel(colorCriticalOp,"Color Critical - Please Select Device");
+            //cu.setLabel(colorCriticalOp,"Color Critical - please indicate job # below");
+            if (cu.hasValue(colorCriticalDevice)) {
+                if (configureglobals.cdevicemgr.autoDeviceSwitch) {
+                    toggleAutoDeviceTypeButton();
+                    $('select[name="DEVICEDD"]').trigger('focus').trigger('change');
+                }
+                var criticalDeviceId = getCriticalDeviceId[cu.getValue(colorCriticalDevice)] ? getCriticalDeviceId[cu.getValue(colorCriticalDevice)] : null;
+                if (criticalDeviceId && !hasQtyError) {
+                    if (cu.getDeviceType() != criticalDeviceId) {
+                        setDevice(criticalDeviceId);
+                    }
+                }
+            }
+            if (hasQtyError) {
+                cu.alert('<p>The default settings for this device cannot run with these specifications. Resubmit the specs with your Color Critical requirements, but do not select a device. Instead, enter a press note with the device required</p>');
+            }
+        } else {
+            if (!configureglobals.cdevicemgr.autoDeviceSwitch) {
+                toggleAutoDeviceTypeButton();
+            }
+            pu.validateValue(colorCriticalDevice,'');
+            cu.hideField(colorCriticalDevice);
+            cu.setSelectedOptionText(colorCriticalOp,'No');
+        }
+    }
+}
+function toggleAutoDeviceTypeButton() {
+    $autoDeviceSelector = $('#device a.togglePreset');
+    $autoDeviceButton = $autoDeviceSelector.length == 1 ? $autoDeviceSelector[0] : null;
+    if ($autoDeviceButton) {
+        // toggle the calculator device type mode
+        // "click" the "Let me choose"/"Use best price" button by running it's href javascript
+        eval($autoDeviceButton.href);
+    }
+}
+function setDevice(deviceId) {
+    var $deviceSelect = $('select[name="DEVICEDD"]');
+    var availableValues = $.map($deviceSelect.children('option'), function(e) { return e.value; });
+    if ($.inArray(deviceId.toString(), availableValues) != -1) {
+        $deviceSelect.val(deviceId);
+        $deviceSelect.trigger('focus').trigger('change');
+    } else {
+        console.log('device not available');
+    }
+}
+
+function ulineLabelDimSelector(updates, product)  {
+    if (cu.getPjcId(product) == 199) {
+        var presetDims = fields.presetDimensions;
+        var stockType = fields.paperType;
+
+        if (cu.isLastChangedField(updates, stockType)) {
+            var labelDims = {
+                122 : 434,   //Uline Label 4x3.33
+                123 : 393,   //Uline Label 4x2
+                124 : 808,   //Uline Label 8.5x5.5
+                125 : 392,   //Uline Label 2.625x1
+                126 : 435,   //Uline Label 4x6
+                108 : null   //Special Order Uline Labels
+            }
+
+            var presetDimId = labelDims[cu.getValue(stockType)] ? labelDims[cu.getValue(stockType)] : null;
+            if (presetDimId) {
+                pu.validateValue(presetDims, presetDimId);
             }
         }
     }

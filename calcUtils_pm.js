@@ -95,6 +95,17 @@ var pmCalcUtil = {
             }
         }
     },
+    updateOperationQuestion: function(opList, questionText) {
+        if (!(Array.isArray(opList))) {
+            opList = [opList];
+        }
+        for (var i = 0; i < opList.length; i++) {
+            var opQuestion = $('#operation' + opList[i] + ' div.op div label.opQuestion');
+            if (opQuestion) {
+                var opQuestionText = $(opQuestion).text(questionText);
+            }
+        }
+    },
     roundTo: function (n, digits) {
         var negative = false;
         if (digits === undefined) {
@@ -190,6 +201,54 @@ var pmCalcUtil = {
         }
         if (obj) {
             result = obj;
+        }
+        return result
+    }, 
+    countHasValueFromOpSet: function (operations) {
+        var opsWithValue = 0;
+        for (var i = 0; i < operations.length; i++) {
+            var key = 'operation' + operations[i];
+            if (fields[key]) {
+                if (cu.hasValue(fields[key])) {
+                    opsWithValue++;
+                }
+            }
+        }
+        return opsWithValue
+    }, 
+    validateConfig: function (reasons) {
+        //call function at end of logic scripts
+        if (reasons.length > 0) {
+            $('button.continueButton').removeAttr('onclick');
+            $('button.continueButton').unbind('click');
+            var checkoutErrorMessage = '<p><strong>These issues must be resolved before continuing:</strong></p><div><ul>';
+            for (var i = 0; i < reasons.length; i++) {
+                checkoutErrorMessage += '<li>' + reasons[i] + '</li>'
+            }
+            checkoutErrorMessage += '</ul></div>'
+            $('button.continueButton').removeAttr('onclick');
+            $('button.continueButton').bind('click', function(event) {
+                cu.alert(checkoutErrorMessage);
+            });
+        } else {
+            $('button.continueButton').unbind('click');
+            $('button.continueButton').attr('onclick', 'common.continueClicked();');
+        }
+        disableCheckoutReasons = [];
+    },
+    getMaterialReferenceId: function (type) {
+        var result = '';
+        if (configureglobals.cquote.lpjQuote) {
+            var material = configureglobals.cquote.lpjQuote.piece[type];
+            if (material) {
+                result = material.referenceId
+            }
+        } else if (configureglobals.cquote.pjQuote) {
+            //for now just search for press sheet
+            if (configureglobals.cquote.pjQuote.pressSheetQuote) {
+                var result = configureglobals.cquote.pjQuote.pressSheetQuote.pressSheet.referenceId;
+            }
+            
         }
         return result
     }

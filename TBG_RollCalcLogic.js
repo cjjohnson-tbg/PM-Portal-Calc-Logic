@@ -257,58 +257,8 @@ function setRollChangeCost(printConfig) {
     }
 }
 
-/**** CUTTING */
-
-function setCuttingOps(quote, product) {
-    var cutMethod = getCutMethod();
-    setZundOps(quote, cutMethod);
-    setOutsourceCutOps(cutMethod);
-    setMCTCutOp(cutMethod, product);
-    setNoCutOp(cutMethod);
-}
-function getCutMethod() {
-    var userDeclareCutOp = fields.operation111;
-    var cutMethodId = {
-        450 : 'noCutting',
-        451 : 'zund',
-        452 : 'outsourcedCut',
-        495 : 'fabCut'
-    }
-    //default to zund
-    var result = 'zund';
-    if (cu.hasValue(fields.operation127)) {
-        var result = 'mct';
-        return result;
-    }
-    if (cu.hasValue(userDeclareCutOp)) {
-        var userDeclaredCutMethod = cutMethodId[cu.getValue(fields.operation111)];
-        if (userDeclaredCutMethod) {
-            var result = userDeclaredCutMethod;
-            return result
-        }
-    }
-    return result
-}
-function setOutsourceCutOps(cutMethod) {
-    var outsourceCutOp = fields.operation104;
-    if (cutMethod =='outsourcedCut' || cutMethod == 'outsourceDieCut') {
-        //outourced cut set to default if nothing chosen yet
-        if (!cu.hasValue(outsourceCutOp)) {
-            if (cutMethod == 'outsourcedCut') {
-                cu.changeField(outsourceCutOp,412,true);    
-            } else if (cutMethod == 'outsourceDieCut') {
-                cu.changeField(outsourceCutOp,463,true);    
-            }
-        }
-    } else {
-        pu.removeOperationItemsWithString(104,'Cut');
-        if (cu.getSelectedOptionText(outsourceCutOp).indexOf('Cut') != -1) {
-            cu.changeField(outsourceCutOp,'', true);
-        }
-    }
-}
-/**** NEW CUTTING */
-function test_setCuttingOps(quote, updates, product) {
+/**** CUTTING UPDATE 2018-08-27 */
+function setCuttingOps(quote, updates, product) {
         var userDeclareCutOp = fields.operation111;
 
         var isZundCut = cu.getSelectedOptionText(userDeclareCutOp).indexOf('Zund') != -1;
@@ -322,11 +272,10 @@ function test_setCuttingOps(quote, updates, product) {
 
         var setZundCost = altCutMethod ? false : true;
 
-        test_setZundOps(quote, setZundCost, isZundCut);
+        setZundOps(quote, setZundCost, isZundCut);
         setAltCutMethod(updates, altCutMethod);
-        
 }
-function test_setZundOps(quote, setZundCost, isZundCut) {
+function setZundOps(quote, setZundCost, isZundCut) {
     var zundLoading = fields.operation53;
     var zundCutting = fields.operation55;
     var zundUnloading = fields.operation56;
@@ -374,40 +323,6 @@ function test_setZundOps(quote, setZundCost, isZundCut) {
     }
 }
 
-function setZundOps(quote, cutMethod) {
-    var zundLoading = fields.operation53;
-    var zundCutting = fields.operation55;
-    var zundUnloading = fields.operation56;
-    var intCutOp = fields.operation112;
-    var userItCutOpAnswer = fields.operation180_answer;
-
-
-    if (cutMethod == 'zund') {
-        var zundFactors = {
-            "K1" : {"name" : "Knife 1", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 195, "intCutOpItem": 773, "rank" : 1},
-            "K2" : {"name" : "Knife 2", "loadingOpItem" : 202, "unloadingOpItem" : 201 , "runOpItem": 196, "intCutOpItem": 774, "rank" : 2},
-            "R1" : {"name" : "Router 1", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 197, "intCutOpItem": 775, "rank" : 3},
-            "R2" : {"name" : "Router 2", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 198, "intCutOpItem": 776, "rank" : 4},
-            "R3" : {"name" : "Router 3", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 199, "intCutOpItem": 777, "rank" : 5},
-            "R4" : {"name" : "Router 4", "loadingOpItem" : 204, "unloadingOpItem" : 201 , "runOpItem": 200, "intCutOpItem": 778, "rank" : 6}
-        }
-
-        var zundChoice = getZundChoice(quote, zundFactors);
-        if (zundChoice) {
-            pu.validateValue(zundLoading, zundChoice.loadingOpItem);
-            pu.validateValue(zundCutting, zundChoice.runOpItem);
-            pu.validateValue(zundUnloading,zundChoice.unloadingOpItem);
-        }
-
-    } else {
-        pu.validateValue(zundLoading,'');
-        pu.validateValue(zundCutting,'');
-        pu.validateValue(zundUnloading,'');
-        pu.validateValue(fields.operation179,'');
-    }
-    //Interior cut operations soon to be re-org
-    //setZundInCutOp(cutMethod, zundChoice);
-}
 function getZundChoice(quote, zundFactors) {
     //check print substrate A and Mount for highest ranked factor
     var printSubFactor = getMaterialZundFactor(zundFactors, quote, 'aPrintSubstrate');

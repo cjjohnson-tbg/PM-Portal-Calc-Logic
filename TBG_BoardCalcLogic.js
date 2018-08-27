@@ -286,106 +286,6 @@ function setInkConsumptionOps(quote) {
 
 function setCuttingOperations(quote) {
     /********* CUTTING LOGIC */
-    var zundFactors = {
-        "K1" : {"name" : "Knife 1", "loadingOpItem" : 645, "unloadingOpItem" : 606 , "runOpItem": 593, "intCutOpItem": 773, "rank" : 1},
-        "K2" : {"name" : "Knife 2", "loadingOpItem" : 645, "unloadingOpItem" : 606 , "runOpItem": 594, "intCutOpItem": 774, "rank" : 2},
-        "R1" : {"name" : "Router 1", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 595, "intCutOpItem": 775, "rank" : 3},
-        "R2" : {"name" : "Router 2", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 596, "intCutOpItem": 776, "rank" : 4},
-        "R3" : {"name" : "Router 3", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 597, "intCutOpItem": 777, "rank" : 5},
-        "R4" : {"name" : "Router 4", "loadingOpItem" : 646, "unloadingOpItem" : 606 , "runOpItem": 598, "intCutOpItem": 778, "rank" : 6}
-    }
-    var cutMethodId = {
-        1079: 'noCut' , //No Cutting
-        1080: 'zund' , //Cut
-        1081: 'outsourceCut' , //Outsource Cut
-        1082: 'outsourceDieCut' , //Outsource Die-Cut
-        1083: 'zund' , //Zund Cut
-        1084: 'guillotineCut' , //Guillotine Cut
-        1156: 'fabCut',  //Fab to Cut
-        1794: 'fabLaser',  //Fab to Cut
-        1790: 'sfGuillotine',
-        1791: 'sfMotion',
-        1793: 'fabCNC'
-    }
-    //default to zund
-    var cutMethod = 'zund';
-    var cuttingOp = fields.operation170;
-    if (cu.hasValue(cuttingOp)) {
-        userCutSelection = cutMethodId[cu.getValue(cuttingOp)];
-    }
-    if (userCutSelection) {
-        cutMethod = userCutSelection;
-    }
-    
-    var zundCuttingOp = fields.operation102;
-    var zundLoadingOp = fields.operation104;
-    var zundUnloadingOp = fields.operation105;
-    var noCutOp = fields.operation168;
-    var outsourceCutOp = fields.operation156;
-    var guillotineCutOp = fields.operation154;
-    var fabCutOp = fields.operation174;
-    //zund Cutting
-    if (cutMethod == 'zund') {
-        //default zundFactor to K1, and check materials for largest index
-        var zundChoice = zundFactors.K1;
-        //check print substrate A and Mount for highest ranked factor
-        if (quote.pressSheetQuote.pressSheet.zundFactor) {
-            zundChoice = zundFactors[quote.pressSheetQuote.pressSheet.zundFactor];
-        }
-        pu.validateValue(zundLoadingOp, zundChoice.loadingOpItem);
-        pu.validateValue(zundUnloadingOp, zundChoice.unloadingOpItem);
-        pu.validateValue(zundCuttingOp, zundChoice.runOpItem)
-
-    } else {
-        pu.validateValue(zundLoadingOp,'');
-        pu.validateValue(zundCuttingOp,'');
-        pu.validateValue(zundUnloadingOp,'');
-    }
-    //no cutting -- ENTER IN NO CUT FOR noCut AND fabCut
-    if (cutMethod == 'noCut') {
-        pu.validateValue(noCutOp, 1076);
-    } else {
-        pu.validateValue(noCutOp,'');
-    }
-    //Fab cut
-    if (cutMethod == 'fabCut' || cutMethod == 'fabLaser') {
-        if (!cu.hasValue(fabCutOp)) {
-            //cu.changeField(fabCutOp, 1108, true); 
-        }
-        pu.removeClassFromOperation(174, 'planning');
-        //if Fab Laser Cut is chosen, force Pre-mask 2 sides=
-        if (cutMethod == 'fabLaser') {
-            if (cu.getValue(fields.operation133) != 761) {
-                cu.changeField(fields.operation133, 761, true);
-                onQuoteUpdatedMessages += '<p>Fab Laser Cut requires Premask on both sides.  This has been chosen on your behalf.</p>';
-            }
-        }
-    } else {
-        pu.validateValue(fabCutOp,'');
-    }
-    //outsourced
-/*    if (cutMethod == 'outsourceCut' || cutMethod == 'outsourceDieCut') {
-        if (cutMethod == 'outsourceCut') {
-            pu.validateValue(outsourceCutOp, 911);
-        }
-        if (cutMethod == 'outsourceDieCut') {
-            pu.validateValue(outsourceCutOp, 1096);
-            pu.validateValue(guillotineCutOp, 907);
-        } else {
-            pu.validateValue(guillotineCutOp, '');
-        }
-    } else {
-        if (cu.getSelectedOptionText(outsourceCutOp).indexOf('Cut') != -1) {
-            if (cu.hasValue(outsourceCutOp)) {
-                cu.changeField(outsourceCutOp,'',true);
-            }
-        }
-        pu.removeOperationItemsWithString(156,'Cut');
-    }*/
-}
-
-function test_setCuttingOperations(quote) {
-    /********* CUTTING LOGIC */
     var userDeclareCutOp = fields.operation170;
 
     var zundFactors = {
@@ -464,9 +364,6 @@ function test_setCuttingOperations(quote) {
             }
             if (altCutMethod == 'outsourceDieCut') {
                 pu.validateValue(outsourceCutOp, 1096);
-                pu.validateValue(guillotineCutOp, 907);
-            } else {
-                pu.validateValue(guillotineCutOp, '');
             }
         } else {
             if (cu.getSelectedOptionText(outsourceCutOp).indexOf('Cut') != -1) {
@@ -491,7 +388,6 @@ function test_setCuttingOperations(quote) {
             if (isZundCut) {
                 pu.validateValue(userDeclareCutOp, zundChoice.userChoiceItem);
             }
-
         }
     }
     function hideInvalidZundOptions() {

@@ -1018,7 +1018,7 @@ function heatBendingRules(updates) {
             if (substrateCaliper <  minSubstrateCaliper) {
                 heatBendErrors.push( 'Substrates with calipers less than than ' + minSubstrateCaliper + '" must be sent through central estimating.');
             }
-            if (bendLength >= 12 && substrateCaliper < .060) {
+            if (bendLength > 12 && substrateCaliper < .060) {
                 heatBendErrors.push( 'Substrates with calipers less than .060" must have a bend length 12" or less and must be sent through central estimating');
             }
             if (hasMountLam && substrateCaliper < .060) {

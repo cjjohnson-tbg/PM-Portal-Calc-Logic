@@ -1287,7 +1287,7 @@ function heatBendingRules(updates) {
             heatBendErrors.push('Heat bending for Buy-out materials must be sent through central estimating.');
         } else {
             //bend length must be less than 12" for thin materials
-            if (bendLength >= 12 && cu.isValueInSet(fields.printSubstrates,thinHeatBendSubstrates)) {
+            if (bendLength > 12 && cu.isValueInSet(fields.printSubstrates,thinHeatBendSubstrates)) {
                 heatBendErrors.push( 'Substrates with calipers less than .060" must have a bend length 12" or less and must be sent through central estimating');
             }
             if (hasMountLam && cu.isValueInSet(fields.printSubstrates, thinHeatBendSubstrates)) {

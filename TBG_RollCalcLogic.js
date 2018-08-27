@@ -134,7 +134,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     fabrivuLogic(product);
     colorCritical();
     woodDowelQtyMax();
-    kederSewingLogic(updates);
+
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
@@ -890,19 +890,6 @@ function woodDowelQtyMax() {
             onQuoteUpdatedMessages += '<p>Your total Dowel quantity for this job is over 200.  Please route this finishing operation through Central Estimating or Purchasing</p>';
             cu.changeField(woodDowelOp,'', true);
         }
-    }
-}
-function kederSewingLogic(updates) {
-    var kederSew = fields.operation63;
-    var testFit = fields.operation187;
-    if (cu.hasValue(kederSew)) {
-        if (cu.isLastChangedField(updates, kederSew)) {
-            if (!cu.hasValue(testFit)) {
-                cu.changeField(testFit,965,true);
-            }
-        }
-    } else {
-        pu.validateValue(testFit,'');
     }
 }
 

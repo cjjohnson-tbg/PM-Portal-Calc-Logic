@@ -99,6 +99,8 @@ var sfSheetCalcLogic = {
                     $('#operation14 label.opQuestion').text('How many sets to shrink wrap together');
                 }
 
+                setTopAndBottomPieceOps();
+
                 ulineLabelDimSelector(updates, product);
 
                 /********* Display Run Time information on Estimating Site for LF Board Estimating */
@@ -215,6 +217,20 @@ function checkForColorCriticalDevice(validation) {
             cu.setSelectedOptionText(colorCriticalOp,'No');
         }
     }
+}
+function setTopAndBottomPieceOps() {
+    var topInchIncreaserAnswer = fields.operation121_answer;
+    var topInchDecreaserAnswer = fields.operation123_answer;
+    var topLinInch = cu.getWidth();
+    topLinInch = parseInt(topLinInch);
+    if (topInchIncreaserAnswer && topInchDecreaserAnswer) {
+        if (cu.getValue(topInchIncreaserAnswer) != topLinInch) {
+            cu.changeField(topInchIncreaserAnswer, topLinInch, true);
+        }
+        if (cu.getValue(topInchDecreaserAnswer) != topLinInch) {
+            cu.changeField(topInchDecreaserAnswer, topLinInch, true);
+        }
+    } 
 }
 function toggleAutoDeviceTypeButton() {
     $autoDeviceSelector = $('#device a.togglePreset');

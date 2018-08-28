@@ -87,11 +87,7 @@ var boardCalcLogic = {
 function functionsRanInFullQuote(updates, validation, product, quote) {
     checkForColorCriticalDevice(validation, product);
     setInkConsumptionOps(quote);
-    if (cu.getPjcId(product) == 1638) {
-        test_setCuttingOperations(quote);
-    } else {
-        setCuttingOperations(quote);
-    }
+    setCuttingOperations(quote);
     edgeBandingLogic();
     setLamOps(quote);
     setFluteDirectionOp();

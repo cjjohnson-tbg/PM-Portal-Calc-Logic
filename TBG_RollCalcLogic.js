@@ -115,11 +115,7 @@ function addJobMaterialProperties(quote) {
 function functionsRanInFullQuote(updates, validation, product, quote) {
     createOperationItemKey(quote);
     setWasteOperationCosts(quote);
-    if (cu.getPjcId(product) == 492) {
-        test_setCuttingOps(quote, updates, product);
-    } else {
-        setCuttingOps(quote, product);
-    }    
+    setCuttingOps(quote, product);
 
     setRollChangeCost(cc.printConfig);
 

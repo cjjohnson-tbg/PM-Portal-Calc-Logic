@@ -851,7 +851,8 @@ function bannerStandLogic() {
     var bannerStandMaterial = [
         '23',    //13 oz. Scrim Vinyl Matte (for outdoor use)
         '26',    //13 oz. Smooth Vinyl - Opaque Matte (for indoor use)
-        '73'    //18 oz. Smooth Vinyl - Opaque Matte (for heavy duty outdoor use)
+        '73',    //18 oz. Smooth Vinyl - Opaque Matte (for heavy duty outdoor use)
+        '357'   //Ecomedia 8mil - Roll
     ]
     var bannerStandOp = fields.operation75;
     if (bannerStandOp) {
@@ -859,7 +860,7 @@ function bannerStandLogic() {
             //cu.hideField(bannerStandOp);
             pu.addClassToOperation(75,'planning');
             if (cu.hasValue(bannerStandOp)) {
-                onQuoteUpdatedMessages += '<p>Banners stands can only be ordered with 13 oz Vinyl.</p>';
+                onQuoteUpdatedMessages += '<p>Banners stands can only be ordered with Vinyl or Ecomedia.</p>';
                 cu.changeField(bannerStandOp,'',true);
             }
         } else {

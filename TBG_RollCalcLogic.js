@@ -1545,11 +1545,15 @@ function uiUpdates(product) {
     
     pu.trimOperationItemNames(inkOpsWithDPI, ' - ');
     pu.trimOperationItemNames(opsToTrimWithUnderscore, '_');
-    pu.removeOperationItemsWithString(104,'Print');
     pu.removeClassFromOperation(111,'costingOnly');
     pu.addClassToOperation(planningOnlyOps, 'planning');
     pu.addClassToOperation(estimatingOnlyOps,'estimating');
     pu.addClassToOperation(opsWithCalculatedAnswer,'calculatedAnswer');
+    
+    if (cu.getPjcId(product) != 389) {
+        //exclude for TBG Finishing Only
+        pu.removeOperationItemsWithString(104,'Print');
+    }
 
     canvasOperationDisplay();
     bannerFinishingOperationDisplay(product);

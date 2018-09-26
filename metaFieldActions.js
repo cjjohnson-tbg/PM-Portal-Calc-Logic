@@ -120,7 +120,6 @@ var metaFieldsActions = {
                 '51'    //Prototype Proof - Internal
             ]
             // hide items by default, show upon Require or other
-            hardProofDate.hide();
             pmQty.hide();
             estQtyMeta.hide();
             
@@ -135,6 +134,10 @@ var metaFieldsActions = {
                 $('.softProofDate').show();
                 cu.setLabel(fields.proof,'Proof (Enter Estimated Qty Below)');
                 requireMetaField(estQtyMeta, 'Please enter Estimate Final Quantity');
+            } else {
+                //remove hidden state from changing proofs
+                $('.date').show();
+                hardProofDate.hide();
             }
         }
         function buyoutMaterial(product) {

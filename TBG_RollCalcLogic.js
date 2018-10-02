@@ -130,6 +130,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     fabrivuLogic(product);
     colorCritical();
     woodDowelQtyMax();
+    setMaterialPackaging();
 
 }
 
@@ -1485,6 +1486,74 @@ function vutekInkOptGroups_surface() {
 
       inkSelect.val(selectedOption);
    }
+}
+function setMaterialPackaging() {
+    var matPackageTypeOp = fields.operation190;
+    var matBaggingOp = fields.operation191;
+
+    if (matPackageTypeOp && matBaggingOp) {
+        var bannerMatRefIds = [
+            '2684', '2714', '2770', '2772', '3129', '3130', '3131', '3134', '6044', '6049', '3261', '2297', '3274', '3125', '4270', '3267', '5904', '3268', '3269', '3270', '6118', '3258', '3259', '3260', '3262', '5593'
+        ]
+        var poplinMatRefIds = [
+            '3271', '3273'
+        ]
+
+        var substrateRefId = pu.getMaterialReferenceId('aPrintSubstrate');
+        var height = Number(cu.getHeight());
+        var totalQty = cu.getTotalQuantity();
+
+        var isBannerMaterial = bannerMatRefIds.indexOf(substrateRefId) != -1;
+        var isPoplin = poplinMatRefIds.indexOf(substrateRefId) != -1;
+        var isMesh = substrateRefId == '2297';
+
+        //Bagging operation
+        if (isPoplin || (isBannerMaterial && height > 94)) {
+            pu.validateValue(matBaggingOp, 994)
+        } else {
+            pu.validateValue(matBaggingOp, '');
+        }
+
+        //material type operation
+        var materialTypeId = getMaterialTypeId();
+        pu.validateValue(matPackageTypeOp, materialTypeId);
+
+        //hide invalid roll on core options
+        hideInvalidCoreOptions();
+
+
+        function getMaterialTypeId() {
+            if (isPoplin) {
+                return 986
+            }
+            if ((isMesh || isBannerMaterial) && totalQty < 25) {
+                return 987
+            }
+            if (isBannerMaterial) {
+                if (height > 94) {
+                    return 986
+                } else if (height > 78) {
+                    return 992
+                } else if (height > 62) {
+                    return 991
+                } else if (height > 50) {
+                    return 990
+                } else if (height > 36) {
+                    return 989
+                }
+                return 988
+            }
+            //default to 988 if no others
+            return ''
+        }
+
+        function hideInvalidCoreOptions() {
+            pu.addClassToOperationItemsWithString(190,'hide','Roll On Core');
+            //show availabel zund option
+            $('option[value="' + zundChoice.userChoiceItem + '"]').removeClass('hide');
+            pu.trimOperationItemNames(190,'_');
+        }
+    }
 }
 
 function operationQuestionTextChange() {

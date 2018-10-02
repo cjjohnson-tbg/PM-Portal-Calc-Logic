@@ -398,13 +398,22 @@ function setCuttingOperations(quote) {
 function edgeBandingLogic() {
     /********* Disallow Edge Banding for incorrect sizes */
     var edgeBanding = fields.operation119;
+    var substrateTypesCannotEdgeBand = [
+        '308',  //Eagle Cell - White/Kraft/White
+        '279'   //Eagle Cell - White
+    ]
+    var weightsThatCanHeatBend = [
+        '52',   //1"
+        '52'    //.5"
+    ]
     if (edgeBanding) {
         //disable field unless 1/2" or 1" substrate selected
-        if (cu.getValue(fields.paperWeight) == 52 || cu.getValue(fields.paperWeight) == 53) {   
+        if (cu.isValueInSet(fields.paperWeight, weightsThatCanHeatBend) && !cu.isValueInSet(fields.paperType,substrateTypesCannotEdgeBand)) {   
             cu.enableField(edgeBanding);
         }
         else {
             cu.disableField(edgeBanding);
+            pu.validateValue(edgeBanding,'');
             cu.setSelectedOptionText(edgeBanding,'Must Select 1" or 1/2" Substrate');
         }
         if (cu.hasValue(edgeBanding)) {
@@ -419,7 +428,7 @@ function edgeBandingLogic() {
             if (cu.getValue(edgeBanding) == 694 || cu.getValue(edgeBanding) == 695) {
                 if (cu.getValue(fields.paperWeight) != 53) {
                     cu.changeField(edgeBanding, '', true);
-                    onQuoteUpdatedMessages += '<p>1/2" Edgebanding requires a 1/2" substrate.  Please choose an appropriate substrate and then add Edgebanding.</p>';
+                    onQuoteUpdatedMessages += '<p>1" Edgebanding requires a 1" substrate.  Please choose an appropriate substrate and then add Edgebanding.</p>';
                 }
             }
         }

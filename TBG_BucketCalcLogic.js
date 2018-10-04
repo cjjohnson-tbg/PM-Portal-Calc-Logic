@@ -96,7 +96,8 @@ function setLabels() {
 function addClassesSF() {
     var planningOnlyOps = [
         55,   //
-        125   //LF Bucket Job
+        125,   //LF Bucket Job
+        281     //Ship in a Set
     ]
     var sfPlanningOnlyOperations = [
         150,    //LF Cutting

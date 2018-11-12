@@ -403,7 +403,7 @@ function edgeBandingLogic() {
         '279'   //Eagle Cell - White
     ]
     var weightsThatCanHeatBend = [
-        '52',   //1"
+        '53',   //1"
         '52'    //.5"
     ]
     if (edgeBanding) {

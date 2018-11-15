@@ -57,6 +57,7 @@ var bucketCalcLogic = {
 
         setCuttingOps(quote, product);
         sizeLimitation(product);
+        side2Ink(product);
         uiUpdatesLF();
 
     }
@@ -225,6 +226,23 @@ function getMaxZundRank(zundFactors, defaultFactor, printSubFactor, mountSubFact
         }
     }
     return result
+}
+
+function side2Ink(product) {
+    //Disable side 2 ink for SCHEDULED ECOMEDIA PRINTING
+    if (cu.getPjcId(product) == 499) {
+        var side2inkOp = fields.operation137;
+        if (cu.getValue(fields.sides) == '2') {
+            if (!cu.hasValue(side2inkOp)) {
+                cu.enableField(side2inkOp);
+                cu.changeField(side2inkOp,641, true);
+            }
+        } else {
+            pu.validateValue(side2inkOp,'');
+            cu.disableField(side2inkOp);
+            cu.setSelectedOptionText(fields.operation137,'Must Select 2 Sides');
+        }
+    }
 }
 
 function setTopAndBottomPieceOps() {

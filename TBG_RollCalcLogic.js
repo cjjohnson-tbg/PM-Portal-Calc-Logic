@@ -130,7 +130,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     fabrivuLogic(product);
     colorCritical();
     woodDowelQtyMax();
-    setMaterialPackaging();
+    setMaterialPackaging(updates);
 
 }
 
@@ -1487,11 +1487,18 @@ function vutekInkOptGroups_surface() {
       inkSelect.val(selectedOption);
    }
 }
-function setMaterialPackaging() {
+function setMaterialPackaging(updates) {
     var matPackageTypeOp = fields.operation190;
     var matBaggingOp = fields.operation191;
 
     if (matPackageTypeOp && matBaggingOp) {
+
+        //always run unless field has been manually overridden
+        if (window.matPackagingOverridden) { return }
+        if (cu.isLastChangedField(updates, matPackageTypeOp) || cu.isLastChangedField(updates, matBaggingOp)) {
+            window.matPackagingOverridden = true;
+            return
+        }
         var bannerMatRefIds = [
             '2684', '2714', '2770', '2772', '3129', '3130', '3131', '3134', '6044', '6049', '3261', '2297', '3274', '3125', '4270', '3267', '5904', '3268', '3269', '3270', '6118', '3258', '3259', '3260', '3262', '5593'
         ]
@@ -1549,9 +1556,12 @@ function setMaterialPackaging() {
 
         function hideInvalidCoreOptions() {
             pu.addClassToOperationItemsWithString(190,'hide','Roll On Core');
-            //show availabel zund option
-            $('option[value="' + zundChoice.userChoiceItem + '"]').removeClass('hide');
-            pu.trimOperationItemNames(190,'_');
+            //show if option chosen
+            if (cu.hasValue(matPackageTypeOp)) {
+                $('#operation190 option[value="' + cu.getValue(matPackageTypeOp) + '"]').removeClass('hide');
+            }
+            
+            //pu.trimOperationItemNames(190,'_');
         }
     }
 }

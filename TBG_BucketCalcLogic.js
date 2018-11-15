@@ -59,6 +59,7 @@ var bucketCalcLogic = {
         sizeLimitation(product);
         side2Ink(product);
         uiUpdatesLF();
+        requireLam(product);
 
     }
 }
@@ -241,6 +242,16 @@ function side2Ink(product) {
             pu.validateValue(side2inkOp,'');
             cu.disableField(side2inkOp);
             cu.setSelectedOptionText(fields.operation137,'Must Select 2 Sides');
+        }
+    }
+}
+
+function requireLam(product) {
+    //Require front or back lam on SCHEDULED ECOMEDIA PRINTING
+    if (cu.getPjcId(product) == 499) {
+        if (!cu.hasValue(fields.frontLaminate) && !cu.hasValue(fields.backLaminate)) {
+            onQuoteUpdatedMessages += '<p>This product requires Laminate on either front or back.  Back Lam has been set on your behalf.</p>';
+            cu.changeField(fields.backLaminate, 49, true);
         }
     }
 }

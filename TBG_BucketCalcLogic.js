@@ -12,7 +12,7 @@ var bucketCalcLogic = {
        cu.initFields();
        metaFieldsActions.onCalcLoaded(product);
         if (cu.isSmallFormat(product)) {
-            uiUpdatesSF();
+            uiUpdatesSF(product);
         } else {
             uiUpdatesLF();
         }
@@ -50,7 +50,7 @@ var bucketCalcLogic = {
         setInkConsumptionOps();
         setCuttingOperations(quote);
         sizeLimitation(product);
-        uiUpdatesSF();
+        uiUpdatesSF(product);
     },
     onQuoteUpdated_POD_LargeFormat: function(updates, validation, product, quote) {
         var changeEventTriggered = false;
@@ -76,8 +76,8 @@ function shipDateRestrictions() {
     });
 }
 
-function uiUpdatesSF() {
-    addClassesSF();
+function uiUpdatesSF(product) {
+    addClassesSF(product);
     trimOptionsSF();
     shipDateRestrictions();
     setLabels();
@@ -95,7 +95,7 @@ function setLabels() {
     //CHange label of pages for Setrs
     cu.setLabel(fields.paperWeight,'Thickness');
 }
-function addClassesSF() {
+function addClassesSF(product) {
     var planningOnlyOps = [
         55,   //
         125,   //LF Bucket Job
@@ -117,6 +117,11 @@ function addClassesSF() {
 
     pu.addClassToOperation(planningOnlyOps,'planning');
     pu.addClassToOperation(sfPlanningOnlyOperations,'planning');
+
+    //remove planning class for Sets on Bucket Magnet Printing
+    if (cu.getPjcId(product) == 1306) {
+        pu.removeClassFromOperation(281, 'planning');
+    }
 }
 function addClassesLF() {
     var planningOnlyOps = [

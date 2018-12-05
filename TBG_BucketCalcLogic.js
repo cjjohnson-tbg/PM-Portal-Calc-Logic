@@ -50,6 +50,7 @@ var bucketCalcLogic = {
         setInkConsumptionOps();
         setCuttingOperations(quote);
         sizeLimitation(product);
+        magnetPrintMode(product);
         uiUpdatesSF(product);
     },
     onQuoteUpdated_POD_LargeFormat: function(updates, validation, product, quote) {
@@ -82,6 +83,7 @@ function uiUpdatesSF(product) {
     shipDateRestrictions();
     setLabels();
     pu.showMessages();
+    pu.validateConfig(disableCheckoutReasons);
 }
 function uiUpdatesLF() {
     addClassesLF();
@@ -556,13 +558,24 @@ function sizeLimitation(product) {
         console.log('cannot compute total Sq Ft size limitation');
         return
     }
-    var maxSq = pjcSizeMax[cu.getPjcId(product)] ? pjcSizeMax[cu.getPjcId(product)] : 200;
+    var maxSq = pjcSizeMax[cu.getPjcId(product)] ? pjcSizeMax[cu.getPjcId(product)] : 699;
     if (totalSquareFeet > maxSq) {
         bucketSizeMessage = '<p>The Bucket product is limited to jobs less than ' + maxSq + ' sq ft.  For jobs greater than this please use the Board Printing Product.</p>';
         onQuoteUpdatedMessages += bucketSizeMessage;
-        disableCheckoutButton(bucketSizeMessage);
-    } else {
-        enableCheckoutButton();
+        disableCheckoutReasons.push(bucketSizeMessage);
+    } 
+}
+function magnetPrintMode(product) {
+    if (cu.getPjcId(product) == 1306) {
+        //default to Sephora gloss for users set to Team Perry Ludwig
+        var sephoraTeam = globalpageglobals.cuser.metadata["Default Team"] == 'Team Perry Ludwig';
+        var defaultMode = sephoraTeam ? 1260 : 1259;
+        var modeOp = fields.operation187;
+        if (!cu.hasValue(modeOp)) {
+            cu.changeField(modeOp, defaultMode, true);
+        }
+        $('#operation187 option[value=""]').hide()
+        modeOp.css('color','red');
     }
 }
 

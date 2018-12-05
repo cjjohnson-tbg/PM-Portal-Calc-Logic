@@ -98,6 +98,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     mountAdhesive();
     jobCostSpoilage(quote);
     colorWork();
+    magnetPrintMode(product);
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
@@ -1109,6 +1110,24 @@ function colorWork() {
         }
     }
 }
+function magnetPrintMode() {
+    var modeOp = fields.operation187;
+    if (modeOp) {
+        var sephoraTeam = globalpageglobals.cuser.metadata["Default Team"] == 'Team Perry Ludwig';
+        var defaultMode = sephoraTeam ? 1260 : 1259;
+        if (cu.getValue(fields.paperType) == 51) {
+            if (!cu.hasValue(modeOp)) {
+                cu.changeField(modeOp, defaultMode, true);
+            }
+            pu.removeClassFromOperation(187, 'planning');
+            modeOp.css('color','red');
+            $('#operation187 option[value=""]').hide()
+        } else {
+            pu.validateValue(modeOp,'');
+            pu.addClassToOperation(187,'planning');
+        }
+    }
+}
 
 //functions ran after completed full quote
 function setSpecialMarkupOps(quote) {
@@ -1202,7 +1221,7 @@ function updateClasses() {
         // 170,     //LF Hub Cutting
         174,     //LF TBG-Fab Cut
         193,     //LF Bucket Job
-        187,    //LF Gloss Mode
+        // 187,    //LF Gloss Mode
         202,     //LF MCT Cutting
         215     //LF Gutter
     ]

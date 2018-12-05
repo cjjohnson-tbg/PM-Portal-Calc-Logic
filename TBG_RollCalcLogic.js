@@ -254,7 +254,6 @@ function setRollChangeCost(printConfig) {
     }
 }
 
-/**** CUTTING UPDATE 2018-08-27 */
 function setCuttingOps(quote, updates, product) {
         var userDeclareCutOp = fields.operation111;
 

@@ -100,6 +100,7 @@ var sfSheetCalcLogic = {
                 }
 
                 setTopAndBottomPieceOps();
+                linearOperationItemAnswers();
 
                 ulineLabelDimSelector(updates, product);
 
@@ -231,6 +232,38 @@ function setTopAndBottomPieceOps() {
             cu.changeField(topInchDecreaserAnswer, topLinInch, true);
         }
     } 
+}
+function linearOperationItemAnswers () {
+    var opsWithTopOnlyLinearAnswers = [
+         '122',  //LF Tape, Mag, Velcro - Top Only
+         '177',  //LF Film Tape Application - Top Only
+         '265',  //LF Foam Tape Application - Top Only
+         '183',  //LF Magnet Application - Top Only
+         '180'  //LF Velcro Application - Top Only
+    ]
+    var opsWithTopAndBottomAnswers = [
+         '124',  //LF Tape, Mag, Velcro - Top & Bottom
+         '184',  //LF Velcro Application - Top & Bottom
+         '178',  //LF Film Tape Application - Top & Bottom
+         '181',  //LF Magnet Application - Top & Bottom
+         '264'  //LF Foam Tape Application - Top & Bottom
+    ]
+    var width = cu.getWidth();
+
+    insertWidth(opsWithTopOnlyLinearAnswers, parseInt(pu.roundTo(width,0)) );
+    insertWidth(opsWithTopAndBottomAnswers, parseInt(pu.roundTo(width * 2,0)) );
+
+    //pu.hideOperationQuestion(opsWithTopOnlyLinearAnswers);
+    //pu.hideOperationQuestion(opsWithTopAndBottomAnswers);
+
+    function insertWidth(opList, width) {
+        for (var i = 0; i < opList.length; i++) {
+            var fieldAnswer = fields['operation' + opList[i] + '_answer'];
+            if (fieldAnswer) {
+                pu.validateValue(fieldAnswer, width);
+            }
+        }
+    }
 }
 function toggleAutoDeviceTypeButton() {
     $autoDeviceSelector = $('#device a.togglePreset');

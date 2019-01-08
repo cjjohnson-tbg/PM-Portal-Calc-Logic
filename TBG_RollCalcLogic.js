@@ -1252,9 +1252,33 @@ function heatBendingRules(updates) {
 }
 
 function fabrivuLogic(product) {
-    //set transfer paper to JETCOL DYE SUB TRANSFER PAPER, but leave none for planning to override
-    var dyeSubTransferOp = fields.operation88;
-    pu.validateValue(dyeSubTransferOp, 428, true);
+    
+    if (cu.getPjcId(product) == 450) {
+        //set transfer paper to JETCOL DYE SUB TRANSFER PAPER, but leave none for planning to override
+        var dyeSubTransferOp = fields.operation88;
+        pu.validateValue(dyeSubTransferOp, 428, true);
+
+        //insert LF needed into Tranfer Paper material and labor operation Answers
+        if (!cc.printConfig) { 
+            console.log('no printConfig');
+            return;
+        }
+        if (!cc.printConfig.details.valid_quote) {
+            console.log('no valid print configs');
+            return;
+        }
+
+        var totalLf = cc.printConfig.materials.aPrintSubstrate.totalRollLF;
+        totalLf = roundTo(totalLf,0);
+        if (!totalLf) { return };
+        
+        var transferMatOpAnswer = fields.operation88_answer;
+        var tissueMatOpAnswer = fields.operation155_answer;
+        var transferLaborAnswer = fields.operation229_answer;
+        pu.validateValue(transferMatOpAnswer,totalLf);
+        pu.validateValue(tissueMatOpAnswer,totalLf);
+        pu.validateValue(transferLaborAnswer,totalLf);
+    }
 }
 
 function colorCritical() {
@@ -1333,6 +1357,7 @@ function setDefaultTeam() {
         "Team Andrew Dyson" : 690,
         "Team Beth Josub" : 691,
         "Team Craig Omdal" : 692,
+        "Team Jayson Hansen" : 1010,
         "Team Jim Olson" : 694,
         "Team John Pihaly" : 695,
         "Team Jordan Feddema" : 696,

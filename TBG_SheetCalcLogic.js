@@ -103,6 +103,7 @@ var sfSheetCalcLogic = {
                 linearOperationItemAnswers();
 
                 ulineLabelDimSelector(updates, product);
+                vinylGraphicSizeMin(product);
 
                 /********* Display Run Time information on Estimating Site for LF Board Estimating */
                 $('#runTime span').text(cu.getTotalRuntime());
@@ -306,6 +307,27 @@ function ulineLabelDimSelector(updates, product)  {
             }
         }
     }
+}
+
+function vinylGraphicSizeMin(product) {
+    var vinylGraphicPjcs = [
+        '101',  //TBG Hub Specialty
+        '1690'  //TBG Hub Specialty - Collated
+    ]
+    if (!cu.isPjc(product, vinylGraphicPjcs)) { 
+        return
+    }
+
+    var laserCutting = fields.operation71;
+    var outsourceCut = fields.operation153;
+    
+    var shortSide = Math.min(cu.getWidth(), cu.getHeight());
+    if (shortSide < 2) {
+        if (!cu.hasValue(laserCutting) && !cu.hasValue(outsourceCut)) {
+            cu.changeField(laserCutting, 576);
+        }
+    }
+
 }
 
 configureEvents.registerOnCalcLoadedListener(sfSheetCalcLogic);

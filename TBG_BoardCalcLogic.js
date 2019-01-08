@@ -1163,6 +1163,7 @@ function setDefaultTeam() {
         "Team Beth Josub" : 1572,
         "Team Cindy Johnson" : 1570,
         "Team Craig Omdal" : 1575,
+        "Team Jayson Hansen" : 2045,
         "Team Jim Olson" : 1580,
         "Team John Pihaly" : 1578,
         "Team Jordan Feddema" : 1574,

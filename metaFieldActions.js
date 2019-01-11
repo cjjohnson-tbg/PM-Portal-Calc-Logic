@@ -53,6 +53,7 @@ var metaFieldsActions = {
                     //configureEvents.onQuoteUpdated();
                 }
             });
+            dateInput.attr("autocomplete", "off");
         }
         function characterMax() {
             $('.buyout label:contains("Description")').parent().attr('id','buyoutDescription');

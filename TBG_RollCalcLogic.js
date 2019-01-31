@@ -127,7 +127,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     fluteDirectionRules();
     backlitDoubleStike();
     heatBendingRules(updates);
-    fabrivuLogic(product);
+    fabrivuTransferPaper(product);
     colorCritical();
     woodDowelQtyMax();
     setMaterialPackaging(updates);
@@ -1251,7 +1251,7 @@ function heatBendingRules(updates) {
     }
 }
 
-function fabrivuLogic(product) {
+function fabrivuTransferPaper(product) {
     
     if (cu.getPjcId(product) == 450) {
         //set transfer paper to JETCOL DYE SUB TRANSFER PAPER, but leave none for planning to override
@@ -1274,7 +1274,7 @@ function fabrivuLogic(product) {
         
         var transferMatOpAnswer = fields.operation88_answer;
         var tissueMatOpAnswer = fields.operation155_answer;
-        var transferLaborAnswer = fields.operation229_answer;
+        var transferLaborAnswer = fields.operation196_answer;
         pu.validateValue(transferMatOpAnswer,totalLf);
         pu.validateValue(tissueMatOpAnswer,totalLf);
         pu.validateValue(transferLaborAnswer,totalLf);

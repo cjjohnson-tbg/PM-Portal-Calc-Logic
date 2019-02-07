@@ -38,7 +38,7 @@ var calcConfig = {
 		this.materials = {};
 	},
 	setDatFields: function(quote) {
-		this.dat.devDefaults = quote.device.customProperties ? quote.device.customProperties : '';
+		this.dat.devDefaults = quote.device ? quote.device : '';
 		this.dat.productionQty = configureglobals.cquote.lpjQuote.productionQuantity;
 		this.dat.totalSquareFeet = quote.piece.totalSquareFeet;
 		this.dat.subSqFtCost = quote.aPrintSubstratePrice / (this.dat.totalSquareFeet * this.dat.productionQty);
@@ -142,35 +142,35 @@ var configHelper = {
 		details.vertPiece = vertical_piece_orienation;
 		//Going to assume tiled vertically until needing extra complexity
 		var nTiles = this.getTileCount(piece, tiled);
-		var flatWidth = this.getFlatWidth(piece, vertical_piece_orienation, nTiles);
-		var flatHeight = vertical_piece_orienation ? piece.width : piece.height;
+		var outerWidth = this.getOuterWidth(piece, vertical_piece_orienation, nTiles);
+		var outerHeight = vertical_piece_orienation ? piece.width : piece.height;
 		
 		details.tiled = tiled;
 		details.nTiles = nTiles;
-		details.flatWidth = flatWidth; 
-		details.flatHeight = flatHeight;
+		details.outerWidth = outerWidth; 
+		details.outerHeight = outerHeight;
 
 		details.productionQty = dat.productionQty * nTiles;
 		details.sides = piece.sides;
 		//set printable width as smallest width of all materials
 		details.formWidth = this.getSignatureDim(mats, 'width');
-		details.printableWidth = details.formWidth - (2 * dat.devDefaults.margin);
+		details.printableWidth = details.formWidth - dat.devDefaults.leftMargin - dat.devDefaults.rightMargin;
 
-		details.formLengthMax = this.getFormLength(mats, flatHeight);
-		details.printableLength = details.formLengthMax - (2 * dat.devDefaults.margin);
+		details.formLengthMax = this.getFormLength(mats, outerHeight);
+		details.printableLength = details.formLengthMax - dat.devDefaults.bottomMargin - dat.devDefaults.topMargin;
 
-		details.nAcrossForm = Math.floor( details.printableWidth / (flatWidth + ( (dat.devDefaults.bleed + dat.devDefaults.gutter) * 2)) );
-		details.nDownForm = Math.floor( details.printableLength / (flatHeight + ( (dat.devDefaults.bleed + dat.devDefaults.gutter) * 2)) );
+		details.nAcrossForm = Math.floor( details.printableWidth / outerWidth );
+		details.nDownForm = Math.floor( details.printableLength / outerHeight );
 		details.nUpPerForm = details.nAcrossForm * details.nDownForm;
 		details.nDownTotal = Math.ceil(details.productionQty / details.nAcrossForm);
-		details.formLength = details.nDownForm * (flatHeight + ( (dat.devDefaults.bleed + dat.devDefaults.gutter) * 2) );
+		details.formLength = details.nDownForm * outerHeight;
 
 		//production quantity must round up if not equal to # across to fill up 1 full signature
 		details.totalForms = Math.ceil( details.productionQty / details.nUpPerForm );
 		details.totalFormLF = details.totalForms * details.formLength / 12;
 		details.totalFullForms = Math.floor( details.nDownTotal / details.nDownForm );
 		details.nDownLastForm =  details.nDownTotal % details.nDownForm;
-		details.lastPartialFormLF = details.nDownLastForm * (flatHeight + (2 * (dat.devDefaults.bleed + dat.devDefaults.gutter) )) / 12;
+		details.lastPartialFormLF = details.nDownLastForm * outerHeight / 12;
 		details.valid_quote = (details.nAcrossForm > 0 && details.nDownForm > 0) ? true : false;
 
 		//Attrition for Lamainating
@@ -182,18 +182,18 @@ var configHelper = {
 	getTileCount: function(piece, tiled) {
 		var maxTileWidth = 52;
 		if (tiled) {
-			return Math.ceil(piece.flatWidth / maxTileWidth);
+			return Math.ceil(piece.outerWidth / maxTileWidth);
 		} else {
 			return 1
 		} 
 	},
-	getFlatWidth: function (piece, vertical_piece_orienation, nTiles) {
+	getOuterWidth: function (piece, vertical_piece_orienation, nTiles) {
 		if (nTiles > 1) {
-			return roundTo(piece.flatWidth / nTiles, 3)
+			return roundTo(piece.outerWidth / nTiles, 3)
 		} else if (vertical_piece_orienation) {
-			return piece.flatHeight
+			return piece.outerHeight
 		} else {
-			return piece.flatWidth
+			return piece.outerWidth
 		}
 	},
 	getLamWithSpoilage: function(matLength) {

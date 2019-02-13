@@ -143,7 +143,7 @@ var configHelper = {
 		//Going to assume tiled vertically until needing extra complexity
 		var nTiles = this.getTileCount(piece, tiled);
 		var outerWidth = this.getOuterWidth(piece, vertical_piece_orienation, nTiles);
-		var outerHeight = vertical_piece_orienation ? piece.width : piece.height;
+		var outerHeight = vertical_piece_orienation ? piece.outerWidth : piece.outerHeight;
 		
 		details.tiled = tiled;
 		details.nTiles = nTiles;

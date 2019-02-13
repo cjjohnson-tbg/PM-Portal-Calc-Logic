@@ -3,6 +3,7 @@ var metaMessageCounts = {
     outsourcePriceMessageCount : 0
 }
 
+
 var metaFieldsActions = {
     onCalcLoaded: function() {
         
@@ -10,6 +11,7 @@ var metaFieldsActions = {
         addDatePickers();
         characterMax();
         clearReorderMeta();
+        scheduledPrintingClass();
 
         bindCalcReInit();
 
@@ -97,9 +99,33 @@ var metaFieldsActions = {
                 },200);
             });
         }
+        function scheduledPrintingClass() {
+            var productTitle = $('#product .page-title h1').text().replace(/\s+/g, '-').toLowerCase();
+            if (productTitle.indexOf('scheduled') != -1) {
+                $('body').addClass('scheduledPrinting');
+            }
+        }
     },
     onQuoteUpdated: function(product) {
         var metaMessage = '';
+        var bucketPjcs = {
+            'sf' : [
+                '1306',   //*TBG Magnet Buckets
+                '1757',    //* TBG Backlit Buckets_new
+                '1762'    //*TBG Board Buckets-NEW
+            ], 
+            'lf' : [
+                '458',   //*TBG Board Buckets
+                '495',   //*TBG Lexjet Buckets
+                '496',   //*TBG Banner Buckets
+                '497',   //z_TBG Sihl Buckets
+                '498',   //z_TBG Static Cling Buckets
+                '499',   //*TBG Ecomedia Buckets
+                '550',   //z_TBG Lexjet Buckets 3G 3G
+                '551',   //* TBG Backlit Buckets
+                '556'   //*TBG Finishing Only Bucket
+            ]
+        }
 
         hardProof();
         buyoutMaterial(product);
@@ -108,9 +134,13 @@ var metaFieldsActions = {
         colorCriticalDevice();
         colorWork(product);
         tileSlug();
+        shipDateRestrictions(product);
         showMessages(product);
 
         function hardProof() {
+            if (cu.isPjc(product, bucketPjcs.sf) || cu.isPjc(product, bucketPjcs.lf)) {
+                return
+            }
             var hardProofDate = $('.hardProof');
             var pmQty = $('.pmProofQty');
             var estQtyMeta = $('.estFinalQty');
@@ -291,6 +321,24 @@ var metaFieldsActions = {
                 $('.slug').hide();
             }
         }
+        function shipDateRestrictions(product) {
+            //Ship Date restriction 
+            try {
+                if (cu.isPjc(product, bucketPjcs.sf) || cu.isPjc(product, bucketPjcs.lf)) {
+                    $('.shipDate').removeClass('date');
+                    $('.shipDate input').removeClass('hasDatepicker');
+                    $('.shipDate input').unbind();
+                    $('.shipDate input').datepicker({
+                        showAnim: "fold",
+                        beforeShowDay: $.datepicker.noWeekends,  // disable weekends
+                        minDate : pu.isNowBeforeCSTCutoffTime(13,15) ? 1 : 2 // if before 1:15, 1, if after 1:15 then 2
+                    });
+                }
+            }
+            catch(err) {
+                console.log('no buckets');
+            }
+        }
         function requireMetaField(metaField, message) {
             var metaInput = $(metaField).find('input');
             metaField.show();
@@ -298,7 +346,7 @@ var metaFieldsActions = {
             if (metaInput.val() == '') {
                 disableCheckoutReasons.push(message);
             }
-        } 
+        }
         function showMessages() {
             if (metaMessage != '') {
                 cu.alert(metaMessage);

@@ -1,6 +1,14 @@
 var cu = calcUtil;
 var pu = pmCalcUtil;
 
+
+var bucketPjcs = [
+    //for new pjcs, add into metafield actions bucketPjcs object as well
+    '1306',   //*TBG Magnet Buckets
+    '1757',    //* TBG Backlit Buckets_new
+    '1762'    //*TBG Board Buckets-NEW
+]
+
 var calcCount = 0;
 
 var onQuoteUpdatedMessages = '';
@@ -99,6 +107,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     jobCostSpoilage(quote);
     colorWork();
     magnetPrintMode(product);
+    bucketBoardLimit(product);
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
@@ -1125,6 +1134,15 @@ function magnetPrintMode() {
         } else {
             pu.validateValue(modeOp,'');
             pu.addClassToOperation(187,'planning');
+        }
+    }
+}
+function bucketBoardLimit(product) {
+    if (cu.isPjc(product, bucketPjcs)) {
+        var boardThroughput = cu.getTotalPressSheets();
+        if (boardThroughput >= 20) {
+            onQuoteUpdatedMessages += '<p>Bucket Printing is limited to 20 boards.  Please use the standard Board Printing product.</p>';
+            disableCheckoutReasons.push('>Bucket Printing is limited to 20 boards.  Please use the standard Board Printing product.');
         }
     }
 }

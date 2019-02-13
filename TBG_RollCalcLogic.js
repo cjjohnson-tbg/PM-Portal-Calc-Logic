@@ -15,6 +15,15 @@ var cc = calcConfig;
 var calcCount = 0;
 var lastUIChangedFieldName = null;
 
+var bucketPjcs = [
+    '458',   //*TBG Board Buckets
+    '495',   //*TBG Lexjet Buckets
+    '496',   //*TBG Banner Buckets
+    '499',   //*TBG Ecomedia Buckets
+    '551',   //* TBG Backlit Buckets
+    '556'   //*TBG Finishing Only Bucket
+]
+
 var rollCalcLogic = {
     onCalcLoaded: function(product) {
         cu.initFields();
@@ -131,6 +140,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     colorCritical();
     woodDowelQtyMax();
     setMaterialPackaging(updates);
+    bucketSizeLimitation(product);
 
 }
 
@@ -1410,6 +1420,24 @@ function maxQuotedJob() {
         $('#validation-message-container').html('<div class="ribbon-wrapper quote-warning">The total price of your job exceeds $' + maxQuotaJobAmt + '. Please contact Central Estimating to obtain a quote for your job.</div>')
     } else {
         $('#validation-message-container').html('');
+    }
+}
+function bucketSizeLimitation(product) {
+    if (cu.isPjc(product, bucketPjcs)) {
+        var pjcSizeMax = {
+            495 : 30
+        }
+        var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
+        if (isNaN(totalSquareFeet)) {
+            console.log('cannot compute total Sq Ft size limitation');
+            return
+        }
+        var maxSq = pjcSizeMax[cu.getPjcId(product)] ? pjcSizeMax[cu.getPjcId(product)] : 699;
+        if (totalSquareFeet > maxSq) {
+            bucketSizeMessage = '<p>The Bucket product is limited to jobs less than ' + maxSq + ' sq ft.  For jobs greater than this please use the Board Printing Product.</p>';
+            onQuoteUpdatedMessages += bucketSizeMessage;
+            disableCheckoutReasons.push(bucketSizeMessage);
+        }
     }
 }
 

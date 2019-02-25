@@ -238,8 +238,16 @@ function setWasteOperationAnswer(opAnswer, calcCost, cost) {
 }
 function setRollChangeCost(printConfig) {
     //Roll Change Minutes
+    var pjc = configureglobals.clpjc.id;
     var rollChangeOp = fields.operation138;
     var rollChangeOpAnswer = fields.operation138_answer;
+
+    var pjcRollChangeOpItem = {
+        '450' : 1032  //FabriVu Roll Change
+    }
+
+    var rollChangeOpItem = pjcRollChangeOpItem[pjc] ? pjcRollChangeOpItem[pjc] : 682;
+
     var rollChangeMins = 0;
     if (printConfig) {
         var printConfigMaterials = printConfig.materials;
@@ -251,9 +259,13 @@ function setRollChangeCost(printConfig) {
         }
     }
     if (rollChangeOp) {
-        if (rollChangeMins > 0 && (!cu.hasValue(rollChangeOp))) {
-            cu.changeField(rollChangeOp, 682, true);
-        } 
+        if (rollChangeMins > 0) {
+            pu.validateValue(rollChangeOp, rollChangeOpItem);
+        } else { 
+            pu.validateValue(rollChangeOp,'');
+        }
+        
+
         if (!isNaN(rollChangeMins)) {
             if (rollChangeOpAnswer) {
                 if (cu.getValue(rollChangeOpAnswer) != rollChangeMins) {

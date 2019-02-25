@@ -156,7 +156,7 @@ var configHelper = {
 		details.formWidth = this.getSignatureDim(mats, 'width');
 		details.printableWidth = details.formWidth - dat.devDefaults.leftMargin - dat.devDefaults.rightMargin;
 
-		details.formLengthMax = this.getFormLength(mats, outerHeight);
+		details.formLengthMax = this.getFormLength(mats, outerHeight, dat.devDefaults);
 		details.printableLength = details.formLengthMax - dat.devDefaults.bottomMargin - dat.devDefaults.topMargin;
 
 		details.nAcrossForm = Math.floor( details.printableWidth / outerWidth );
@@ -227,15 +227,16 @@ var configHelper = {
 		}
 		return results
 	},
-	getFormLength: function(mats, pieceHeight) {
+	getFormLength: function(mats, pieceHeight, deviceDefaults) {
 		var defaultLen = 126;
 		var result = defaultLen;
+		var pieceHeightWithBleed = pieceHeight + deviceDefaults.bottomMargin + deviceDefaults.topMargin;
 		//Special rule, if width of roll is 126" then use 200"
 		if (mats.aPrintSubstrate.width == 126) {
 			result = 200
 		}
-		if (pieceHeight > result) {
-			result = pieceHeight
+		if (pieceHeightWithBleed > result) {
+			result = pieceHeightWithBleed
 		}
 		var minMatLength = this.getSignatureDim(mats, 'length');
 		if (minMatLength < result) {

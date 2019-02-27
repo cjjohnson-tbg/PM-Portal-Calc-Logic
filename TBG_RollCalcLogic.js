@@ -1554,6 +1554,10 @@ function vutekInkOptGroups_surface() {
 function setMaterialPackaging(updates) {
     var matPackageTypeOp = fields.operation190;
     var matBaggingOp = fields.operation191;
+    var softFoldOpItems = [
+        '986',
+        '987'
+    ]
 
     if (matPackageTypeOp && matBaggingOp) {
 
@@ -1578,11 +1582,9 @@ function setMaterialPackaging(updates) {
         var isPoplin = poplinMatRefIds.indexOf(substrateRefId) != -1;
         var isMesh = substrateRefId == '2297';
 
-        //Bagging operation
-        if (isPoplin || (isBannerMaterial && height > 94)) {
-            pu.validateValue(matBaggingOp, 994)
-        } else {
-            pu.validateValue(matBaggingOp, '');
+        //When Soft Fold update Bagging material
+        if (cu.isValueInSet(matPackageTypeOp, softFoldOpItems)) {
+            pu.validateValue(matBaggingOp, 994);
         }
 
         //material type operation

@@ -1387,6 +1387,7 @@ function setDefaultTeam() {
         "Team Pete Ludwig" : 698,
         "Team Rick Behncke" : 699,
         "Team Rick Mirau" : 700,
+        "Team Tom Manthe" : 1027,
         "Team Tony Jones" : 701,
         "Team Tracy Cogan" : 702,
         "Team Vito Lombardo" : 703

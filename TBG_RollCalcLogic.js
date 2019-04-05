@@ -874,7 +874,8 @@ function bannerStandLogic() {
         '23',    //13 oz. Scrim Vinyl Matte (for outdoor use)
         '26',    //13 oz. Smooth Vinyl - Opaque Matte (for indoor use)
         '73',    //18 oz. Smooth Vinyl - Opaque Matte (for heavy duty outdoor use)
-        '357'   //Ecomedia 8mil - Roll
+        '357',   //Ecomedia 8mil - Roll
+        '508'   //Synthetic Paper 8mil - White (replaced Ecomedia)
     ]
     var bannerStandOp = fields.operation75;
     if (bannerStandOp) {
@@ -1575,6 +1576,16 @@ function setMaterialPackaging(updates) {
             '3271', '3273'
         ]
 
+        var baggingOptionsToHide = [
+            1008,   //18 x 42 Poly Bag
+            1036,   //Poly Bag_18x42" - 2647
+            1037,   //Poly Bag_20x26" - 7024
+            1038,   //Poly Bag_24x54" - 7023
+            1039,   //Poly Bag_28x42" - 7025
+            1040,   //Poly Bag_36x54" - 7026
+            1062
+        ]
+
         var substrateRefId = pu.getMaterialReferenceId('aPrintSubstrate');
         var height = Number(cu.getHeight());
         var totalQty = cu.getTotalQuantity();
@@ -1595,6 +1606,8 @@ function setMaterialPackaging(updates) {
         //hide invalid roll on core options
         hideInvalidCoreOptions();
 
+        //hide all options but 994 
+        pu.hideFieldOptions(baggingOptionsToHide); 
 
         function getMaterialTypeId() {
             if (isPoplin) {

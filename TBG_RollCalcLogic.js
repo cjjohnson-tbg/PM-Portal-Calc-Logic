@@ -1583,6 +1583,7 @@ function setMaterialPackaging(updates) {
             1038,   //Poly Bag_24x54" - 7023
             1039,   //Poly Bag_28x42" - 7025
             1040,   //Poly Bag_36x54" - 7026
+            1065,   //20x20 Poly Bag
             1062
         ]
 

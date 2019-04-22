@@ -137,6 +137,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     backlitDoubleStike();
     heatBendingRules(updates);
     fabrivuTransferPaper(product);
+    fabrivuBacklitInk();
     colorCritical();
     woodDowelQtyMax();
     setMaterialPackaging(updates);
@@ -1301,6 +1302,17 @@ function fabrivuTransferPaper(product) {
         pu.validateValue(transferMatOpAnswer,totalLf);
         pu.validateValue(tissueMatOpAnswer,totalLf);
         pu.validateValue(transferLaborAnswer,totalLf);
+    }
+}
+function fabrivuBacklitInk() {
+    //if Aberdeen Stretch Knit Backlit selected, change ink operation to Fabrivu Backlit
+    var fabrivuInkOp = fields.operation142;
+    if (fabrivuInkOp) {
+        if (cu.getValue(fields.printSubstrate) == 371 ) {
+            pu.validateValue(fabrivuInkOp, 722);
+        } else {
+            pu.validateValue(fabrivuInkOp, 719);
+        }
     }
 }
 

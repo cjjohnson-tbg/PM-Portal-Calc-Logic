@@ -908,7 +908,7 @@ function heatBendingRules(updates) {
         var substrateCaliper = cu.getPressSheetCaliper();
         var bendLength = orientation == 'vertical' ? cu.getHeight() : cu.getWidth();
         var maxSubstrateCaliper = .118;
-        var minSubstrateCaliper = .040;
+        var minSubstrateCaliper = .030;
 
         var isBuyOut = cu.getValue(fields.paperType) == '247';
         //only approved materials
@@ -931,8 +931,8 @@ function heatBendingRules(updates) {
             if (substrateCaliper <  minSubstrateCaliper) {
                 heatBendErrors.push( 'Substrates with calipers less than than ' + minSubstrateCaliper + '" must be sent through central estimating.');
             }
-            if (bendLength > 12 && substrateCaliper < .060) {
-                heatBendErrors.push( 'Substrates with calipers less than .060" must have a bend length 12" or less and must be sent through central estimating');
+            if (bendLength > 24 && substrateCaliper < .040) {
+                heatBendErrors.push( 'Substrates with calipers less than .040" must have a bend length 24" or less and must be sent through central estimating');
             }
             if (hasMountLam && substrateCaliper < .060) {
                 heatBendErrors.push( 'Substrates with calipers less than .060" and laminating or mounting must be sent through central estimating.');

@@ -221,6 +221,13 @@ var metaFieldsActions = {
             } else {
                 $('.buyout').hide();
                 $('.actualId').hide();
+                $('.buyout input').each(function(){
+                    var text_value=$(this).val();
+                    if (text_value!='') {
+                        $(this).val('');
+                        configureEvents.onQuoteUpdated();
+                    }
+                });
             }
         }
         function subOutDate(product) {

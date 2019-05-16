@@ -104,6 +104,7 @@ var sfSheetCalcLogic = {
 
                 ulineLabelDimSelector(updates, product);
                 vinylGraphicSizeMin(product);
+                slipSheet(product);
 
                 /********* Display Run Time information on Estimating Site for LF Board Estimating */
                 $('#runTime span').text(cu.getTotalRuntime());
@@ -285,6 +286,21 @@ function setDevice(deviceId) {
         console.log('device not available');
     }
 }
+function slipSheet(product) {
+    //if Under 4 pages, remove slip sheets for Collated Sets
+    var slipSheetOps = [
+        '51',   //Slip Sheets
+        '175'   //Slip Sheet Between Sets
+    ]
+    var slipSheetOp = cu.findOperationFromSet(slipSheetOps);
+    var pages = parseInt(cu.getValue(fields.pages));
+    if (pages && slipSheetOp) {
+        if (pages < 4) {
+            pu.validateValue(slipSheetOp,'');
+            cu.hideField(slipSheetOp)
+        }
+    }
+}
 
 function ulineLabelDimSelector(updates, product)  {
     if (cu.getPjcId(product) == 199) {
@@ -316,6 +332,12 @@ function vinylGraphicSizeMin(product) {
     ]
     if (!cu.isPjc(product, vinylGraphicPjcs)) { 
         return
+    }
+    //if stock type disables motion cutting, skip
+    if (stocksTypesThatDisableMotionCutter) {
+        if (cu.isValueInSet(fields.paperType,stocksTypesThatDisableMotionCutter)) {
+            return
+        }
     }
 
     var laserCutting = fields.operation71;

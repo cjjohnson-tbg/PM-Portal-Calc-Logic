@@ -12,6 +12,7 @@ var metaFieldsActions = {
         characterMax();
         clearReorderMeta();
         scheduledPrintingClass();
+        sephoraStripMessage();
 
         bindCalcReInit();
 
@@ -103,6 +104,13 @@ var metaFieldsActions = {
             var productTitle = $('#product .page-title h1').text().replace(/\s+/g, '-').toLowerCase();
             if (productTitle.indexOf('scheduled') != -1) {
                 $('body').addClass('scheduledPrinting');
+            }
+        }
+        function sephoraStripMessage() {
+            if (configureglobals.clpjc) {
+                if (configureglobals.clpjc.id == 555) {
+                    $('.shipDate').append('<p>Please include a note on your kitting distro, in the pre-kitting field that indicates the graphics will arrive in kitting in pre-collated sets, from cutting.</p>');
+                }
             }
         }
     },
@@ -406,8 +414,7 @@ var metaFieldsActions = {
                 }
             }
         }
-        
-     },
+     }
 }
 
 var stockClassification = {

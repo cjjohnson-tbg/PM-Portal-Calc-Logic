@@ -1458,10 +1458,15 @@ function checkForHardProofRequired() {
     }
     var boardThroughput = cu.getTotalPressSheets();
     var proofOp = fields.proof;
-    var proofSelection = cu.getValue(proofOp);
+    var hardProofOptions = [
+        '40', //Printed Hard Proof - Internal
+        '43', //Printed Hard Proof - External
+        '48', //Prototype Proof - External
+        '51'  //
+    ]
     if (boardThroughput >= 20) {
         if (hardProofMessageCount == 0) {
-            if (proofSelection != 40 && proofSelection != 43) {
+            if (!cu.isValueInSet(proofOp, hardProofOptions)) {
                 onQuoteUpdatedMessages += '<p>Jobs with a throughput of 20 boards require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
                 hardProofMessageCount = 1;
                 pu.showMessages();

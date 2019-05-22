@@ -1372,9 +1372,17 @@ function hardProofCheck(quote) {
     var totalSquareFeet = (pieceWidth * pieceHeight * cu.getTotalQuantity())/144;
     var proofOp = fields.proof;
     var proofSelection = configureglobals.cquotedata.proof.name;
+    
+    var hardProofOptions = [
+    '40', //Printed Hard Proof - Internal
+    '43', //Printed Hard Proof - External
+    '48', //Prototype Proof - External
+    '51',  //Prototype Proof - Internal
+    '50'    //Printed Hard Proof - Unknown Quantity
+    ]
     if (totalSquareFeet >= 700) {
         if (hardProofMessageCount == 0) {
-            if (proofSelection.indexOf('Hard') == -1) {
+            if (!cu.isValueInSet(proofOp, hardProofOptions)) {
                 onQuoteUpdatedMessages += '<p>Jobs with a printable area over 700 square feet require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
                 pu.showMessages();
                 hardProofMessageCount = 1;

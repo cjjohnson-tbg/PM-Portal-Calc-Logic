@@ -704,6 +704,10 @@ function setFluteDirectionOp() {
         129,
         144
     ]
+    //skip if no Press Sheet Type select Shown
+    if (!fields.pressSheetType) {
+        return
+    }
     if (fluteDirectionOp) {
         var substrateName = $('#pressSheetType select[name="PRESSSHEETTYPEDD"] option:selected').text();
         var hasFlutes = false;

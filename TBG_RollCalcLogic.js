@@ -860,6 +860,10 @@ function bannerFinishingOperationDisplay(product) {
     if (cu.getPjcId(product) == 450) {
         return;
     }
+    //do not run if no substrate field 
+    if (!fields.printSubstrate) {
+        return
+    }
     //hide operstions if substrate not in list
     if (!cu.isValueInSet(fields.printSubstrate, substratesWithBannerFinishing)) {
         pu.addClassToOperation(bannerFinishingOperations, 'planning');
@@ -878,6 +882,10 @@ function bannerStandLogic() {
         '357',   //Ecomedia 8mil - Roll
         '508'   //Synthetic Paper 8mil - White (replaced Ecomedia)
     ]
+    //do not run if no substrate field 
+    if (!fields.printSubstrate) {
+        return
+    }
     var bannerStandOp = fields.operation75;
     if (bannerStandOp) {
         if (!cu.isValueInSet(fields.printSubstrate, bannerStandMaterial)) {

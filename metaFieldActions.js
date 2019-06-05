@@ -254,6 +254,8 @@ var metaFieldsActions = {
                     $('.subOutDate').hide();
                     $('.subOutDate input').val('');
                 }
+            } else {  //Hide on all others without outsource op
+                $('.subOutDate').hide();
             }
         }
         function fabDate(product) {

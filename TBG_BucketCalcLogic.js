@@ -12,7 +12,7 @@ var bucketCalcLogic = {
        cu.initFields();
        metaFieldsActions.onCalcLoaded(product);
         if (cu.isSmallFormat(product)) {
-            uiUpdatesSF();
+            uiUpdatesSF(product);
         } else {
             uiUpdatesLF();
         }
@@ -50,14 +50,17 @@ var bucketCalcLogic = {
         setInkConsumptionOps();
         setCuttingOperations(quote);
         sizeLimitation(product);
-        uiUpdatesSF();
+        magnetPrintMode(product);
+        uiUpdatesSF(product);
     },
     onQuoteUpdated_POD_LargeFormat: function(updates, validation, product, quote) {
         var changeEventTriggered = false;
 
         setCuttingOps(quote, product);
         sizeLimitation(product);
+        side2Ink(product);
         uiUpdatesLF();
+        requireLam(product);
 
     }
 }
@@ -74,12 +77,13 @@ function shipDateRestrictions() {
     });
 }
 
-function uiUpdatesSF() {
-    addClassesSF();
+function uiUpdatesSF(product) {
+    addClassesSF(product);
     trimOptionsSF();
     shipDateRestrictions();
     setLabels();
     pu.showMessages();
+    pu.validateConfig(disableCheckoutReasons);
 }
 function uiUpdatesLF() {
     addClassesLF();
@@ -93,10 +97,11 @@ function setLabels() {
     //CHange label of pages for Setrs
     cu.setLabel(fields.paperWeight,'Thickness');
 }
-function addClassesSF() {
+function addClassesSF(product) {
     var planningOnlyOps = [
         55,   //
-        125   //LF Bucket Job
+        125,   //LF Bucket Job
+        281     //Ship in a Set
     ]
     var sfPlanningOnlyOperations = [
         150,    //LF Cutting
@@ -114,6 +119,11 @@ function addClassesSF() {
 
     pu.addClassToOperation(planningOnlyOps,'planning');
     pu.addClassToOperation(sfPlanningOnlyOperations,'planning');
+
+    //remove planning class for Sets on Bucket Magnet Printing
+    if (cu.getPjcId(product) == 1306) {
+        pu.removeClassFromOperation(281, 'planning');
+    }
 }
 function addClassesLF() {
     var planningOnlyOps = [
@@ -224,6 +234,33 @@ function getMaxZundRank(zundFactors, defaultFactor, printSubFactor, mountSubFact
         }
     }
     return result
+}
+
+function side2Ink(product) {
+    //Disable side 2 ink for SCHEDULED ECOMEDIA PRINTING
+    if (cu.getPjcId(product) == 499) {
+        var side2inkOp = fields.operation137;
+        if (cu.getValue(fields.sides) == '2') {
+            if (!cu.hasValue(side2inkOp)) {
+                cu.enableField(side2inkOp);
+                cu.changeField(side2inkOp,641, true);
+            }
+        } else {
+            pu.validateValue(side2inkOp,'');
+            cu.disableField(side2inkOp);
+            cu.setSelectedOptionText(fields.operation137,'Must Select 2 Sides');
+        }
+    }
+}
+
+function requireLam(product) {
+    //Require front or back lam on SCHEDULED ECOMEDIA PRINTING
+    if (cu.getPjcId(product) == 499) {
+        if (!cu.hasValue(fields.frontLaminate) && !cu.hasValue(fields.backLaminate)) {
+            onQuoteUpdatedMessages += '<p>This product requires Laminate on either front or back.  Back Lam has been set on your behalf.</p>';
+            cu.changeField(fields.backLaminate, 49, true);
+        }
+    }
 }
 
 function setTopAndBottomPieceOps() {
@@ -521,13 +558,24 @@ function sizeLimitation(product) {
         console.log('cannot compute total Sq Ft size limitation');
         return
     }
-    var maxSq = pjcSizeMax[cu.getPjcId(product)] ? pjcSizeMax[cu.getPjcId(product)] : 200;
+    var maxSq = pjcSizeMax[cu.getPjcId(product)] ? pjcSizeMax[cu.getPjcId(product)] : 699;
     if (totalSquareFeet > maxSq) {
         bucketSizeMessage = '<p>The Bucket product is limited to jobs less than ' + maxSq + ' sq ft.  For jobs greater than this please use the Board Printing Product.</p>';
         onQuoteUpdatedMessages += bucketSizeMessage;
-        disableCheckoutButton(bucketSizeMessage);
-    } else {
-        enableCheckoutButton();
+        disableCheckoutReasons.push(bucketSizeMessage);
+    } 
+}
+function magnetPrintMode(product) {
+    if (cu.getPjcId(product) == 1306) {
+        //default to Sephora gloss for users set to Team Perry Ludwig
+        var sephoraTeam = globalpageglobals.cuser.metadata["Default Team"] == 'Team Perry Ludwig';
+        var defaultMode = sephoraTeam ? 1260 : 1259;
+        var modeOp = fields.operation187;
+        if (!cu.hasValue(modeOp)) {
+            cu.changeField(modeOp, defaultMode, true);
+        }
+        $('#operation187 option[value=""]').hide()
+        modeOp.css('color','red');
     }
 }
 

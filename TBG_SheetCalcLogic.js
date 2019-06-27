@@ -99,7 +99,12 @@ var sfSheetCalcLogic = {
                     $('#operation14 label.opQuestion').text('How many sets to shrink wrap together');
                 }
 
+                setTopAndBottomPieceOps();
+                linearOperationItemAnswers();
+
                 ulineLabelDimSelector(updates, product);
+                vinylGraphicSizeMin(product);
+                slipSheet(product);
 
                 /********* Display Run Time information on Estimating Site for LF Board Estimating */
                 $('#runTime span').text(cu.getTotalRuntime());
@@ -216,6 +221,52 @@ function checkForColorCriticalDevice(validation) {
         }
     }
 }
+function setTopAndBottomPieceOps() {
+    var topInchIncreaserAnswer = fields.operation121_answer;
+    var topInchDecreaserAnswer = fields.operation123_answer;
+    var topLinInch = cu.getWidth();
+    topLinInch = parseInt(topLinInch);
+    if (topInchIncreaserAnswer && topInchDecreaserAnswer) {
+        if (cu.getValue(topInchIncreaserAnswer) != topLinInch) {
+            cu.changeField(topInchIncreaserAnswer, topLinInch, true);
+        }
+        if (cu.getValue(topInchDecreaserAnswer) != topLinInch) {
+            cu.changeField(topInchDecreaserAnswer, topLinInch, true);
+        }
+    } 
+}
+function linearOperationItemAnswers () {
+    var opsWithTopOnlyLinearAnswers = [
+         '122',  //LF Tape, Mag, Velcro - Top Only
+         '177',  //LF Film Tape Application - Top Only
+         '265',  //LF Foam Tape Application - Top Only
+         '183',  //LF Magnet Application - Top Only
+         '180'  //LF Velcro Application - Top Only
+    ]
+    var opsWithTopAndBottomAnswers = [
+         '124',  //LF Tape, Mag, Velcro - Top & Bottom
+         '184',  //LF Velcro Application - Top & Bottom
+         '178',  //LF Film Tape Application - Top & Bottom
+         '181',  //LF Magnet Application - Top & Bottom
+         '264'  //LF Foam Tape Application - Top & Bottom
+    ]
+    var width = cu.getWidth();
+
+    insertWidth(opsWithTopOnlyLinearAnswers, parseInt(pu.roundTo(width,0)) );
+    insertWidth(opsWithTopAndBottomAnswers, parseInt(pu.roundTo(width * 2,0)) );
+
+    //pu.hideOperationQuestion(opsWithTopOnlyLinearAnswers);
+    //pu.hideOperationQuestion(opsWithTopAndBottomAnswers);
+
+    function insertWidth(opList, width) {
+        for (var i = 0; i < opList.length; i++) {
+            var fieldAnswer = fields['operation' + opList[i] + '_answer'];
+            if (fieldAnswer) {
+                pu.validateValue(fieldAnswer, width);
+            }
+        }
+    }
+}
 function toggleAutoDeviceTypeButton() {
     $autoDeviceSelector = $('#device a.togglePreset');
     $autoDeviceButton = $autoDeviceSelector.length == 1 ? $autoDeviceSelector[0] : null;
@@ -233,6 +284,21 @@ function setDevice(deviceId) {
         $deviceSelect.trigger('focus').trigger('change');
     } else {
         console.log('device not available');
+    }
+}
+function slipSheet(product) {
+    //if Under 4 pages, remove slip sheets for Collated Sets
+    var slipSheetOps = [
+        '51',   //Slip Sheets
+        '175'   //Slip Sheet Between Sets
+    ]
+    var slipSheetOp = cu.findOperationFromSet(slipSheetOps);
+    var pages = parseInt(cu.getValue(fields.pages));
+    if (pages && slipSheetOp) {
+        if (pages < 4) {
+            pu.validateValue(slipSheetOp,'');
+            cu.hideField(slipSheetOp)
+        }
     }
 }
 
@@ -257,6 +323,33 @@ function ulineLabelDimSelector(updates, product)  {
             }
         }
     }
+}
+
+function vinylGraphicSizeMin(product) {
+    var vinylGraphicPjcs = [
+        '101',  //TBG Hub Specialty
+        '1690'  //TBG Hub Specialty - Collated
+    ]
+    if (!cu.isPjc(product, vinylGraphicPjcs)) { 
+        return
+    }
+    //if stock type disables motion cutting, skip
+    if (stocksTypesThatDisableMotionCutter) {
+        if (cu.isValueInSet(fields.paperType,stocksTypesThatDisableMotionCutter)) {
+            return
+        }
+    }
+
+    var laserCutting = fields.operation71;
+    var outsourceCut = fields.operation153;
+    
+    var shortSide = Math.min(cu.getWidth(), cu.getHeight());
+    if (shortSide < 2) {
+        if (!cu.hasValue(laserCutting) && !cu.hasValue(outsourceCut)) {
+            cu.changeField(laserCutting, 576);
+        }
+    }
+
 }
 
 configureEvents.registerOnCalcLoadedListener(sfSheetCalcLogic);

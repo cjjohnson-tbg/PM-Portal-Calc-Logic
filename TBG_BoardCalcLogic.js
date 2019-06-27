@@ -1,6 +1,14 @@
 var cu = calcUtil;
 var pu = pmCalcUtil;
 
+
+var bucketPjcs = [
+    //for new pjcs, add into metafield actions bucketPjcs object as well
+    '1306',   //*TBG Magnet Buckets
+    '1757',    //* TBG Backlit Buckets_new
+    '1762'    //*TBG Board Buckets-NEW
+]
+
 var calcCount = 0;
 
 var onQuoteUpdatedMessages = '';
@@ -93,10 +101,13 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     setFluteDirectionOp();
     heatBendingRules(updates);
     twoSidedJobOp();
-    setTopAndBottomPieceOps();
+    //setTopAndBottomPieceOps();
+    linearOperationItemAnswers();
     mountAdhesive();
     jobCostSpoilage(quote);
     colorWork();
+    magnetPrintMode(product);
+    bucketBoardLimit(product);
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
@@ -397,13 +408,22 @@ function setCuttingOperations(quote) {
 function edgeBandingLogic() {
     /********* Disallow Edge Banding for incorrect sizes */
     var edgeBanding = fields.operation119;
+    var substrateTypesCannotEdgeBand = [
+        '308',  //Eagle Cell - White/Kraft/White
+        '279'   //Eagle Cell - White
+    ]
+    var weightsThatCanHeatBend = [
+        '53',   //1"
+        '52'    //.5"
+    ]
     if (edgeBanding) {
         //disable field unless 1/2" or 1" substrate selected
-        if (cu.getValue(fields.paperWeight) == 52 || cu.getValue(fields.paperWeight) == 53) {   
+        if (cu.isValueInSet(fields.paperWeight, weightsThatCanHeatBend) && !cu.isValueInSet(fields.paperType,substrateTypesCannotEdgeBand)) {   
             cu.enableField(edgeBanding);
         }
         else {
             cu.disableField(edgeBanding);
+            pu.validateValue(edgeBanding,'');
             cu.setSelectedOptionText(edgeBanding,'Must Select 1" or 1/2" Substrate');
         }
         if (cu.hasValue(edgeBanding)) {
@@ -418,7 +438,7 @@ function edgeBandingLogic() {
             if (cu.getValue(edgeBanding) == 694 || cu.getValue(edgeBanding) == 695) {
                 if (cu.getValue(fields.paperWeight) != 53) {
                     cu.changeField(edgeBanding, '', true);
-                    onQuoteUpdatedMessages += '<p>1/2" Edgebanding requires a 1/2" substrate.  Please choose an appropriate substrate and then add Edgebanding.</p>';
+                    onQuoteUpdatedMessages += '<p>1" Edgebanding requires a 1" substrate.  Please choose an appropriate substrate and then add Edgebanding.</p>';
                 }
             }
         }
@@ -684,6 +704,10 @@ function setFluteDirectionOp() {
         129,
         144
     ]
+    //skip if no Press Sheet Type select Shown
+    if (!fields.pressSheetType) {
+        return
+    }
     if (fluteDirectionOp) {
         var substrateName = $('#pressSheetType select[name="PRESSSHEETTYPEDD"] option:selected').text();
         var hasFlutes = false;
@@ -1002,6 +1026,38 @@ function setTopAndBottomPieceOps() {
         }
     } 
 }
+function linearOperationItemAnswers () {
+    var opsWithTopOnlyLinearAnswers = [
+         '122',  //LF Tape, Mag, Velcro - Top Only
+         '177',  //LF Film Tape Application - Top Only
+         '265',  //LF Foam Tape Application - Top Only
+         '183',  //LF Magnet Application - Top Only
+         '180'  //LF Velcro Application - Top Only
+    ]
+    var opsWithTopAndBottomAnswers = [
+         '124',  //LF Tape, Mag, Velcro - Top & Bottom
+         '184',  //LF Velcro Application - Top & Bottom
+         '178',  //LF Film Tape Application - Top & Bottom
+         '181',  //LF Magnet Application - Top & Bottom
+         '264'  //LF Foam Tape Application - Top & Bottom
+    ]
+    var width = cu.getWidth();
+
+    insertWidth(opsWithTopOnlyLinearAnswers, parseInt(pu.roundTo(width,0)) );
+    insertWidth(opsWithTopAndBottomAnswers, parseInt(pu.roundTo(width * 2,0)) );
+
+    //pu.hideOperationQuestion(opsWithTopOnlyLinearAnswers);
+    //pu.hideOperationQuestion(opsWithTopAndBottomAnswers);
+
+    function insertWidth(opList, width) {
+        for (var i = 0; i < opList.length; i++) {
+            var fieldAnswer = fields['operation' + opList[i] + '_answer'];
+            if (fieldAnswer) {
+                pu.validateValue(fieldAnswer, width);
+            }
+        }
+    }
+}
 
 function mountAdhesive() {
     var mountsWithClearAdhesive = [
@@ -1067,19 +1123,50 @@ function colorWork() {
         }
     }
 }
+function magnetPrintMode() {
+    var modeOp = fields.operation187;
+    if (modeOp) {
+        var sephoraTeam = globalpageglobals.cuser.metadata["Default Team"] == 'Team Perry Ludwig';
+        var defaultMode = sephoraTeam ? 1260 : 1259;
+        if (cu.getValue(fields.paperType) == 51) {
+            if (!cu.hasValue(modeOp)) {
+                cu.changeField(modeOp, defaultMode, true);
+            }
+            pu.removeClassFromOperation(187, 'planning');
+            modeOp.css('color','red');
+            $('#operation187 option[value=""]').hide()
+        } else {
+            pu.validateValue(modeOp,'');
+            pu.addClassToOperation(187,'planning');
+        }
+    }
+}
+function bucketBoardLimit(product) {
+    if (cu.isPjc(product, bucketPjcs)) {
+        var boardThroughput = cu.getTotalPressSheets();
+        if (boardThroughput >= 20) {
+            onQuoteUpdatedMessages += '<p>Bucket Printing is limited to 20 boards.  Please use the standard Board Printing product.</p>';
+            disableCheckoutReasons.push('>Bucket Printing is limited to 20 boards.  Please use the standard Board Printing product.');
+        }
+    }
+}
 
 //functions ran after completed full quote
 function setSpecialMarkupOps(quote) {
     //calculates job costs and inserts into special costing operation answers
     var hasUpdate = false;
-    var teamCost = getOperationPrice(quote, "TBG Team");
-    var specCustCost = getOperationPrice(quote, "TBG Special Customer");
-    var jobCost = parseInt((quote.jobCostPrice + quote.operationsPrice - teamCost - specCustCost));
+    
+    var teamCost = Number(getOperationPrice(quote, "TBG Team"));
+    var teamCostAnswer = Math.round( (quote.jobCostPrice + quote.operationsPrice - teamCost) * 100) / 100;
+    
+    var specCustCost = Number(getOperationPrice(quote, "TBG Special Customer"));
+    var specCustCostAnswer = Math.round( (quote.jobCostPrice + quote.operationsPrice) * 100) / 100;
+    
     if (cu.hasValue(fields.operation218)) {
-        pu.validateValue(fields.operation218_answer, jobCost);
+        pu.validateValue(fields.operation218_answer, teamCostAnswer);
     }
     if (cu.hasValue(fields.operation226)) {
-        pu.validateValue(fields.operation226_answer, jobCost);
+        pu.validateValue(fields.operation226_answer, specCustCostAnswer);
     }
     return hasUpdate
 }
@@ -1102,6 +1189,7 @@ function setDefaultTeam() {
         "Team Beth Josub" : 1572,
         "Team Cindy Johnson" : 1570,
         "Team Craig Omdal" : 1575,
+        "Team Jayson Hansen" : 2045,
         "Team Jim Olson" : 1580,
         "Team John Pihaly" : 1578,
         "Team Jordan Feddema" : 1574,
@@ -1109,6 +1197,7 @@ function setDefaultTeam() {
         "Team Pete Ludwig" : 1568,
         "Team Rick Behncke" : 1581,
         "Team Rick Mirau" : 1585,
+        "Team Tom Manthe" : 2065,
         "Team Tony Jones" : 1582,
         "Team Tracy Cogan" : 1577,
         "Team Vito Lombardo" : 1571,
@@ -1160,7 +1249,7 @@ function updateClasses() {
         // 170,     //LF Hub Cutting
         174,     //LF TBG-Fab Cut
         193,     //LF Bucket Job
-        187,    //LF Gloss Mode
+        // 187,    //LF Gloss Mode
         202,     //LF MCT Cutting
         215     //LF Gutter
     ]
@@ -1377,10 +1466,15 @@ function checkForHardProofRequired() {
     }
     var boardThroughput = cu.getTotalPressSheets();
     var proofOp = fields.proof;
-    var proofSelection = cu.getValue(proofOp);
+    var hardProofOptions = [
+        '40', //Printed Hard Proof - Internal
+        '43', //Printed Hard Proof - External
+        '48', //Prototype Proof - External
+        '51'  //
+    ]
     if (boardThroughput >= 20) {
         if (hardProofMessageCount == 0) {
-            if (proofSelection != 40 && proofSelection != 43) {
+            if (!cu.isValueInSet(proofOp, hardProofOptions)) {
                 onQuoteUpdatedMessages += '<p>Jobs with a throughput of 20 boards require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
                 hardProofMessageCount = 1;
                 pu.showMessages();

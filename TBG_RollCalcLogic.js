@@ -15,6 +15,15 @@ var cc = calcConfig;
 var calcCount = 0;
 var lastUIChangedFieldName = null;
 
+var bucketPjcs = [
+    '458',   //*TBG Board Buckets
+    '495',   //*TBG Lexjet Buckets
+    '496',   //*TBG Banner Buckets
+    '499',   //*TBG Ecomedia Buckets
+    '551',   //* TBG Backlit Buckets
+    '556'   //*TBG Finishing Only Bucket
+]
+
 var rollCalcLogic = {
     onCalcLoaded: function(product) {
         cu.initFields();
@@ -127,9 +136,12 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     fluteDirectionRules();
     backlitDoubleStike();
     heatBendingRules(updates);
-    fabrivuLogic(product);
+    fabrivuTransferPaper(product);
+    fabrivuBacklitInk();
     colorCritical();
     woodDowelQtyMax();
+    setMaterialPackaging(updates);
+    bucketSizeLimitation(product);
 
 }
 
@@ -227,8 +239,16 @@ function setWasteOperationAnswer(opAnswer, calcCost, cost) {
 }
 function setRollChangeCost(printConfig) {
     //Roll Change Minutes
+    var pjc = configureglobals.clpjc.id;
     var rollChangeOp = fields.operation138;
     var rollChangeOpAnswer = fields.operation138_answer;
+
+    var pjcRollChangeOpItem = {
+        '450' : 1032  //FabriVu Roll Change
+    }
+
+    var rollChangeOpItem = pjcRollChangeOpItem[pjc] ? pjcRollChangeOpItem[pjc] : 682;
+
     var rollChangeMins = 0;
     if (printConfig) {
         var printConfigMaterials = printConfig.materials;
@@ -240,9 +260,13 @@ function setRollChangeCost(printConfig) {
         }
     }
     if (rollChangeOp) {
-        if (rollChangeMins > 0 && (!cu.hasValue(rollChangeOp))) {
-            cu.changeField(rollChangeOp, 682, true);
-        } 
+        if (rollChangeMins > 0) {
+            pu.validateValue(rollChangeOp, rollChangeOpItem);
+        } else { 
+            pu.validateValue(rollChangeOp,'');
+        }
+        
+
         if (!isNaN(rollChangeMins)) {
             if (rollChangeOpAnswer) {
                 if (cu.getValue(rollChangeOpAnswer) != rollChangeMins) {
@@ -253,7 +277,6 @@ function setRollChangeCost(printConfig) {
     }
 }
 
-/**** CUTTING UPDATE 2018-08-27 */
 function setCuttingOps(quote, updates, product) {
         var userDeclareCutOp = fields.operation111;
 
@@ -528,7 +551,7 @@ function setLamRunOps(quote, config) {
     if (!config) {
         return 
     }
-    var lamLfWithSpoilage = config.details.lamLfWithSpoilage
+    var lamLfWithSpoilage = config.details.lamLfWithSpoilage;
     var hasFrontLam = cu.hasValue(fields.frontLaminate);
     var hasBackLam = cu.hasValue(fields.backLaminate);
     var hasMount = cu.hasValue(fields.mountSubstrate);
@@ -785,6 +808,10 @@ function canvasOperationDisplay() {
         65, //TBG Canvas Frame Assembly
         66  //TBG Canvas Stretching
     ]
+    //Skip if no Print SUbstrate chosen
+    if (!fields.printSubstrate) {
+        return
+    }
     //hide operations only pertaining to canvas substrates
     if (!cu.isValueInSet(fields.printSubstrate, canvasSubstrates)) {
         pu.addClassToOperation(canvasOperations, 'planning');
@@ -837,6 +864,10 @@ function bannerFinishingOperationDisplay(product) {
     if (cu.getPjcId(product) == 450) {
         return;
     }
+    //do not run if no substrate field 
+    if (!fields.printSubstrate) {
+        return
+    }
     //hide operstions if substrate not in list
     if (!cu.isValueInSet(fields.printSubstrate, substratesWithBannerFinishing)) {
         pu.addClassToOperation(bannerFinishingOperations, 'planning');
@@ -851,15 +882,21 @@ function bannerStandLogic() {
     var bannerStandMaterial = [
         '23',    //13 oz. Scrim Vinyl Matte (for outdoor use)
         '26',    //13 oz. Smooth Vinyl - Opaque Matte (for indoor use)
-        '73'    //18 oz. Smooth Vinyl - Opaque Matte (for heavy duty outdoor use)
+        '73',    //18 oz. Smooth Vinyl - Opaque Matte (for heavy duty outdoor use)
+        '357',   //Ecomedia 8mil - Roll
+        '508'   //Synthetic Paper 8mil - White (replaced Ecomedia)
     ]
+    //do not run if no substrate field 
+    if (!fields.printSubstrate) {
+        return
+    }
     var bannerStandOp = fields.operation75;
     if (bannerStandOp) {
         if (!cu.isValueInSet(fields.printSubstrate, bannerStandMaterial)) {
             //cu.hideField(bannerStandOp);
             pu.addClassToOperation(75,'planning');
             if (cu.hasValue(bannerStandOp)) {
-                onQuoteUpdatedMessages += '<p>Banners stands can only be ordered with 13 oz Vinyl.</p>';
+                onQuoteUpdatedMessages += '<p>Banners stands can only be ordered with Vinyl or Ecomedia.</p>';
                 cu.changeField(bannerStandOp,'',true);
             }
         } else {
@@ -1250,10 +1287,45 @@ function heatBendingRules(updates) {
     }
 }
 
-function fabrivuLogic(product) {
-    //set transfer paper to JETCOL DYE SUB TRANSFER PAPER, but leave none for planning to override
-    var dyeSubTransferOp = fields.operation88;
-    pu.validateValue(dyeSubTransferOp, 428, true);
+function fabrivuTransferPaper(product) {
+    
+    if (cu.getPjcId(product) == 450) {
+        //set transfer paper to JETCOL DYE SUB TRANSFER PAPER, but leave none for planning to override
+        var dyeSubTransferOp = fields.operation88;
+        pu.validateValue(dyeSubTransferOp, 428, true);
+
+        //insert LF needed into Tranfer Paper material and labor operation Answers
+        if (!cc.printConfig) { 
+            console.log('no printConfig');
+            return;
+        }
+        if (!cc.printConfig.details.valid_quote) {
+            console.log('no valid print configs');
+            return;
+        }
+
+        var totalLf = cc.printConfig.materials.aPrintSubstrate.totalRollLF;
+        totalLf = roundTo(totalLf,0);
+        if (!totalLf) { return };
+        
+        var transferMatOpAnswer = fields.operation88_answer;
+        var tissueMatOpAnswer = fields.operation155_answer;
+        var transferLaborAnswer = fields.operation196_answer;
+        pu.validateValue(transferMatOpAnswer,totalLf);
+        pu.validateValue(tissueMatOpAnswer,totalLf);
+        pu.validateValue(transferLaborAnswer,totalLf);
+    }
+}
+function fabrivuBacklitInk() {
+    //if Aberdeen Stretch Knit Backlit selected, change ink operation to Fabrivu Backlit
+    var fabrivuInkOp = fields.operation142;
+    if (fabrivuInkOp) {
+        if (cu.getValue(fields.printSubstrate) == 371 ) {
+            pu.validateValue(fabrivuInkOp, 722);
+        } else {
+            pu.validateValue(fabrivuInkOp, 719);
+        }
+    }
 }
 
 function colorCritical() {
@@ -1312,9 +1384,17 @@ function hardProofCheck(quote) {
     var totalSquareFeet = (pieceWidth * pieceHeight * cu.getTotalQuantity())/144;
     var proofOp = fields.proof;
     var proofSelection = configureglobals.cquotedata.proof.name;
+    
+    var hardProofOptions = [
+    '40', //Printed Hard Proof - Internal
+    '43', //Printed Hard Proof - External
+    '48', //Prototype Proof - External
+    '51',  //Prototype Proof - Internal
+    '50'    //Printed Hard Proof - Unknown Quantity
+    ]
     if (totalSquareFeet >= 700) {
         if (hardProofMessageCount == 0) {
-            if (proofSelection.indexOf('Hard') == -1) {
+            if (!cu.isValueInSet(proofOp, hardProofOptions)) {
                 onQuoteUpdatedMessages += '<p>Jobs with a printable area over 700 square feet require to have a hard proof. We have changed the proofing option on your behalf.  Please remove if it is not required by your customer.</p>';
                 pu.showMessages();
                 hardProofMessageCount = 1;
@@ -1332,6 +1412,7 @@ function setDefaultTeam() {
         "Team Andrew Dyson" : 690,
         "Team Beth Josub" : 691,
         "Team Craig Omdal" : 692,
+        "Team Jayson Hansen" : 1010,
         "Team Jim Olson" : 694,
         "Team John Pihaly" : 695,
         "Team Jordan Feddema" : 696,
@@ -1339,6 +1420,7 @@ function setDefaultTeam() {
         "Team Pete Ludwig" : 698,
         "Team Rick Behncke" : 699,
         "Team Rick Mirau" : 700,
+        "Team Tom Manthe" : 1027,
         "Team Tony Jones" : 701,
         "Team Tracy Cogan" : 702,
         "Team Vito Lombardo" : 703
@@ -1357,14 +1439,18 @@ function setDefaultTeam() {
 }
 function setSpecialMarkupOps(quote) {
     //calculates job costs and inserts into special costing operation answers
+    
     var teamCost = getOperationPrice(quote, 139);
-    var specCustCost = getOperationPrice(quote, 152);
-    var jobCost = parseInt((quote.jobCostPrice + quote.operationsPrice - teamCost - specCustCost));
+    var jobCost = Math.round( (quote.jobCostPrice + quote.operationsPrice - teamCost) * 100) / 100;
+
+    var specCustCostAnswer = Math.round( (quote.jobCostPrice + quote.operationsPrice) * 100) / 100;
+
     if (cu.hasValue(fields.operation139)) {
         pu.validateValue(fields.operation139_answer, jobCost);
     }
+
     if (cu.hasValue(fields.operation152)) {
-        pu.validateValue(fields.operation152_answer, jobCost);
+        pu.validateValue(fields.operation152_answer, specCustCostAnswer);
     }
 }
 function getOperationPrice(quote, opId) {
@@ -1384,6 +1470,24 @@ function maxQuotedJob() {
         $('#validation-message-container').html('<div class="ribbon-wrapper quote-warning">The total price of your job exceeds $' + maxQuotaJobAmt + '. Please contact Central Estimating to obtain a quote for your job.</div>')
     } else {
         $('#validation-message-container').html('');
+    }
+}
+function bucketSizeLimitation(product) {
+    if (cu.isPjc(product, bucketPjcs)) {
+        var pjcSizeMax = {
+            495 : 30
+        }
+        var totalSquareFeet = (cu.getWidth() * cu.getHeight() * cu.getTotalQuantity())/144;
+        if (isNaN(totalSquareFeet)) {
+            console.log('cannot compute total Sq Ft size limitation');
+            return
+        }
+        var maxSq = pjcSizeMax[cu.getPjcId(product)] ? pjcSizeMax[cu.getPjcId(product)] : 699;
+        if (totalSquareFeet > maxSq) {
+            bucketSizeMessage = '<p>The Bucket product is limited to jobs less than ' + maxSq + ' sq ft.  For jobs greater than this please use the Board Printing Product.</p>';
+            onQuoteUpdatedMessages += bucketSizeMessage;
+            disableCheckoutReasons.push(bucketSizeMessage);
+        }
     }
 }
 
@@ -1485,6 +1589,99 @@ function vutekInkOptGroups_surface() {
       inkSelect.val(selectedOption);
    }
 }
+function setMaterialPackaging(updates) {
+    var matPackageTypeOp = fields.operation190;
+    var matBaggingOp = fields.operation191;
+    var softFoldOpItems = [
+        '986',
+        '987'
+    ]
+
+    if (matPackageTypeOp && matBaggingOp) {
+
+        //always run unless field has been manually overridden
+        if (window.matPackagingOverridden) { return }
+        if (cu.isLastChangedField(updates, matPackageTypeOp) || cu.isLastChangedField(updates, matBaggingOp)) {
+            window.matPackagingOverridden = true;
+            return
+        }
+        var bannerMatRefIds = [
+            '2684', '2714', '2770', '2772', '3129', '3130', '3131', '3134', '6044', '6049', '3261', '2297', '3274', '3125', '4270', '3267', '5904', '3268', '3269', '3270', '6118', '3258', '3259', '3260', '3262', '5593'
+        ]
+        var poplinMatRefIds = [
+            '3271', '3273'
+        ]
+
+        var baggingOptionsToHide = [
+            1008,   //18 x 42 Poly Bag
+            1036,   //Poly Bag_18x42" - 2647
+            1037,   //Poly Bag_20x26" - 7024
+            1038,   //Poly Bag_24x54" - 7023
+            1039,   //Poly Bag_28x42" - 7025
+            1040,   //Poly Bag_36x54" - 7026
+            1065,   //20x20 Poly Bag
+            1062
+        ]
+
+        var substrateRefId = pu.getMaterialReferenceId('aPrintSubstrate');
+        var height = Number(cu.getHeight());
+        var totalQty = cu.getTotalQuantity();
+
+        var isBannerMaterial = bannerMatRefIds.indexOf(substrateRefId) != -1;
+        var isPoplin = poplinMatRefIds.indexOf(substrateRefId) != -1;
+        var isMesh = substrateRefId == '2297';
+
+        //When Soft Fold update Bagging material
+        if (cu.isValueInSet(matPackageTypeOp, softFoldOpItems)) {
+            pu.validateValue(matBaggingOp, 994);
+        }
+
+        //material type operation
+        var materialTypeId = getMaterialTypeId();
+        pu.validateValue(matPackageTypeOp, materialTypeId);
+
+        //hide invalid roll on core options
+        hideInvalidCoreOptions();
+
+        //hide all options but 994 
+        pu.hideFieldOptions(baggingOptionsToHide); 
+
+        function getMaterialTypeId() {
+            if (isPoplin) {
+                return 986
+            }
+            if ((isMesh || isBannerMaterial) && totalQty < 25) {
+                return 987
+            }
+            if (isBannerMaterial) {
+                if (height > 94) {
+                    return 986
+                } else if (height > 78) {
+                    return 992
+                } else if (height > 62) {
+                    return 991
+                } else if (height > 50) {
+                    return 990
+                } else if (height > 36) {
+                    return 989
+                }
+                return 988
+            }
+            //default to 988 if no others
+            return ''
+        }
+
+        function hideInvalidCoreOptions() {
+            pu.addClassToOperationItemsWithString(190,'hide','Roll On Core');
+            //show if option chosen
+            if (cu.hasValue(matPackageTypeOp)) {
+                $('#operation190 option[value="' + cu.getValue(matPackageTypeOp) + '"]').removeClass('hide');
+            }
+            
+            //pu.trimOperationItemNames(190,'_');
+        }
+    }
+}
 
 function operationQuestionTextChange() {
     var applicationOps = [
@@ -1544,11 +1741,15 @@ function uiUpdates(product) {
     
     pu.trimOperationItemNames(inkOpsWithDPI, ' - ');
     pu.trimOperationItemNames(opsToTrimWithUnderscore, '_');
-    pu.removeOperationItemsWithString(104,'Print');
     pu.removeClassFromOperation(111,'costingOnly');
     pu.addClassToOperation(planningOnlyOps, 'planning');
     pu.addClassToOperation(estimatingOnlyOps,'estimating');
     pu.addClassToOperation(opsWithCalculatedAnswer,'calculatedAnswer');
+    
+    if (cu.getPjcId(product) != 389) {
+        //exclude for TBG Finishing Only
+        pu.removeOperationItemsWithString(104,'Print');
+    }
 
     canvasOperationDisplay();
     bannerFinishingOperationDisplay(product);

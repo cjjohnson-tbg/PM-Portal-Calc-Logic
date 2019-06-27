@@ -251,5 +251,14 @@ var pmCalcUtil = {
             
         }
         return result
+    },
+    isNowBeforeCSTCutoffTime: function(hour24, minutes) {
+        var localOffsetMs = new Date().getTimezoneOffset()*60*-1000;
+        var localVsServerOffsetMs = localOffsetMs - SERVER_TZ_OFFSET_MS;
+        var localTime = new Date();
+        var localCutoffTime = (new Date(localTime.getFullYear(), localTime.getMonth(), localTime.getDate(), hour24, minutes, 0, 0));
+        var localCutoffTime = new Date(localCutoffTime.getTime() + localVsServerOffsetMs);
+        var returnVal = localTime.getTime() < localCutoffTime.getTime();
+        return returnVal;
     }
 }

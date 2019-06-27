@@ -551,7 +551,7 @@ function setLamRunOps(quote, config) {
     if (!config) {
         return 
     }
-    var lamLfWithSpoilage = config.details.lamLfWithSpoilage
+    var lamLfWithSpoilage = config.details.lamLfWithSpoilage;
     var hasFrontLam = cu.hasValue(fields.frontLaminate);
     var hasBackLam = cu.hasValue(fields.backLaminate);
     var hasMount = cu.hasValue(fields.mountSubstrate);
@@ -808,6 +808,10 @@ function canvasOperationDisplay() {
         65, //TBG Canvas Frame Assembly
         66  //TBG Canvas Stretching
     ]
+    //Skip if no Print SUbstrate chosen
+    if (!fields.printSubstrate) {
+        return
+    }
     //hide operations only pertaining to canvas substrates
     if (!cu.isValueInSet(fields.printSubstrate, canvasSubstrates)) {
         pu.addClassToOperation(canvasOperations, 'planning');
@@ -1435,14 +1439,18 @@ function setDefaultTeam() {
 }
 function setSpecialMarkupOps(quote) {
     //calculates job costs and inserts into special costing operation answers
+    
     var teamCost = getOperationPrice(quote, 139);
-    var specCustCost = getOperationPrice(quote, 152);
-    var jobCost = parseInt((quote.jobCostPrice + quote.operationsPrice - teamCost - specCustCost));
+    var jobCost = Math.round( (quote.jobCostPrice + quote.operationsPrice - teamCost) * 100) / 100;
+
+    var specCustCostAnswer = Math.round( (quote.jobCostPrice + quote.operationsPrice) * 100) / 100;
+
     if (cu.hasValue(fields.operation139)) {
         pu.validateValue(fields.operation139_answer, jobCost);
     }
+
     if (cu.hasValue(fields.operation152)) {
-        pu.validateValue(fields.operation152_answer, jobCost);
+        pu.validateValue(fields.operation152_answer, specCustCostAnswer);
     }
 }
 function getOperationPrice(quote, opId) {

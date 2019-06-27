@@ -1155,14 +1155,18 @@ function bucketBoardLimit(product) {
 function setSpecialMarkupOps(quote) {
     //calculates job costs and inserts into special costing operation answers
     var hasUpdate = false;
-    var teamCost = getOperationPrice(quote, "TBG Team");
-    var specCustCost = getOperationPrice(quote, "TBG Special Customer");
-    var jobCost = parseInt((quote.jobCostPrice + quote.operationsPrice - teamCost - specCustCost));
+    
+    var teamCost = Number(getOperationPrice(quote, "TBG Team"));
+    var teamCostAnswer = Math.round( (quote.jobCostPrice + quote.operationsPrice - teamCost) * 100) / 100;
+    
+    var specCustCost = Number(getOperationPrice(quote, "TBG Special Customer"));
+    var specCustCostAnswer = Math.round( (quote.jobCostPrice + quote.operationsPrice) * 100) / 100;
+    
     if (cu.hasValue(fields.operation218)) {
-        pu.validateValue(fields.operation218_answer, jobCost);
+        pu.validateValue(fields.operation218_answer, teamCostAnswer);
     }
     if (cu.hasValue(fields.operation226)) {
-        pu.validateValue(fields.operation226_answer, jobCost);
+        pu.validateValue(fields.operation226_answer, specCustCostAnswer);
     }
     return hasUpdate
 }

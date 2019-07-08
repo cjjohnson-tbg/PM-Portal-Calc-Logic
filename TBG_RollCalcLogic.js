@@ -240,14 +240,16 @@ function setWasteOperationAnswer(opAnswer, calcCost, cost) {
 function setRollChangeCost(printConfig) {
     //Roll Change Minutes
     var pjc = configureglobals.clpjc.id;
+    var deviceId = cu.getDeviceId();
     var rollChangeOp = fields.operation138;
     var rollChangeOpAnswer = fields.operation138_answer;
 
-    var pjcRollChangeOpItem = {
-        '450' : 1032  //FabriVu Roll Change
+    var deviceIdOpItemMap = {
+        54 : 1032,  // FabriVu Roll Change
+        46 : 1121   // HP/ Canon Roll Change
     }
 
-    var rollChangeOpItem = pjcRollChangeOpItem[pjc] ? pjcRollChangeOpItem[pjc] : 682;
+    var rollChangeOpItem = deviceIdOpItemMap[deviceId] ? deviceIdOpItemMap[deviceId] : 682;
 
     var rollChangeMins = 0;
     if (printConfig) {
@@ -262,6 +264,7 @@ function setRollChangeCost(printConfig) {
     if (rollChangeOp) {
         if (rollChangeMins > 0) {
             pu.validateValue(rollChangeOp, rollChangeOpItem);
+            pu.updateOperationQuestion(138,'Roll Change Minutes');
         } else { 
             pu.validateValue(rollChangeOp,'');
         }

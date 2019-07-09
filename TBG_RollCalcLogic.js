@@ -130,6 +130,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
 
     setInkMaterialCosts();
     setLamRunOps(quote, cc.printConfig);
+    setPrePrintLamOps(quote, cc.printConfig);
     canonBacklitLogic(updates, product);
     checkSidesOpConflicts(quote);
     setVinylCuttingRules();
@@ -280,6 +281,7 @@ function setRollChangeCost(printConfig) {
     }
 }
 
+/**** CUTTING */
 function setCuttingOps(quote, updates, product) {
         var userDeclareCutOp = fields.operation111;
 
@@ -759,7 +761,31 @@ function setLamRunOps(quote, config) {
     } else {
         pu.validateValue(rollChangeOp,'');
     }
+
 }
+function setPrePrintLamOps(quote, config) {
+    if (!config) {
+        return 
+    }
+    var lamLfWithSpoilage = config.details.lamLfWithSpoilage;
+
+    var prePrintFrontLamAnswer = fields.operation67_answer;
+    var prePrintBackLamAnswer = fields.operation84_answer;
+    var premaskAnswer = fields.operation78_answer;
+
+    if (cu.hasValue(prePrintFrontLamAnswer)) {
+        pu.validateValue(prePrintFrontLamAnswer, lamLfWithSpoilage);
+    }
+    if (cu.hasValue(prePrintBackLamAnswer)) {
+        pu.validateValue(prePrintBackLamAnswer, lamLfWithSpoilage);
+    }
+    if (cu.hasValue(premaskAnswer)) {
+        pu.validateValue(premaskAnswer, lamLfWithSpoilage);
+    }
+
+
+}
+
 function getLamRollChangeOp(materials, hasColdOverCold) {
     var result = 0;
     var rollChanges = 0;
@@ -779,7 +805,6 @@ function getLamRollChangeOp(materials, hasColdOverCold) {
     result = minutesPerChange * rollChanges;
     return result
 }
-
 function canonBacklitLogic(updates, product) {
     if (cu.getPjcId(product) == 94) {
         // add Ink Configuration and Lam for Kodak Backlit
@@ -801,7 +826,6 @@ function canonBacklitLogic(updates, product) {
         }
     }
 }
-
 function canvasOperationDisplay() {
     var canvasSubstrates = [
         '144',  //6.5oz. Ultraflex Mult-tex Canvas

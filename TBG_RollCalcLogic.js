@@ -1071,6 +1071,7 @@ function heatBendingRules(updates) {
     
     var substratesThatCanHeatBend =[
         '207',   //Buy-out
+        '5',    //Styrene 030
         '211',     //Styrene 040
         '221',     //Styrene 060
         '7',     //Styrene 080
@@ -1089,6 +1090,7 @@ function heatBendingRules(updates) {
         '117',   //Expanded PVC Foamboard - .125in-3mm - Black
         '354',   //Acrylic Clear Extruded .118
         '417',   //Acrylic Black Extruded .118"
+        '158',  //PETG .030
         '40',    //PETG .040
         '199',   //PETG .040 Non-Glare
         '41',    //PETG .060
@@ -1246,14 +1248,14 @@ function heatBendingRules(updates) {
             heatBendErrors.push('The substrate selected is not able to Heat Bend with Mount or Laminating.');
         }
         if (hasBuyoutMaterial) {
-            heatBendErrors.push('Heat bending for Buy-out materials must be sent through central estimating.');
+            heatBendErrors.push('Heat bending for Buy-out materials.');
         } else {
-            //bend length must be less than 12" for thin materials
-            if (bendLength > 12 && cu.isValueInSet(fields.printSubstrates,thinHeatBendSubstrates)) {
-                heatBendErrors.push( 'Substrates with calipers less than .060" must have a bend length 12" or less and must be sent through central estimating');
+            //bend length must be less than 24" for thin materials
+            if (bendLength > 24 && cu.isValueInSet(fields.printSubstrates,thinHeatBendSubstrates)) {
+                heatBendErrors.push( 'Substrates with calipers less than .060" must have a bend length 24" or less .');
             }
             if (hasMountLam && cu.isValueInSet(fields.printSubstrates, thinHeatBendSubstrates)) {
-                heatBendErrors.push( 'Substrates with calipers less than .060" and laminating or mounting must be sent through central estimating.');
+                heatBendErrors.push( 'Substrates with calipers less than .060" and laminating or mounting.');
             }
         }
 
@@ -1295,11 +1297,11 @@ function heatBendingRules(updates) {
                 pu.validateValue(heatBendingOpVert, customHeatBendOpItem);
                 pu.validateValue(heatBendingOpHoriz, '');
                 
-                var errorMessage = '<p>Heat Bending with this configuration must be estimated through an Estimate Request. A choice is still needed so the Heat Bending Operations have been adjusted to account for this.</p><div><ul>';
+                var errorMessage = '<p>Heat Bending with this configuration must be estimated through an Fab Estimate Request.</p><div><ul>';
                 for (var i = 0; i < errors.length; i++ ) {
                     errorMessage += '<li>' + errors[i] + '</li>';
                 }
-                errorMessage += '</ul></div><p>For more information please visit the Help Tip.</p>'
+                errorMessage += '</ul></div><p>A choice is still needed so the Heat Bending Operations have been adjusted to account for this.</p><p>For more information please visit the Help Tip.</p>'
                 onQuoteUpdatedMessages += errorMessage;
             }
         }

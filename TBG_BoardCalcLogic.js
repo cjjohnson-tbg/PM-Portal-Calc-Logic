@@ -912,7 +912,7 @@ function heatBendingRules(updates) {
         var substrateCaliper = cu.getPressSheetCaliper();
         var bendLength = orientation == 'vertical' ? cu.getHeight() : cu.getWidth();
         var maxSubstrateCaliper = .118;
-        var minSubstrateCaliper = .040;
+        var minSubstrateCaliper = .030;
 
         var isBuyOut = cu.getValue(fields.paperType) == '247';
         //only approved materials
@@ -924,22 +924,22 @@ function heatBendingRules(updates) {
             heatBendErrors.push('Heat bending is not available for pieces with Bend Length longer than 40".');
         }
         if (isBuyOut) {
-            heatBendErrors.push('Heat bending for Buy-out materials must be sent through central estimating.');
+            heatBendErrors.push('Heat bending for Buy-out materials.');
         }
         //caliper restrictions, only if present and not a buyout
         if (substrateCaliper && !isBuyOut) {
             //max caliper of .118
             if (substrateCaliper > maxSubstrateCaliper) {
-                heatBendErrors.push( 'Substrates with calipers greater than ' + maxSubstrateCaliper + '" must be sent through central estimating.');
+                heatBendErrors.push( 'Substrates with calipers greater than ' + maxSubstrateCaliper + '".');
             }
             if (substrateCaliper <  minSubstrateCaliper) {
-                heatBendErrors.push( 'Substrates with calipers less than than ' + minSubstrateCaliper + '" must be sent through central estimating.');
+                heatBendErrors.push( 'Substrates with calipers less than than ' + minSubstrateCaliper + '".');
             }
-            if (bendLength > 12 && substrateCaliper < .060) {
-                heatBendErrors.push( 'Substrates with calipers less than .060" must have a bend length 12" or less and must be sent through central estimating');
+            if (bendLength > 24 && substrateCaliper <= .040) {
+                heatBendErrors.push( 'Substrates with calipers of .040" or less must have a bend length 24" or less.');
             }
             if (hasMountLam && substrateCaliper < .060) {
-                heatBendErrors.push( 'Substrates with calipers less than .060" and laminating or mounting must be sent through central estimating.');
+                heatBendErrors.push( 'Substrates with calipers less than .060" with laminating or mounting.');
             }
         }
     }
@@ -981,11 +981,11 @@ function heatBendingRules(updates) {
                 pu.validateValue(heatBendingOpVert,customHeatBendOpItem);
                 pu.validateValue(heatBendingOpHoriz, '');
                 
-                var errorMessage = '<p>Heat Bending with this configuration must be estimated through an Estimate Request. A choice is still needed so the Heat Bending Operations have been adjusted to account for this.</p><div><ul>';
+                var errorMessage = '<p>Heat Bending with this configuration must be estimated through a Fab Estimate Request:</p><div><ul>';
                 for (var i = 0; i < errors.length; i++ ) {
                     errorMessage += '<li>' + errors[i] + '</li>';
                 }
-                errorMessage += '</ul></div><p>For more information please visit the Help Tip.</p>'
+                errorMessage += '</ul></div><p>A choice is still needed so the Heat Bending Operations have been adjusted to account for this.</p><p>For more information please visit the Help Tip.</p>'
                 onQuoteUpdatedMessages += errorMessage;
             }
         }

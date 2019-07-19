@@ -37,14 +37,24 @@ var pmCalcUtil = {
             });
         }
     },
-    trimOperationItemNames: function(opList, deliminater) {
+    trimOperationItemNames: function(opList, deliminater, opItemsList) {
         //change single operation to array
         if (!(Array.isArray(opList))) {
             opList = [opList];
         }
+        //Op Items List Optional.  default to empty array
+        opItemsList = opItemsList || [];
+        if (!(Array.isArray(opItemsList))) {
+            opItemsList = [opItemsList];
+        }
         for (var i = 0; i < opList.length; i++) {
             $('select#operation' + opList[i] + ' option').each(function() {
-                //var label = $(this).text;
+                //If item list is present, check if option in list
+                if (opItemsList.length > 0) {
+                    if (opItemsList.indexOf(Number(this.value)) == -1) {
+                        return
+                    }
+                }
                 var label = this.text;
                 var index = label.indexOf(deliminater);
                 if (index != -1) {

@@ -608,6 +608,10 @@ function setLamOps(quote) {
                         pu.validateValue(laminatingRun, 1595);
                         pu.validateValue(laminatingRun2,'');
                         pu.validateValue(laminatingRun3, '');
+                    } else if (hasColdBack) { // 1. Cold
+                        pu.validateValue(laminatingRun, 777);
+                        pu.validateValue(laminatingRun2,'');
+                        pu.validateValue(laminatingRun3, '');
                     }
                 }
             }

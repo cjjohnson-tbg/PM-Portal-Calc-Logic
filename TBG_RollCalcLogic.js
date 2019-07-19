@@ -141,7 +141,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     fabrivuBacklitInk();
     colorCritical();
     woodDowelQtyMax();
-    setMaterialPackaging(updates);
+    setMaterialPackaging(product, updates);
     bucketSizeLimitation(product);
 
 }
@@ -1618,7 +1618,7 @@ function vutekInkOptGroups_surface() {
       inkSelect.val(selectedOption);
    }
 }
-function setMaterialPackaging(updates) {
+function setMaterialPackaging(product, updates) {
     var matPackageTypeOp = fields.operation190;
     var matBaggingOp = fields.operation191;
     var softFoldOpItems = [
@@ -1634,11 +1634,18 @@ function setMaterialPackaging(updates) {
             window.matPackagingOverridden = true;
             return
         }
-        var bannerMatRefIds = [
-            '2684', '2714', '2770', '2772', '3129', '3130', '3131', '3134', '6044', '6049', '3261', '2297', '3274', '3125', '4270', '3267', '5904', '3268', '3269', '3270', '6118', '3258', '3259', '3260', '3262', '5593'
+        var rollOnCoreRefIds = [
+            2681, 2714, 7852, 4270, 3125, 7737, 9035, 3260, 2770, 7732, 3259, 3261, 6118, 4089, 7738, 3269, 3270, 3268, 2772, 3129, 3134, 3131, 3130, 6044, 6049, 3132, 5593, 3132, 4089
         ]
-        var poplinMatRefIds = [
-            '3271', '3273'
+        var softFoldRefIds = [
+            3271, 3273, 2297
+        ]
+        var softRollRefIds = [
+            2297
+        ]
+        var dyeSubFabricPjcs = [
+                '450',  //*TBG Dye Sub Fabric Printing
+                '521'   //*TBG Dye Sub Fabric - Tiled
         ]
 
         var baggingOptionsToHide = [
@@ -1652,38 +1659,53 @@ function setMaterialPackaging(updates) {
             1062
         ]
 
-        var substrateRefId = pu.getMaterialReferenceId('aPrintSubstrate');
+        var substrateRefId = Number(pu.getMaterialReferenceId('aPrintSubstrate'));
         var height = Number(cu.getHeight());
         var totalQty = cu.getTotalQuantity();
-
-        var isBannerMaterial = bannerMatRefIds.indexOf(substrateRefId) != -1;
-        var isPoplin = poplinMatRefIds.indexOf(substrateRefId) != -1;
-        var isMesh = substrateRefId == '2297';
 
         //When Soft Fold update Bagging material
         if (cu.isValueInSet(matPackageTypeOp, softFoldOpItems)) {
             pu.validateValue(matBaggingOp, 994);
+        } else {
+            pu.validateValue(matBaggingOp, '')
         }
 
-        //material type operation
-        var materialTypeId = getMaterialTypeId();
-        pu.validateValue(matPackageTypeOp, materialTypeId);
+        //material Operation Items
+        var rollOnCoreOpItem = getRollOnCoreid(height);
+        var materialOpItem = getMaterialOpItemId();
+
+        pu.validateValue(matPackageTypeOp, materialOpItem);
 
         //hide invalid roll on core options
-        hideInvalidCoreOptions();
+        hideInvalidCoreOptions(rollOnCoreOpItem);
 
         //hide all options but 994 
         pu.hideFieldOptions(baggingOptionsToHide); 
 
-        function getMaterialTypeId() {
-            if (isPoplin) {
+        function getMaterialOpItemId() {
+            //soft fold on all dye sub fabric
+            if (cu.isPjc(product, dyeSubFabricPjcs)) {
                 return 986
             }
-            if ((isMesh || isBannerMaterial) && totalQty < 25) {
+            if (softFoldRefIds.indexOf(substrateRefId) != -1) {
+                return 986
+            }
+            if (softRollRefIds.indexOf(substrateRefId) != -1) {
                 return 987
             }
-            if (isBannerMaterial) {
-                if (height > 94) {
+            if (rollOnCoreRefIds.indexOf(substrateRefId) != -1) {
+                //Soft Fold if under 25 qty
+                if (totalQty < 25) {
+                    return 986  
+                }
+                return rollOnCoreOpItem
+            }
+            return ''
+        }
+
+        function getRollOnCoreid(height) {
+            //return option based on height.  all others will get hidden
+            if (height > 94) {
                     return 986
                 } else if (height > 78) {
                     return 992
@@ -1694,20 +1716,17 @@ function setMaterialPackaging(updates) {
                 } else if (height > 36) {
                     return 989
                 }
-                return 988
-            }
-            //default to 988 if no others
-            return ''
+            return 988
         }
 
-        function hideInvalidCoreOptions() {
-            pu.addClassToOperationItemsWithString(190,'hide','Roll On Core');
-            //show if option chosen
+        function hideInvalidCoreOptions(rollOnCoreOpItem) {
+            pu.addClassToOperationItemsWithString(190,'hide','Roll on Core');
+            //show Roll on Core Option for Size
             if (cu.hasValue(matPackageTypeOp)) {
-                $('#operation190 option[value="' + cu.getValue(matPackageTypeOp) + '"]').removeClass('hide');
+                $('#operation190 option[value="' + rollOnCoreOpItem + '"]').removeClass('hide');
             }
-            
-            //pu.trimOperationItemNames(190,'_');
+            //trim only rollOnCoreOption
+            pu.trimOperationItemNames(190,'_', rollOnCoreOpItem);
         }
     }
 }

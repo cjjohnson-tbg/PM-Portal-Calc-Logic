@@ -83,14 +83,20 @@ var pmCalcUtil = {
             });
         }
     },
-    removeOperationItemsWithString: function (op, string) {
-        $('select#operation' + op +' option').each(function() {
-            var item = this.text;
-            var index = item.indexOf(string);
-            if (index != -1) {
-                $(this).hide();
-            }
-        });
+    removeOperationItemsWithString: function (opList, string) {
+        //change single operation to array
+        if (!(Array.isArray(opList))) {
+            opList = [opList];
+        }
+        for (var i = 0; i < opList.length; i++) {
+            $('select#operation' + opList[i] +' option').each(function() {
+                var optionText = this.text;
+                var index = optionText.indexOf(string);
+                if (index != -1 && !this.selected) {
+                    $(this).hide();
+                }
+            });
+        }
     },
     hideOperationQuestion: function (opList) {
         if (!(Array.isArray(opList))) {

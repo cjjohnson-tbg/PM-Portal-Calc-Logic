@@ -1319,7 +1319,16 @@ function updateOpItems() {
         271,   //LF Magnet Tape Application - Custom
         272   //LF Velcro Tape Application - Custom
     ]
-    pu.trimOperationItemNames(opsWithUnderscoreItems,'_');
+    var opsToHideOptions_z = [
+        129, //LF Pre-Printing Front Laminate
+        133, //LF Premask
+        131, //LF Front Laminating
+        139, //LF Mounting
+        130, //LF Back Laminating
+        144  //LF Pre-Printing Back Laminate
+    ]
+    pu.removeOperationItemsWithString(opsToHideOptions_z, 'z_');
+    pu.trimOperationItemNames(opsWithUnderscoreItems,'_', excludeText = 'z_');
     pu.removeOperationItemsWithString(156,'Print');
 }
 function inkOptGroup_surface(product) {

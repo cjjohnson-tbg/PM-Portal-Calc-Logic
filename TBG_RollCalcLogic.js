@@ -1238,7 +1238,7 @@ function heatBendingRules(updates) {
         if (bendLength > 40) {
             heatBendErrors.push('Heat bending is not available for pieces with Bend Length longer than 40".');
         }
-        if (!cu.isValueInSet(fields.printSubstrate, substratesThatCanHeatBend)) {
+        if (!cu.isValueInSet(fields.printSubstrate, substratesThatCanHeatBend) || !cu.hasValue(fields.mountSubstrate)) {
             heatBendErrors.push('The Print substrate selected is not able to Heat Bend.');
         } 
         if (cu.hasValue(fields.mountSubstrate) && !cu.isValueInSet(fields.mountSubstrate, mountsThatCanHeatBend)) {

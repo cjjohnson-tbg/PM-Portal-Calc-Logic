@@ -37,7 +37,8 @@ var pmCalcUtil = {
             });
         }
     },
-    trimOperationItemNames: function(opList, deliminater, opItemsList) {
+    trimOperationItemNames: function(opList, deliminater, opItemsList, excludeText) {
+        function trimOperationItemNames (opList, deliminater, opItemsList, excludeText) {}
         //change single operation to array
         if (!(Array.isArray(opList))) {
             opList = [opList];
@@ -52,6 +53,12 @@ var pmCalcUtil = {
                 //If item list is present, check if option in list
                 if (opItemsList.length > 0) {
                     if (opItemsList.indexOf(Number(this.value)) == -1) {
+                        return
+                    }
+                }
+                //if excludeText declared, skip if option has text
+                if (excludeText) {
+                    if (label.indexOf(excludeText) != -1) {
                         return
                     }
                 }

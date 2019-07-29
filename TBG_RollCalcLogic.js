@@ -1700,7 +1700,7 @@ function setMaterialPackaging(product, updates) {
             if (rollOnCoreRefIds.indexOf(substrateRefId) != -1) {
                 //Soft Fold if under 25 qty
                 if (totalQty < 25) {
-                    return 986  
+                    return 987
                 }
                 return rollOnCoreOpItem
             }

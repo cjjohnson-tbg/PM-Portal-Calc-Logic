@@ -283,5 +283,16 @@ var pmCalcUtil = {
         var localCutoffTime = new Date(localCutoffTime.getTime() + localVsServerOffsetMs);
         var returnVal = localTime.getTime() < localCutoffTime.getTime();
         return returnVal;
+    },
+    getQuoteDefaultJson: function() {
+        try {
+            var quoteDefault = configureglobals.coffering.quoteDefaults;
+            var objKeysRegex = /({|,)(?:\s*)(?:')?([A-Za-z_$\.][A-Za-z0-9_ \-\.$]*)(?:')?(?:\s*):/g;// look for object names
+            var newQuotedKeysString = quoteDefault.replace(objKeysRegex, "$1\"$2\":");// all object names should be double quoted
+            var newObject = JSON.parse(newQuotedKeysString);
+            return newObject
+        } catch (e) {
+            return false
+        }
     }
 }

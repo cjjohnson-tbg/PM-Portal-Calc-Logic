@@ -1626,8 +1626,7 @@ function setMaterialPackaging(product, updates) {
     var matPackageTypeOp = fields.operation190;
     var matBaggingOp = fields.operation191;
     var softFoldOpItems = [
-        '986',
-        '987'
+        '986'
     ]
 
     if (matPackageTypeOp && matBaggingOp) {

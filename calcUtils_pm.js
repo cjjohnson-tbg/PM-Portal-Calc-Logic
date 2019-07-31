@@ -56,13 +56,15 @@ var pmCalcUtil = {
                         return
                     }
                 }
+
+                var label = this.text;
+                
                 //if excludeText declared, skip if option has text
                 if (excludeText) {
                     if (label.indexOf(excludeText) != -1) {
                         return
                     }
                 }
-                var label = this.text;
                 var index = label.indexOf(deliminater);
                 if (index != -1) {
                     var newLabel = label.substring(0,index);

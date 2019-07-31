@@ -1232,6 +1232,7 @@ function updateUI(product) {
     pu.validateConfig(disableCheckoutReasons);
     renderExtendedCostBreakdown();
     inkOptGroup_surface(product);
+    disableBoardType(product);
     //inkOptGroup_common(product);
 }
 function updateLabels() {
@@ -1447,6 +1448,24 @@ function inkOptGroup_common(product) {
         }
         inkSelect.val(selectedOption);
    }
+}
+function disableBoardType(product) {
+    var pjcsDisableType = [
+        '1826', //*TBG Simple Signs Productization
+        '1827', //*TBG Simple Signs with Removable Adhesive Productization
+        '1828'  //*TBG Simple Signs with Application Productization
+    ]
+
+    if (cu.isPjc(product, pjcsDisableType)) {
+        //reset to Quote Override if changed
+        var quoteDefault_json = pu.getQuoteDefaultJson();
+        if (quoteDefault_json) {
+            if (quoteDefault_json.pressSheetType) {
+                pu.validateValue(fields.paperType, quoteDefault_json.pressSheetType);
+            }
+        }
+        cu.disableField(fields.paperType);
+    }
 }
 
 function addBasicDetailsToPage() {

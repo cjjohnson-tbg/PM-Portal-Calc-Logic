@@ -1289,36 +1289,38 @@ function updateClasses() {
 }
 function updateOpItems() {
     var opsWithUnderscoreItems = [
-        129,    //LF Pre-Printing Front Laminate
-        130,    //LF Back Laminating
-        131,    //LF Front Laminating
-        144,    //LF Pre-Printing Back Laminate
-        139,     //LF Mounting
-        120,    //LF Tape, Mag, Velcro - Perimeter
-        122,    //LF Tape, Mag, Velcro - Top Only
-        124,     //LF Tape, Mag, Velcro - Top & Bottom
-        133,    //LF Premask
-        248,     //Can color team approve color without PM?
-        243,     //Match Color to
-        176,   //LF Film Tape Application - Perimeter
-        177,   //LF Film Tape Application - Top Only
-        178,   //LF Film Tape Application - Top & Bottom
-        179,   //LF Magnet Application - Perimeter
-        180,   //LF Velcro Application - Top Only
-        181,   //LF Magnet Application - Top & Bottom
-        182,   //LF Velcro Application - Perimeter
-        183,   //LF Magnet Application - Top Only
-        184,   //LF Velcro Application - Top & Bottom
-        263,   //LF Foam Tape Application - Perimeter
-        264,   //LF Foam Tape Application - Top & Bottom
-        265,   //LF Foam Tape Application - Top Only
-        266,   //LF Bump-ons Application
-        267,   //LF Sleeves Application
-        268,   //LF Misc Hand Application
-        269,   //LF Film Tape Application - Custom
-        270,   //LF Foam Tape Application - Custom
-        271,   //LF Magnet Tape Application - Custom
-        272   //LF Velcro Tape Application - Custom
+        120,  //LF Tape, Mag, Velcro - Perimeter
+        122,  //LF Tape, Mag, Velcro - Top Only
+        124,  //LF Tape, Mag, Velcro - Top & Bottom
+        129,  //LF Pre-Printing Front Laminate
+        130,  //LF Back Laminating
+        131,  //LF Front Laminating
+        133,  //LF Premask
+        139,  //LF Mounting
+        144,  //LF Pre-Printing Back Laminate
+        176,  //LF Film Tape Application - Perimeter
+        177,  //LF Film Tape Application - Top Only
+        178,  //LF Film Tape Application - Top & Bottom
+        179,  //LF Magnet Application - Perimeter
+        180,  //LF Velcro Application - Top Only
+        181,  //LF Magnet Application - Top & Bottom
+        182,  //LF Velcro Application - Perimeter
+        183,  //LF Magnet Application - Top Only
+        184,  //LF Velcro Application - Top & Bottom
+        243,  //Match Color to
+        248,  //Can color team approve color without PM?
+        263,  //LF Foam Tape Application - Perimeter
+        264,  //LF Foam Tape Application - Top & Bottom
+        265,  //LF Foam Tape Application - Top Only
+        266,  //LF Bump-ons Application
+        267,  //LF Sleeves Application
+        268,  //LF Misc Hand Application
+        269,  //LF Film Tape Application - Custom
+        270,  //LF Foam Tape Application - Custom
+        271,  //LF Magnet Tape Application - Custom
+        272,  //LF Velcro Tape Application - Custom
+        277,  //LF Grommet Color
+        282,  //Variable Data Personalization - DO NOT USE
     ]
     var opsToHideOptions_z = [
         129, //LF Pre-Printing Front Laminate
@@ -1329,7 +1331,7 @@ function updateOpItems() {
         144  //LF Pre-Printing Back Laminate
     ]
     pu.removeOperationItemsWithString(opsToHideOptions_z, 'z_');
-    pu.trimOperationItemNames(opsWithUnderscoreItems,'_', excludeText = 'z_');
+    pu.trimOperationItemNames(opsWithUnderscoreItems,'_', '', 'z_');
     pu.removeOperationItemsWithString(156,'Print');
 }
 function inkOptGroup_surface(product) {

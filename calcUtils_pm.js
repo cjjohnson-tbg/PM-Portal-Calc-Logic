@@ -38,7 +38,6 @@ var pmCalcUtil = {
         }
     },
     trimOperationItemNames: function(opList, deliminater, opItemsList, excludeText) {
-        function trimOperationItemNames (opList, deliminater, opItemsList, excludeText) {}
         //change single operation to array
         if (!(Array.isArray(opList))) {
             opList = [opList];

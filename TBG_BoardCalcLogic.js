@@ -108,6 +108,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     colorWork();
     magnetPrintMode(product);
     bucketBoardLimit(product);
+    bucketMagnetPrinting(product);
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
@@ -1151,6 +1152,44 @@ function bucketBoardLimit(product) {
         if (boardThroughput >= 20) {
             onQuoteUpdatedMessages += '<p>Bucket Printing is limited to 20 boards.  Please use the standard Board Printing product.</p>';
             disableCheckoutReasons.push('>Bucket Printing is limited to 20 boards.  Please use the standard Board Printing product.');
+        }
+    }
+}
+function bucketMagnetPrinting(product) {
+    //shareId IN (63692,73498) //magnet printing products
+    var bucketOp = fields.operation193;
+
+    var hardProofOptions = [
+        '40', '41', '43', '50'
+    ]
+
+    if (cu.getPjcId(product) == 1789) {
+        var isBucket = true;
+        // < 20 boards //number of press sheets
+        if (cu.getTotalPressSheets() >= 20) {
+            isBucket = false;
+        }
+        // proofType NOT IN (40,41,43,50) //standing & hard proofs
+        if (cu.isValueInSet(fields.proof,hardProofOptions)) {
+            isBucket = false;
+        }
+        // pressSheetWeight <> 55 //.015
+        if (cu.getValue(fields.paperWeight) == 55) {
+            isBucket = false
+        }
+        // operation 205 is not used //color critical
+        if (cu.hasValue(fields.operation205)) {
+            isBucket = false
+        }
+        // operation 187 <> opItem 2037 //other
+        if (cu.getValue(fields.operation187) == 2037) {
+            isBucket = false
+        }
+
+        if (isBucket) {
+            pu.validateValue(bucketOp, 1268);
+        } else {
+            pu.validateValue(bucketOp, '');
         }
     }
 }

@@ -1628,62 +1628,82 @@ function setMaterialPackaging(product, updates) {
     var softFoldOpItems = [
         '986'
     ]
+    var finishingOps = [
+        60,  //TBG Grommets
+        61,  //TBG Hemming
+        61,  //TBG Hemming
+        62,  //TBG Pole Pockets
+        62,  //TBG Pole Pockets
+        63,  //TBG Keder Sewing
+        64,  //TBG Velcro Sewing
+        73,  //TBG Grommet Color
+        161,  //TBG Dye Sub Silver Liner - 2 sided only
+        187,  //TBG Test Fit in Frame
+        188  //TBG Rope
+    ]
+    var finishOpCount = pu.countHasValueFromOpSet(finishingOps);
 
     if (matPackageTypeOp && matBaggingOp) {
-
         //always run unless field has been manually overridden
         if (window.matPackagingOverridden) { return }
         if (cu.isLastChangedField(updates, matPackageTypeOp) || cu.isLastChangedField(updates, matBaggingOp)) {
             window.matPackagingOverridden = true;
             return
         }
-        var rollOnCoreRefIds = [
-            2681, 2714, 7852, 4270, 3125, 7737, 9035, 3260, 2770, 7732, 3259, 3261, 6118, 4089, 7738, 3269, 3270, 3268, 2772, 3129, 3134, 3131, 3130, 6044, 6049, 3132, 5593, 3132, 4089
-        ]
-        var softFoldRefIds = [
-            3271, 3273, 2297
-        ]
-        var softRollRefIds = [
-            2297
-        ]
-        var dyeSubFabricPjcs = [
-                '450',  //*TBG Dye Sub Fabric Printing
-                '521'   //*TBG Dye Sub Fabric - Tiled
-        ]
+        //must have a finishing option selected
+        if (finishOpCount > 0) {
 
-        var baggingOptionsToHide = [
-            1008,   //18 x 42 Poly Bag
-            1036,   //Poly Bag_18x42" - 2647
-            1037,   //Poly Bag_20x26" - 7024
-            1038,   //Poly Bag_24x54" - 7023
-            1039,   //Poly Bag_28x42" - 7025
-            1040,   //Poly Bag_36x54" - 7026
-            1065,   //20x20 Poly Bag
-            1062
-        ]
+            var rollOnCoreRefIds = [
+                2681, 2714, 7852, 4270, 3125, 7737, 9035, 3260, 2770, 7732, 3259, 3261, 6118, 4089, 7738, 3269, 3270, 3268, 2772, 3129, 3134, 3131, 3130, 6044, 6049, 3132, 5593, 3132, 4089
+            ]
+            var softFoldRefIds = [
+                3271, 3273, 2297
+            ]
+            var softRollRefIds = [
+                2297
+            ]
+            var dyeSubFabricPjcs = [
+                    '450',  //*TBG Dye Sub Fabric Printing
+                    '521'   //*TBG Dye Sub Fabric - Tiled
+            ]
 
-        var substrateRefId = Number(pu.getMaterialReferenceId('aPrintSubstrate'));
-        var height = Number(cu.getHeight());
-        var totalQty = cu.getTotalQuantity();
+            var baggingOptionsToHide = [
+                1008,   //18 x 42 Poly Bag
+                1036,   //Poly Bag_18x42" - 2647
+                1037,   //Poly Bag_20x26" - 7024
+                1038,   //Poly Bag_24x54" - 7023
+                1039,   //Poly Bag_28x42" - 7025
+                1040,   //Poly Bag_36x54" - 7026
+                1065,   //20x20 Poly Bag
+                1062
+            ]
 
-        //When Soft Fold update Bagging material
-        if (cu.isValueInSet(matPackageTypeOp, softFoldOpItems)) {
-            pu.validateValue(matBaggingOp, 994);
+            var substrateRefId = Number(pu.getMaterialReferenceId('aPrintSubstrate'));
+            var height = Number(cu.getHeight());
+            var totalQty = cu.getTotalQuantity();
+
+            //When Soft Fold update Bagging material
+            if (cu.isValueInSet(matPackageTypeOp, softFoldOpItems)) {
+                pu.validateValue(matBaggingOp, 994);
+            } else {
+                pu.validateValue(matBaggingOp, '')
+            }
+
+            //material Operation Items
+            var rollOnCoreOpItem = getRollOnCoreid(height);
+            var materialOpItem = getMaterialOpItemId();
+
+            pu.validateValue(matPackageTypeOp, materialOpItem);
+
+            //hide invalid roll on core options
+            hideInvalidCoreOptions(rollOnCoreOpItem);
+
+            //hide all options but 994 
+            pu.hideFieldOptions(baggingOptionsToHide); 
         } else {
-            pu.validateValue(matBaggingOp, '')
+            pu.validateValue(matPackageTypeOp, '');
+            pu.validateValue(matBaggingOp, '');
         }
-
-        //material Operation Items
-        var rollOnCoreOpItem = getRollOnCoreid(height);
-        var materialOpItem = getMaterialOpItemId();
-
-        pu.validateValue(matPackageTypeOp, materialOpItem);
-
-        //hide invalid roll on core options
-        hideInvalidCoreOptions(rollOnCoreOpItem);
-
-        //hide all options but 994 
-        pu.hideFieldOptions(baggingOptionsToHide); 
 
         function getMaterialOpItemId() {
             //soft fold on all dye sub fabric
@@ -1731,6 +1751,8 @@ function setMaterialPackaging(product, updates) {
             //trim only rollOnCoreOption
             pu.trimOperationItemNames(190,'_', rollOnCoreOpItem);
         }
+    } else {
+
     }
 }
 

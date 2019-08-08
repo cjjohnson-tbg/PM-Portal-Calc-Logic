@@ -101,7 +101,6 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     setFluteDirectionOp();
     heatBendingRules(updates);
     twoSidedJobOp();
-    //setTopAndBottomPieceOps();
     linearOperationItemAnswers();
     mountAdhesive();
     jobCostSpoilage(quote);
@@ -1016,20 +1015,6 @@ function twoSidedJobOp() {
     }
 }
 
-function setTopAndBottomPieceOps() {
-    var topInchIncreaserAnswer = fields.operation121_answer;
-    var topInchDecreaserAnswer = fields.operation123_answer;
-    var topLinInch = cu.getWidth();
-    topLinInch = parseInt(topLinInch);
-    if (topInchIncreaserAnswer && topInchDecreaserAnswer) {
-        if (cu.getValue(topInchIncreaserAnswer) != topLinInch) {
-            cu.changeField(topInchIncreaserAnswer, topLinInch, true);
-        }
-        if (cu.getValue(topInchDecreaserAnswer) != topLinInch) {
-            cu.changeField(topInchDecreaserAnswer, topLinInch, true);
-        }
-    } 
-}
 function linearOperationItemAnswers () {
     var opsWithTopOnlyLinearAnswers = [
          '122',  //LF Tape, Mag, Velcro - Top Only
@@ -1140,32 +1125,8 @@ function bucketMagnetPrinting(product) {
     //shareId IN (63692,73498) //magnet printing products
     var bucketOp = fields.operation193;
 
-    var hardProofOptions = [
-        '40', '41', '43', '50'
-    ]
-
     if (cu.getPjcId(product) == 1789) {
-        var isBucket = true;
-        // < 20 boards //number of press sheets
-        if (cu.getTotalPressSheets() >= 20) {
-            isBucket = false;
-        }
-        // proofType NOT IN (40,41,43,50) //standing & hard proofs
-        if (cu.isValueInSet(fields.proof,hardProofOptions)) {
-            isBucket = false;
-        }
-        // pressSheetWeight <> 55 //.015
-        if (cu.getValue(fields.paperWeight) == 55) {
-            isBucket = false
-        }
-        // operation 205 is not used //color critical
-        if (cu.hasValue(fields.operation205)) {
-            isBucket = false
-        }
-        // operation 187 <> opItem 2037 //other
-        if (cu.getValue(fields.operation187) == 2037) {
-            isBucket = false
-        }
+        var isBucket = bucketValidate();
 
         if (isBucket) {
             pu.validateValue(bucketOp, 1268);
@@ -1173,6 +1134,53 @@ function bucketMagnetPrinting(product) {
             pu.validateValue(bucketOp, '');
         }
     }
+
+    function bucketValidate() {
+        var hardProofOptions = [
+            '40', '41', '43', '50'
+        ] 
+        var today = new Date();
+        var tomorrow = new Date();
+        tomorrow.setDate(today.getDate()+1);
+
+        var shipDate = new Date($('.shipDate input').val());
+        var kitDate = new Date($('.kitDate input').val());
+
+        // < 20 boards //number of press sheets
+        if (cu.getTotalPressSheets() >= 20) {
+            return false
+        }
+        // proofType NOT IN (40,41,43,50) //standing & hard proofs
+        if (cu.isValueInSet(fields.proof,hardProofOptions)) {
+            return false
+        }
+        // pressSheetWeight <> 55 //.015
+        if (cu.getValue(fields.paperWeight) == 55) {
+            return false
+        }
+        // operation 205 is not used //color critical
+        if (cu.hasValue(fields.operation205)) {
+            return false
+        }
+        // operation 187 <> opItem 2037 //other
+        if (cu.getValue(fields.operation187) == 2037) {
+            return falseisBucket = false
+        }
+        //ship date must be greater than tomorrow
+        if (!isNaN(shipDate.getTime())) {
+            if (shipDate <= tomorrow) {
+                return false
+            }
+        }
+        //ship date must be greater than tomorrow
+        if (!isNaN(kitDate.getTime())) {
+            if (kitDate <= tomorrow) {
+                return false
+            }
+        }
+        return true
+    }
+    
 }
 
 //functions ran after completed full quote

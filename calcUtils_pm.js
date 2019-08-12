@@ -285,6 +285,44 @@ var pmCalcUtil = {
         var returnVal = localTime.getTime() < localCutoffTime.getTime();
         return returnVal;
     },
+    productionDaysFromNow: function(endDate, cutOffHour) {
+        //End Date and Today (if before cutt off hour) = 1 Production day each
+        var cutOffHour = cutOffHour ? cutOffHour : 0;
+        var localTime = new Date();
+        var daysToAdd = 0;
+
+        if (!pu.isValidDate(endDate)) {
+            return null
+        }
+        //adjust for Saturday, Sunday, or after cutoff time
+        if (localTime.getDay() == 6) {
+            daysToAdd + 2;
+        } else if (localTime.getDay() == 0) {
+            daysToAdd++;
+        } else if (cutOffHour) {
+            if (localTime.getHours() >= cutOffHour) {
+                daysToAdd++;
+            }
+        }
+        var startDate = new Date(localTime.getFullYear(), localTime.getMonth(), localTime.getDate() + daysToAdd, 0, 0, 0, 0);
+
+        var timeDiff = endDate.getTime() - startDate.getTime();
+        var daysBetweenDates = timeDiff / 86400000;
+        
+        // loop through daysBetweenDates to check if weekday
+        var productionDays = 0;
+        for (var dayCount = 0; dayCount <= daysBetweenDates; dayCount++) {
+            var runningDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + dayCount, 0, 0, 0, 0)
+            //if not a weekend, count as Production Day
+            if (runningDate.getDay() > 0 && runningDate.getDay() < 6) {
+                productionDays++;
+            }
+        }
+        return productionDays
+    },
+    isValidDate: function(date) {
+        return date && Object.prototype.toString.call(date) === "[object Date]" && !isNaN(date);
+    },
     getQuoteDefaultJson: function() {
         try {
             var quoteDefault = configureglobals.coffering.quoteDefaults;

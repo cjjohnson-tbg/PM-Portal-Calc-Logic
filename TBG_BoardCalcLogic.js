@@ -1139,12 +1139,24 @@ function bucketMagnetPrinting(product) {
         var hardProofOptions = [
             '40', '41', '43', '50'
         ] 
-        var today = new Date();
-        var tomorrow = new Date();
-        tomorrow.setDate(today.getDate()+1);
 
         var shipDate = new Date($('.shipDate input').val());
         var kitDate = new Date($('.kitDate input').val());
+
+        var productionDays = {
+            toKitting : pu.productionDaysFromNow(kitDate, 15),
+            toShipping : pu.productionDaysFromNow(shipDate, 15),
+            total : 0
+        }
+
+        if (productionDays.toKitting && productionDays.toShipping) {
+            //if both are valid, take smallest
+            productionDays.total = Math.min(productionDays.toKitting, productionDays.toShipping);
+        } else if (productionDays.toKitting) {
+            productionDays.total = productionDays.toKitting;
+        } else if (productionDays.toShipping) {
+            productionDays.total = productionDays.toShipping;
+        }
 
         // < 20 boards //number of press sheets
         if (cu.getTotalPressSheets() >= 20) {
@@ -1166,17 +1178,9 @@ function bucketMagnetPrinting(product) {
         if (cu.getValue(fields.operation187) == 2037) {
             return falseisBucket = false
         }
-        //ship date must be greater than tomorrow
-        if (!isNaN(shipDate.getTime())) {
-            if (shipDate <= tomorrow) {
-                return false
-            }
-        }
-        //ship date must be greater than tomorrow
-        if (!isNaN(kitDate.getTime())) {
-            if (kitDate <= tomorrow) {
-                return false
-            }
+        //ship date must be greater than tomorrow (adjusted for weekend and late day entry)
+        if (productionDays.total < 3) {
+            return false
         }
         return true
     }

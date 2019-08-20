@@ -125,6 +125,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     createOperationItemKey(quote);
     setWasteOperationCosts(quote);
     setCuttingOps(quote, product);
+    fotobaBannerCut(product);
 
     setRollChangeCost(cc.printConfig);
 
@@ -487,6 +488,27 @@ function setAltCutMethod(updates, cutMethod) {
         pu.removeOperationItemsWithString(104,'Cut');
         if (cu.getSelectedOptionText(outsourceCutOp).indexOf('Cut') != -1) {
             cu.changeField(outsourceCutOp,'', true);
+        }
+    }
+}
+function fotobaBannerCut(product) {
+    var bannerPjcs = [
+        '577', //*TBG Hanging Banners Productization
+        '576' //*TBG Retractable Banners Productization
+    ]
+
+    var cuttingOp = fields.operation111;
+    var defaultZundId = 968;
+    var fotobaCutId = 864;
+    
+    var qty = cu.getTotalQuantity();
+    var isOneSided = cu.getValue(fields.sides) > 1 ? false : true;
+    
+    if (cu.isPjc(product, bannerPjcs)) {
+        if (qty > 6 && isOneSided) {
+            pu.validateValue(fields.operation111, fotobaCutId);
+        } else {
+            pu.validateValue(fields.operation111, defaultZundId);
         }
     }
 }

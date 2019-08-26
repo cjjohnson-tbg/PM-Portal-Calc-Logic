@@ -1339,33 +1339,43 @@ function heatBendingRules(updates) {
 }
 
 function fabrivuTransferPaper(product) {
-    
-    if (cu.getPjcId(product) == 450) {
-        //set transfer paper to JETCOL DYE SUB TRANSFER PAPER, but leave none for planning to override
-        var dyeSubTransferOp = fields.operation88;
+
+    //set transfer paper to JETCOL DYE SUB TRANSFER PAPER, but leave none for planning to override
+    var dyeSubTransferOp = fields.operation88;
+    if (dyeSubTransferOp) {
         pu.validateValue(dyeSubTransferOp, 428, true);
+    }
+    
 
-        //insert LF needed into Tranfer Paper material and labor operation Answers
-        if (!cc.printConfig) { 
-            console.log('no printConfig');
-            return;
-        }
-        if (!cc.printConfig.details.valid_quote) {
-            console.log('no valid print configs');
-            return;
-        }
+    //insert LF needed into Tranfer Paper material and labor operation Answers
+    if (!cc.printConfig) { 
+        console.log('no printConfig');
+        return;
+    }
+    if (!cc.printConfig.details.valid_quote) {
+        console.log('no valid print configs');
+        return;
+    }
 
-        var totalLf = cc.printConfig.materials.aPrintSubstrate.totalRollLF;
-        totalLf = roundTo(totalLf,0);
-        if (!totalLf) { return };
-        
-        var transferMatOpAnswer = fields.operation88_answer;
-        var tissueMatOpAnswer = fields.operation155_answer;
-        var transferLaborAnswer = fields.operation196_answer;
+    var totalLf = cc.printConfig.materials.aPrintSubstrate.totalRollLF;
+    totalLf = roundTo(totalLf,0);
+    if (!totalLf) { return };
+    
+    var transferMatOpAnswer = fields.operation88_answer;
+    if (transferMatOpAnswer) {
         pu.validateValue(transferMatOpAnswer,totalLf);
+    }
+
+    var tissueMatOpAnswer = fields.operation155_answer;
+    if (tissueMatOpAnswer) {
         pu.validateValue(tissueMatOpAnswer,totalLf);
+    }
+
+    var transferLaborAnswer = fields.operation196_answer;
+    if (transferLaborAnswer) {
         pu.validateValue(transferLaborAnswer,totalLf);
     }
+
 }
 function fabrivuBacklitInk() {
     //if Aberdeen Stretch Knit Backlit selected, change ink operation to Fabrivu Backlit

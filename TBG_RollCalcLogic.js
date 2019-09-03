@@ -604,6 +604,8 @@ function setLamRunOps(quote, config) {
     var hasAdhesiveBack = backLamType == 'Adhesive';
     var hasAdhesiveFront = frontLamType == 'Adhesive';
     var hasPremask = cu.hasValue(fields.operation78);
+    var premaskChoice = cu.getSelectedOptionText(fields.operation78);
+    var hasPremaskSumma = hasPremask ? premaskChoice.indexOf('SUMMA') != -1 : false;
     var selfAdhesive = configureglobals.cprintsubstratesmgr.choice ? configureglobals.cprintsubstratesmgr.choice.selfAdhesive : false;
 
     var invalidLamMessage = '<p>The mounting and laminating choices in this job is not valid.  If you need this configuration please consult Estimating and/or Planning</p>';
@@ -707,6 +709,10 @@ function setLamRunOps(quote, config) {
                 } else if (hasAdhesiveBack) { // 1. Adhesive  2. Premask
                     pu.validateValue(laminatingRun, 706);
                     pu.validateValue(laminatingRun2,718);
+                    pu.validateValue(laminatingRun3,'');
+                } else if (hasPremaskSumma) { // 1. Premask Summa
+                    pu.validateValue(laminatingRun, 1140);
+                    pu.validateValue(laminatingRun2,'');
                     pu.validateValue(laminatingRun3,'');
                 } else { // 1. Premask
                     pu.validateValue(laminatingRun, 712);

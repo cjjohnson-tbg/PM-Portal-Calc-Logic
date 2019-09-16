@@ -1821,7 +1821,8 @@ function uiUpdates(product) {
         116,  //TBGTBG-FabCut
         125,  //TBGBucketJob
         127,  //TBGMCTCutting
-        134    //TBG Gutter
+        134,   //TBG Gutter
+        155   //TBG Dye Sub Tissue Paper
     ]
     var estimatingOnlyOps = [
         //139     //TBG Team Factor

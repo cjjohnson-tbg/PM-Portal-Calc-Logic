@@ -317,7 +317,7 @@ var matHelper = {
 			printSubstrate.price = dat.subSqFtCost * printSubstrate.width / 12;
 		}
 		props.price = printSubstrate.price;
-		props.leadWasteLF = dat.devDefaults.leadWasteLF;
+		props.leadWasteLF = dat.devDefaults.leadWasteLF ? dat.devDefaults.leadWasteLF : 0;
 		props.printableRollLen = printSubstrate.length - (props.leadWasteLF * 12);
 		props.formsPerRoll = Math.floor(props.printableRollLen / details.formLength);
 		props.fullRolls = Math.floor(details.totalFullForms / props.formsPerRoll);

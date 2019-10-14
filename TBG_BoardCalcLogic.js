@@ -106,7 +106,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     jobCostSpoilage(quote);
     colorWork();
     bucketBoardLimit(product);
-    bucketMagnetPrinting(product);
+    bucketPrinting(product);
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
@@ -1121,19 +1121,22 @@ function bucketBoardLimit(product) {
         }
     }
 }
-function bucketMagnetPrinting(product) {
-    //shareId IN (63692,73498) //magnet printing products
+function bucketPrinting(product) {
     var bucketOp = fields.operation193;
 
-    if (cu.getPjcId(product) == 1789) {
-        var isBucket = bucketValidate();
+    if (!bucketOp) {return}
 
-        if (isBucket) {
+    var validBucketJob = bucketValidate();
+
+    if (validBucketJob) {
+        // auto turn on for Magnet Printing
+        if (cu.getPjcId(product) == 1789) {
             pu.validateValue(bucketOp, 1268);
-        } else {
-            pu.validateValue(bucketOp, '');
         }
+    } else {
+        pu.validateValue(bucketOp, '');
     }
+
 
     function bucketValidate() {
         var hardProofOptions = [
@@ -1243,7 +1246,7 @@ function setDefaultTeam() {
     if (userTeam) {
         var teamId = tbgTeams[userTeam];
         if (teamId) {
-            cu.changeField(teamOp, teamId, true);
+            pu.validateValue(teamOp, teamId);
         } else {
             console.log('User assigned team ' + userTeam + ' not in TBG Team set in logic file.');
         }

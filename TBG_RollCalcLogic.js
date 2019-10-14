@@ -906,6 +906,8 @@ function bannerFinishingOperationDisplay(product) {
         '172',   //Top Value Heavy Knit
         '270',   //Heavy Kit Fabric - Top Value 7.3oz
         '394',    //Aberdeen Triple White
+        '399',  //Aberdeen Soft Knit 4.5oz
+        '421',  //Aberdeen Heavy Knit 10oz
         '207'     //Buy-out
     ]
     var bannerFinishingOperations = [

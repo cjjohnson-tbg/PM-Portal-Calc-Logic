@@ -294,11 +294,9 @@ var pmCalcUtil = {
         if (!pu.isValidDate(endDate)) {
             return null
         }
-        //adjust for Saturday, Sunday, or after cutoff time
+        //Counting Saturday as a Non-Production Day.  Sunday IS a production day
         if (localTime.getDay() == 6) {
-            daysToAdd + 2;
-        } else if (localTime.getDay() == 0) {
-            daysToAdd++;
+            daysToAdd ++;
         } else if (cutOffHour) {
             if (localTime.getHours() >= cutOffHour) {
                 daysToAdd++;
@@ -309,12 +307,12 @@ var pmCalcUtil = {
         var timeDiff = endDate.getTime() - startDate.getTime();
         var daysBetweenDates = timeDiff / 86400000;
         
-        // loop through daysBetweenDates to check if weekday
+        // loop through daysBetweenDates to check if a SATURDAY
         var productionDays = 0;
         for (var dayCount = 0; dayCount <= daysBetweenDates; dayCount++) {
             var runningDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + dayCount, 0, 0, 0, 0)
             //if not a weekend, count as Production Day
-            if (runningDate.getDay() > 0 && runningDate.getDay() < 6) {
+            if (runningDate.getDay() != 6) {
                 productionDays++;
             }
         }

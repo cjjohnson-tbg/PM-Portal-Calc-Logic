@@ -1181,8 +1181,9 @@ function bucketPrinting(product) {
         if (cu.getValue(fields.operation187) == 2037) {
             return falseisBucket = false
         }
-        //ship date must be greater than tomorrow (adjusted for weekend and late day entry)
-        if (productionDays.total < 3) {
+        //ship date must be greater than tomorrow (adjusted for Saturdays and late day entry)
+        //If Kitting or Shipping Date is not established yet, do not check for validity
+        if (productionDays.total > 0 && productionDays.total < 3) {
             return false
         }
         return true

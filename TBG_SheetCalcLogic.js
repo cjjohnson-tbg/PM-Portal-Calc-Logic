@@ -94,9 +94,15 @@ var sfSheetCalcLogic = {
                 	}
                 }
 
-                /**** CHANGE SRHINK WRAP QUESTION FOR SETS ****/
+                
                 if (cu.getPjcId(product) == 971) {
+                    /**** CHANGE SRHINK WRAP QUESTION FOR SETS ****/
                     $('#operation14 label.opQuestion').text('How many sets to shrink wrap together');
+                    // Do not allow page count of 1
+                    var pageCount = cu.getValue(fields.pages);
+                    if (pageCount == 1) {
+                        onQuoteUpdatedMessages += '<p>Sets must contain page counts greater than 1.  If you are not ordering a set, please choose a different produdct.</p>';
+                    }
                 }
 
                 setTopAndBottomPieceOps();

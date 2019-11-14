@@ -914,7 +914,7 @@ function heatBendingRules(updates) {
     function validateJobConfig(op, orientation, hasMountLam) {
         var substrateCaliper = cu.getPressSheetCaliper();
         var bendLength = orientation == 'vertical' ? cu.getHeight() : cu.getWidth();
-        var maxSubstrateCaliper = .118;
+        var maxSubstrateCaliper = .237;
         var minSubstrateCaliper = .030;
 
         var isBuyOut = cu.getValue(fields.paperType) == '247';

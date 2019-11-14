@@ -1125,7 +1125,17 @@ function heatBendingRules(updates) {
         '199',   //PETG .040 Non-Glare
         '41',    //PETG .060
         '69',    //PETG .080
-        '159'    //PETG .118
+        '159',    //PETG .118
+        '8',    //Styrene 125"
+        '54', //Expanded PVC Foamboard - 6mm - White"
+        '116', //Expanded PVC Foamboard - 6mm - Black"
+        '129', //Optix Acrylic .220 Clear"
+        '193', //Styrene 125 Black"
+        '229', //Acrylic Clear Frosted 2 sides DP95 .236"
+        '230', //Acrylic Clear Extruded .220"
+        '382', //EPVC Komatex - Black - 6mm"
+        '384', //EPVC Sintra - White - 6mm"
+
     ]
     var mountsThatCanHeatBend = [
         '65',    //Buy-out
@@ -1142,7 +1152,13 @@ function heatBendingRules(updates) {
         '7',    //Styrene 080
         '58',    //Styrene 080 Black
         '82',    //Acrylic Black Cast .118
-        '102'    //Acrylic Clear Cast .118
+        '102',    //Acrylic Clear Cast .118
+        '8',    //Styrene 125"
+        '28', //EPVC - 6mm - White"
+        '37', //EPVC - 6mm - Black"
+        '51', //Styrene 125 Black"
+        '105', //Optix DA Clear .220"
+
     ]
     var thinHeatBendSubstrates = [
         '385',   //EPVC Komatex - White - 1mm

@@ -1134,8 +1134,7 @@ function heatBendingRules(updates) {
         '229', //Acrylic Clear Frosted 2 sides DP95 .236"
         '230', //Acrylic Clear Extruded .220"
         '382', //EPVC Komatex - Black - 6mm"
-        '384', //EPVC Sintra - White - 6mm"
-
+        '384' //EPVC Sintra - White - 6mm"
     ]
     var mountsThatCanHeatBend = [
         '65',    //Buy-out
@@ -1157,7 +1156,7 @@ function heatBendingRules(updates) {
         '28', //EPVC - 6mm - White"
         '37', //EPVC - 6mm - Black"
         '51', //Styrene 125 Black"
-        '105', //Optix DA Clear .220"
+        '105' //Optix DA Clear .220"
 
     ]
     var thinHeatBendSubstrates = [
@@ -1165,7 +1164,7 @@ function heatBendingRules(updates) {
         '386',   //EPVC Sintra - White - 1mm
         '211',     //Styrene 040
         '199',   //PETG .040 Non-Glare
-        '113',   //Expanded PVC Foamboard 1 MM - White
+        '113'   //Expanded PVC Foamboard 1 MM - White`
     ]
 
 
@@ -1284,7 +1283,7 @@ function heatBendingRules(updates) {
         if (bendLength > 40) {
             heatBendErrors.push('Heat bending is not available for pieces with Bend Length longer than 40".');
         }
-        if (!cu.isValueInSet(fields.printSubstrate, substratesThatCanHeatBend) || !cu.hasValue(fields.mountSubstrate)) {
+        if (!cu.isValueInSet(fields.printSubstrate, substratesThatCanHeatBend) && !cu.hasValue(fields.mountSubstrate)) {
             heatBendErrors.push('The Print substrate selected is not able to Heat Bend.');
         } 
         if (cu.hasValue(fields.mountSubstrate) && !cu.isValueInSet(fields.mountSubstrate, mountsThatCanHeatBend)) {

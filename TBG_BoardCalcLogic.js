@@ -93,7 +93,7 @@ var boardCalcLogic = {
 }
 
 function functionsRanInFullQuote(updates, validation, product, quote) {
-    checkForColorCriticalDevice(validation, product);
+    checkForColorCriticalDevice(validation, product, quote);
     setInkConsumptionOps(quote);
     setCuttingOperations(quote);
     edgeBandingLogic();
@@ -194,34 +194,27 @@ function checkForColorCriticalDevice(validation, product) {
     }
     var colorCriticalOp = fields.operation205;
     var colorCriticalDevice = fields.operation206;
+    var selectedDeviceType = cu.getDeviceType();
     if (colorCriticalOp && colorCriticalDevice) {
         var hasQtyError = false;
         if (cu.hasValue(colorCriticalOp)) {
-            //Show special message if quantity of device not hit
-            if (calcValidation.hasErrorForField(validation, fields.quantity)) {
-                hasQtyError = true;
-            }
             cu.showField(colorCriticalDevice);
             cu.setLabel(colorCriticalOp,"Color Critical - please indicate job # below");
             if (cu.hasValue(colorCriticalDevice)) {
-                if (configureglobals.cdevicemgr.autoDeviceSwitch) {
-                    toggleAutoDeviceTypeButton();
-                    $('select[name="DEVICEDD"]').trigger('focus').trigger('change');
-                }
                 var criticalDeviceId = getCriticalDeviceId[cu.getValue(colorCriticalDevice)] ? getCriticalDeviceId[cu.getValue(colorCriticalDevice)] : null;
-                if (criticalDeviceId && !hasQtyError) {
-                    if (cu.getDeviceType() != criticalDeviceId) {
-                        setDevice(criticalDeviceId);
+                // only run if device types are different
+                if (criticalDeviceId != selectedDeviceType) {
+                    if (configureglobals.cdevicemgr.autoDeviceSwitch) {
+                        toggleAutoDeviceTypeButton();
+                        $('select[name="DEVICEDD"]').trigger('focus').trigger('change');
                     }
+                    setDevice(criticalDeviceId);
                 }
             } else {
                 //require device selection 
                 disableCheckoutReasons.push('Please Select Color Critical Device');
                 colorCriticalDevice.css('color','red');
                 cu.setSelectedOptionText(colorCriticalDevice,'Select Device...')
-            }
-            if (hasQtyError) {
-                cu.alert('<p>The default settings for this device cannot run with these specifications. Resubmit the specs with your Color Critical requirements, but do not select a device. Instead, enter a press note with the device required</p>');
             }
         } else {
             if (cu.hasValue(colorCriticalDevice)) {

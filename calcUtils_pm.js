@@ -285,19 +285,26 @@ var pmCalcUtil = {
         var returnVal = localTime.getTime() < localCutoffTime.getTime();
         return returnVal;
     },
-    productionDaysFromNow: function(endDate, cutOffHour) {
+    productionDaysFromNow: function(endDate, cutOffHour, saturday, sunday) {
         //End Date and Today (if before cutt off hour) = 1 Production day each
         var cutOffHour = cutOffHour ? cutOffHour : 0;
         var localTime = new Date();
         var daysToAdd = 0;
 
+        //default to not include Saturday and Sunday unless defined in function call
+        if (!saturday) {
+            saturday = false
+        }
+        if (!sunday) {
+            sunday = false
+        }
+
         if (!pu.isValidDate(endDate)) {
             return null
         }
-        //Counting Saturday as a Non-Production Day.  Sunday IS a production day
-        if (localTime.getDay() == 6) {
-            daysToAdd ++;
-        } else if (cutOffHour) {
+
+        //Add a day if past Cut-off Time
+        if (cutOffHour) {
             if (localTime.getHours() >= cutOffHour) {
                 daysToAdd++;
             }
@@ -307,12 +314,21 @@ var pmCalcUtil = {
         var timeDiff = endDate.getTime() - startDate.getTime();
         var daysBetweenDates = timeDiff / 86400000;
         
-        // loop through daysBetweenDates to check if a SATURDAY
+        // loop through daysBetweenDates to check if a Weekend date
         var productionDays = 0;
         for (var dayCount = 0; dayCount <= daysBetweenDates; dayCount++) {
-            var runningDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + dayCount, 0, 0, 0, 0)
-            //if not a weekend, count as Production Day
-            if (runningDate.getDay() != 6) {
+            var runningDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + dayCount, 0, 0, 0, 0);
+            var dayOfWeek = runningDate.getDay();
+            //Check if Weekend Day is set as Production Day
+            if (dayOfWeek == 6) {
+                if (saturday) {
+                    productionDays++
+                }
+            } else if (dayOfWeek == 0) {
+                if (sunday) {
+                    productionDays++
+                }
+            } else {
                 productionDays++;
             }
         }

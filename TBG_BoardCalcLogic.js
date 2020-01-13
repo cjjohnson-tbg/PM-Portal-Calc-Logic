@@ -1108,9 +1108,9 @@ function colorWork() {
 function bucketBoardLimit(product) {
     if (cu.isPjc(product, bucketPjcs)) {
         var boardThroughput = cu.getTotalPressSheets();
-        if (boardThroughput >= 20) {
-            onQuoteUpdatedMessages += '<p>Bucket Printing is limited to 20 boards.  Please use the standard Board Printing product.</p>';
-            disableCheckoutReasons.push('>Bucket Printing is limited to 20 boards.  Please use the standard Board Printing product.');
+        if (boardThroughput >= 6) {
+            onQuoteUpdatedMessages += '<p>Bucket Printing is limited to 5 boards.  Please use the standard Board Printing product.</p>';
+            disableCheckoutReasons.push('<p>Bucket Printing is limited to 5 boards.  Please use the standard Board Printing product.');
         }
     }
 }
@@ -1140,8 +1140,8 @@ function bucketPrinting(product) {
         var kitDate = new Date($('.kitDate input').val());
 
         var productionDays = {
-            toKitting : pu.productionDaysFromNow(kitDate, 15),
-            toShipping : pu.productionDaysFromNow(shipDate, 15),
+            toKitting : pu.productionDaysFromNow(kitDate, 13),
+            toShipping : pu.productionDaysFromNow(shipDate, 13),
             total : 0
         }
 

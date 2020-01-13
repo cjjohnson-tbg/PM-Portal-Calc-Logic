@@ -1570,9 +1570,9 @@ function bucketSizeLimitation(product) {
             console.log('cannot compute total Sq Ft size limitation');
             return
         }
-        var maxSq = pjcSizeMax[cu.getPjcId(product)] ? pjcSizeMax[cu.getPjcId(product)] : 699;
+        var maxSq = pjcSizeMax[cu.getPjcId(product)] ? pjcSizeMax[cu.getPjcId(product)] : 250;
         if (totalSquareFeet > maxSq) {
-            bucketSizeMessage = '<p>The Bucket product is limited to jobs less than ' + maxSq + ' sq ft.  For jobs greater than this please use the Board Printing Product.</p>';
+            bucketSizeMessage = '<p>The Bucket product is limited to jobs less than ' + maxSq + ' sq ft.  For jobs greater than this please use the UV Roll Printing Product.</p>';
             onQuoteUpdatedMessages += bucketSizeMessage;
             disableCheckoutReasons.push(bucketSizeMessage);
         }

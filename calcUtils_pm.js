@@ -347,5 +347,12 @@ var pmCalcUtil = {
         } catch (e) {
             return false
         }
+    },
+    getFulfillmentCenterId: function() {
+        try {
+            return configureglobals.coffering.systemOffering.fulfillmentCenter.id
+        } catch (e) {
+            return 
+        }
     }
 }

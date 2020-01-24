@@ -93,7 +93,8 @@ var metaFieldsActions = {
         function bindCalcReInit() {
             var metaFields = $('.additionalInformation div.optionWrapperOn');
             var metaInputs = metaFields.find('input');
-            $('.additionalInformation div.optionWrapperOn input').blur(function() {
+            //$('.additionalInformation div.optionWrapperOn input').blur(function() {
+            metaInputs.blur(function() { 
                 //short time to allow for datepicker to enter into input field
                 setTimeout(function() {
                     configureEvents.onQuoteUpdated();
@@ -348,7 +349,7 @@ var metaFieldsActions = {
                     $('.shipDate input').datepicker({
                         showAnim: "fold",
                         beforeShowDay: $.datepicker.noWeekends,  // disable weekends
-                        minDate : pu.isNowBeforeCSTCutoffTime(13,15) ? 1 : 2 // if before 1:15, 1, if after 1:15 then 2
+                        minDate : pu.isNowBeforeCSTCutoffTime(13,15) ? 0 : 1 // if before 1:15, 1, if after 1:15 then 2
                     });
                 }
             }

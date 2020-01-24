@@ -105,7 +105,6 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     mountAdhesive();
     jobCostSpoilage(quote);
     colorWork();
-    bucketBoardLimit(product);
     bucketPrinting(product);
 }
 
@@ -1105,25 +1104,21 @@ function colorWork() {
         }
     }
 }
-function bucketBoardLimit(product) {
-    if (cu.isPjc(product, bucketPjcs)) {
-        var boardThroughput = cu.getTotalPressSheets();
-        if (boardThroughput >= 6) {
-            onQuoteUpdatedMessages += '<p>Bucket Printing is limited to 5 boards.  Please use the standard Board Printing product.</p>';
-            disableCheckoutReasons.push('<p>Bucket Printing is limited to 5 boards.  Please use the standard Board Printing product.');
-        }
-    }
-}
+
 function bucketPrinting(product) {
     var bucketOp = fields.operation193;
-
     if (!bucketOp) {return}
+
+    //if product is Scheduled Product, then disable checkout on Invalid Configurations.
+    //if on a standard product, this field would have to be selected by a Planner or have a re-order from a job where the planner selected Bucket Printing
+    // in the later case, only deselect if new configuration is invalid.  Do not show warnings
+    var scheduledProduct = $('body').hasClass('scheduledPrinting');
 
     var validBucketJob = bucketValidate();
 
     if (validBucketJob) {
         // auto turn on for Magnet Printing
-        if (cu.getPjcId(product) == 1789) {
+        if (cu.getPjcId(product) == 1789 || scheduledProduct) {
             pu.validateValue(bucketOp, 1268);
         }
     } else {
@@ -1153,9 +1148,15 @@ function bucketPrinting(product) {
         } else if (productionDays.toShipping) {
             productionDays.total = productionDays.toShipping;
         }
+        console.log(productionDays);
 
-        // < 20 boards //number of press sheets
-        if (cu.getTotalPressSheets() >= 20) {
+        // limited to 5 boards max
+        if (cu.getTotalPressSheets() >= 6) {
+            if (scheduledProduct) {
+                var maxBoardMessage = '<p>Bucket Printing is limited to 5 boards.  Please use the standard Board Printing product.';
+                onQuoteUpdatedMessages += (maxBoardMessage);
+                disableCheckoutReasons.push(maxBoardMessage);
+            }
             return false
         }
         // proofType NOT IN (40,41,43,50) //standing & hard proofs
@@ -1172,11 +1173,15 @@ function bucketPrinting(product) {
         }
         // operation 187 <> opItem 2037 //other
         if (cu.getValue(fields.operation187) == 2037) {
-            return falseisBucket = false
+            return false
         }
-        //ship date must be greater than tomorrow (adjusted for Saturdays and late day entry)
-        //If Kitting or Shipping Date is not established yet, do not check for validity
-        if (productionDays.total > 0 && productionDays.total < 3) {
+        //Need at least 1 Production Day.  Allow Next Day if before 1:00 pm
+        if (productionDays.total > 0 && productionDays.total < 2) {
+            if (scheduledProduct) {
+                var maxProductionDayMessage = '<p>Bucket Printing requires at least 2 production days.  Cut off time is 1:00 pm to order for next day. Please use the standard Board Printing product.';
+                onQuoteUpdatedMessages += (maxProductionDayMessage);
+                disableCheckoutReasons.push(maxProductionDayMessage);
+            }
             return false
         }
         return true
@@ -1364,9 +1369,6 @@ function updateOpItems() {
     pu.removeOperationItemsWithString(156,'Print');
 }
 function inkOptGroup_surface(product) {
-
-    //Create opt groups only for TBG Board Printing
-    if (cu.getPjcId(product) != 832) {return}
 
     insertOptGroup($('select[name="SIDE1DD"]'));
     insertOptGroup($('select[name="SIDE2DD"]'));

@@ -143,7 +143,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     colorCritical();
     woodDowelQtyMax();
     setMaterialPackaging(product, updates);
-    bucketSizeLimitation(product);
+    bucketPrinting(product);
 
 }
 
@@ -1560,8 +1560,29 @@ function maxQuotedJob() {
         $('#validation-message-container').html('');
     }
 }
-function bucketSizeLimitation(product) {
-    if (cu.isPjc(product, bucketPjcs)) {
+function bucketPrinting(product) {
+    var bucketOp = fields.operation125;
+    if (!bucketOp) {return}
+
+    var bucketOpSelected = cu.hasValue(bucketOp);
+ 
+    //if product is Scheduled Product, then disable checkout on Invalid Configurations.
+    //if on a standard product, this field would have to be selected by a Planner or have a re-order from a job where the planner selected Bucket Printing
+    // in the later case, only deselect if new configuration is invalid.  Do not show warnings
+    var scheduledProduct = $('body').hasClass('scheduledPrinting');
+
+    var validBucketJob = bucketValidate();
+
+    if (validBucketJob) {
+        if (scheduledProduct) {
+            pu.validateValue(bucketOp, 542);
+        }
+    } else {
+        pu.validateValue(bucketOp, '');
+    }
+
+    function bucketValidate() {
+        // Max of 250 sq ft, unless *TBG Lexjet Buckets (30 sq ft)
         var pjcSizeMax = {
             495 : 30
         }
@@ -1571,12 +1592,55 @@ function bucketSizeLimitation(product) {
             return
         }
         var maxSq = pjcSizeMax[cu.getPjcId(product)] ? pjcSizeMax[cu.getPjcId(product)] : 250;
-        if (totalSquareFeet > maxSq) {
-            bucketSizeMessage = '<p>The Bucket product is limited to jobs less than ' + maxSq + ' sq ft.  For jobs greater than this please use the UV Roll Printing Product.</p>';
-            onQuoteUpdatedMessages += bucketSizeMessage;
-            disableCheckoutReasons.push(bucketSizeMessage);
+
+        var hardProofOptions = [
+            '40', '41', '43', '50'
+        ] 
+
+        var shipDate = new Date($('.shipDate input').val());
+        var kitDate = new Date($('.kitDate input').val());
+
+        var productionDays = {
+            toKitting : pu.productionDaysFromNow(kitDate, 13),
+            toShipping : pu.productionDaysFromNow(shipDate, 13),
+            total : 0
         }
+
+        if (productionDays.toKitting && productionDays.toShipping) {
+            //if both are valid, take smallest
+            productionDays.total = Math.min(productionDays.toKitting, productionDays.toShipping);
+        } else if (productionDays.toKitting) {
+            productionDays.total = productionDays.toKitting;
+        } else if (productionDays.toShipping) {
+            productionDays.total = productionDays.toShipping;
+        }
+        console.log(productionDays);
+
+        if (totalSquareFeet > maxSq) {
+            if (bucketOpSelected) {
+                var bucketSizeMessage = '<p>The Bucket product is limited to jobs less than ' + maxSq + ' sq ft.  For jobs greater than this please use the UV Roll Printing Product.</p>';
+                onQuoteUpdatedMessages += bucketSizeMessage;
+                disableCheckoutReasons.push(bucketSizeMessage);
+            }
+            return false
+        }
+        // proofType NOT IN (40,41,43,50) //standing & hard proofs
+        if (cu.isValueInSet(fields.proof,hardProofOptions)) {
+            return false
+        }
+
+        //Need at least 1 Production Day.  Allow Next Day if before 1:00 pm
+        if (productionDays.total > 0 && productionDays.total < 2) {
+            if (scheduledProduct) {
+                var maxProductionDayMessage = '<p>Bucket Printing requires at least 2 production days.  Cut off time is 1:00 pm to order for next day. Please use the standard Roll Printing product.';
+                onQuoteUpdatedMessages += (maxProductionDayMessage);
+                disableCheckoutReasons.push(maxProductionDayMessage);
+            }
+            return false
+        }
+        return true
     }
+
 }
 
 function vutekInkOptGroups() {

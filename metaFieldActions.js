@@ -345,11 +345,11 @@ var metaFieldsActions = {
                 if (cu.isPjc(product, bucketPjcs.sf) || cu.isPjc(product, bucketPjcs.lf)) {
                     $('.shipDate').removeClass('date');
                     $('.shipDate input').removeClass('hasDatepicker');
-                    $('.shipDate input').unbind();
+                    //$('.shipDate input').unbind();
                     $('.shipDate input').datepicker({
                         showAnim: "fold",
                         beforeShowDay: $.datepicker.noWeekends,  // disable weekends
-                        minDate : pu.isNowBeforeCSTCutoffTime(13,15) ? 0 : 1 // if before 1:15, 1, if after 1:15 then 2
+                        minDate : pu.isNowBeforeCSTCutoffTime(13,15) ? 1 : 2 // if before 1:15, 1, if after 1:15 then 2
                     });
                 }
             }

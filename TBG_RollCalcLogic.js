@@ -1403,6 +1403,7 @@ function fabrivuTransferPaper(product) {
 function fabrivuBacklitInk() {
     //if Aberdeen Stretch Knit Backlit selected, change ink operation to Fabrivu Backlit
     var fabrivuInkOp = fields.operation142;
+    var fabrivuLaborOp = fields.operation196;
     var backlitSubstrates = [
         '371',    //Aberdeen Stretch Knit Backlit
         '527'    //Berger Starlite Backlit
@@ -1410,8 +1411,10 @@ function fabrivuBacklitInk() {
     if (fabrivuInkOp) {
         if (cu.isValueInSet(fields.printSubstrate,backlitSubstrates)) {
             pu.validateValue(fabrivuInkOp, 722);
+            pu.validateValue(fabrivuLaborOp, 1203);
         } else {
             pu.validateValue(fabrivuInkOp, 719);
+            pu.validateValue(fabrivuLaborOp, 1014);
         }
     }
 }

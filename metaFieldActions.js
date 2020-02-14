@@ -117,24 +117,7 @@ var metaFieldsActions = {
     },
     onQuoteUpdated: function(product) {
         var metaMessage = '';
-        var bucketPjcs = {
-            'sf' : [
-                '1306',   //*TBG Magnet Buckets
-                '1757',    //* TBG Backlit Buckets_new
-                '1762'    //*TBG Board Buckets-NEW
-            ], 
-            'lf' : [
-                '458',   //*TBG Board Buckets
-                '495',   //*TBG Lexjet Buckets
-                '496',   //*TBG Banner Buckets
-                '497',   //z_TBG Sihl Buckets
-                '498',   //z_TBG Static Cling Buckets
-                '499',   //*TBG Ecomedia Buckets
-                '550',   //z_TBG Lexjet Buckets 3G 3G
-                '551',   //* TBG Backlit Buckets
-                '556'   //*TBG Finishing Only Bucket
-            ]
-        }
+        var schedulePrinting = $('body').hasClass('scheduledPrinting');
 
         hardProof();
         buyoutMaterial(product);
@@ -147,7 +130,7 @@ var metaFieldsActions = {
         showMessages(product);
 
         function hardProof() {
-            if (cu.isPjc(product, bucketPjcs.sf) || cu.isPjc(product, bucketPjcs.lf)) {
+            if (schedulePrinting) {
                 return
             }
             var hardProofDate = $('.hardProof');
@@ -342,7 +325,7 @@ var metaFieldsActions = {
         function shipDateRestrictions(product) {
             //Ship Date restriction 
             try {
-                if (cu.isPjc(product, bucketPjcs.sf) || cu.isPjc(product, bucketPjcs.lf)) {
+                if (schedulePrinting) {
                     $('.shipDate').removeClass('date');
                     $('.shipDate input').removeClass('hasDatepicker');
                     //$('.shipDate input').unbind();

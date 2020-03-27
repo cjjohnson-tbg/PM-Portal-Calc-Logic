@@ -69,12 +69,12 @@ var metaFieldsActions = {
                     $('.buyoutCharWarning').text('');
                 }
             });
-            //Kitting Code Max 5 characters
+            //Kitting Code Max 10 characters
             $('.kittingCode').append('<div><span class="kittingCodeCharWarning" style="color:blue"></span></div>');
             $('.kittingCode input').attr('maxlength', '5');
             $('.kittingCode input').keypress(function() {
-                if (this.value.length == 5) {
-                    $('.kittingCodeCharWarning').text('Warning: Kitting Code has a 5 Character Limit');
+                if (this.value.length == 10) {
+                    $('.kittingCodeCharWarning').text('Warning: Kitting Code has a 10 Character Limit');
                 } else {
                     $('.kittingCodeCharWarning').text('');
                 }

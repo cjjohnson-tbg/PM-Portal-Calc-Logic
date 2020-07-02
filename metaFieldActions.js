@@ -213,6 +213,8 @@ var metaFieldsActions = {
             } else {
                 $('.buyout').hide();
                 $('.actualId').hide();
+                // clear out fields if there is text
+                $('.actualId input').val('');
                 $('.buyout input').each(function(){
                     var text_value=$(this).val();
                     if (text_value!='') {

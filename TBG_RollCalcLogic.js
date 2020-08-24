@@ -144,6 +144,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     woodDowelQtyMax();
     setMaterialPackaging(product, updates);
     bucketPrinting(product);
+    canvasFrameRestriction(product);
 
 }
 
@@ -1644,6 +1645,20 @@ function bucketPrinting(product) {
         return true
     }
 
+}
+function canvasFrameRestriction(product) {
+	if (cu.getPjcId(product) == 337) {
+		var frameOp = fields.operation65;
+		var maxLength = 36;
+		var longestLength = Math.max( Number(cu.getWidth()), Number(cu.getHeight()) );
+
+		if (longestLength > maxLength) {
+			if (cu.hasValue(frameOp) && cu.getValue(frameOp) != 225) {
+				onQuoteUpdatedMessages += '<p>Canvas prints with the largets side greater than ' + maxLength + '" requires 1.5" Frames.  This has been updated for you.<p>';
+				cu.changeField(frameOp, 225, true);
+			}
+		}
+	}
 }
 
 function vutekInkOptGroups() {

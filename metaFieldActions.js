@@ -171,13 +171,15 @@ var metaFieldsActions = {
                 '129',  //Pre-Printing Front Laminate
                 '144',   //Pre-Printing Back Laminate
                 '131',   //Front Laminating
-                '130'   //Back Laminating
+                '130',   //Back Laminating
+                '139'   //Mounting
             ]
             var buyoutOperationItems = [
                 '845',
                 '846',
                 '864',
-                '865'
+                '865',
+                '821'
             ]
             if (cu.isSmallFormat(product)) {
                 var paperType = fields.paperType;

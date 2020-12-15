@@ -1272,7 +1272,7 @@ function heatBendingRules(updates) {
             return .6
         } else if (len <= 36) {
             return .8
-        } else if (len <= 40) {
+        } else if (len <= 48) {
             return 1.2
         }
         return 0
@@ -1281,8 +1281,8 @@ function heatBendingRules(updates) {
         var bendLength = orientation == 'vertical' ? cu.getHeight() : cu.getWidth();
         var hasBuyoutMaterial = (cu.getValue(fields.printSubstrate) == '207' || cu.getValue(fields.mountSubstrate) == '65') ? true : false;
         
-        if (bendLength > 40) {
-            heatBendErrors.push('Heat bending is not available for pieces with Bend Length longer than 40".');
+        if (bendLength > 48) {
+            heatBendErrors.push('Heat bending is not available for pieces with Bend Length longer than 48".');
         }
         if (!cu.isValueInSet(fields.printSubstrate, substratesThatCanHeatBend) && !cu.hasValue(fields.mountSubstrate)) {
             heatBendErrors.push('The Print substrate selected is not able to Heat Bend.');
@@ -1299,9 +1299,6 @@ function heatBendingRules(updates) {
             //bend length must be less than 24" for thin materials
             if (bendLength > 24 && cu.isValueInSet(fields.printSubstrates,thinHeatBendSubstrates)) {
                 heatBendErrors.push( 'Substrates with calipers less than .060" must have a bend length 24" or less .');
-            }
-            if (hasMountLam && cu.isValueInSet(fields.printSubstrates, thinHeatBendSubstrates)) {
-                heatBendErrors.push( 'Substrates with calipers less than .060" and laminating or mounting.');
             }
         }
 

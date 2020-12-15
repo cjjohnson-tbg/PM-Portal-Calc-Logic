@@ -891,7 +891,7 @@ function heatBendingRules(updates) {
             return .6
         } else if (len <= 36) {
             return .8
-        } else if (len <= 40) {
+        } else if (len <= 48) {
             return 1.2
         }
         return 0
@@ -907,16 +907,16 @@ function heatBendingRules(updates) {
         var substrateCaliper = cu.getPressSheetCaliper();
         var bendLength = orientation == 'vertical' ? cu.getHeight() : cu.getWidth();
         var maxSubstrateCaliper = .237;
-        var minSubstrateCaliper = .030;
+        var minSubstrateCaliper = .020;
 
         var isBuyOut = cu.getValue(fields.paperType) == '247';
         //only approved materials
         if (!cu.isValueInSet(fields.paperType, boardTypesThatCanHeatBend)) {
             heatBendErrors.push('The substrate selected is not able to Heat Bend.');
         }
-        //bend length cannot be greater than 40"
-        if (bendLength > 40) {
-            heatBendErrors.push('Heat bending is not available for pieces with Bend Length longer than 40".');
+        //bend length cannot be greater than 48"
+        if (bendLength > 48) {
+            heatBendErrors.push('Heat bending is not available for pieces with Bend Length longer than 48".');
         }
         if (isBuyOut) {
             heatBendErrors.push('Heat bending for Buy-out materials.');

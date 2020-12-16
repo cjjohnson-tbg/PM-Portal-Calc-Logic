@@ -313,7 +313,7 @@ function setCuttingOps(quote, updates, product) {
     var isZundCut = cu.getSelectedOptionText(userDeclareCutOp).indexOf('Zund') != -1;
 
     setZundOps(quote, setZundCost, isZundCut);
-    setAltCutMethod(updates, altCutMethod);
+    setAltCutMethod(updates, altCutMethod); 
 }
 function setZundOps(quote, setZundCost, isZundCut) {
     var zundLoading = fields.operation53;

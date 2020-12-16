@@ -285,21 +285,35 @@ function setRollChangeCost(printConfig) {
 
 /**** CUTTING */
 function setCuttingOps(quote, updates, product) {
-        var userDeclareCutOp = fields.operation111;
+    var userDeclareCutOp = fields.operation111;
+    
+    var altCutMethodId = {
+        450 : 'noCutting',
+        452 : 'outsourcedCut',
+        866 : 'outsourceDieCut'
+    }
+    var altCutMethod = altCutMethodId[cu.getValue(fields.operation111)] ? altCutMethodId[cu.getValue(fields.operation111)] : null;
 
-        var isZundCut = cu.getSelectedOptionText(userDeclareCutOp).indexOf('Zund') != -1;
-
-        var altCutMethodId = {
-            450 : 'noCutting',
-            452 : 'outsourcedCut',
-            866 : 'outsourceDieCut'
+    //Set To MCT Cut if in MCT Substrate List ONLY.  User Cannot Select this option
+    var mctCutSubstrates = [
+        '394',  //Aberdeen Triple White
+        '482'  //Aberdeen 7599 - White/Black/White
+    ]
+    var shouldMctCut = cu.isValueInSet(fields.printSubstrate, mctCutSubstrates);
+    if (shouldMctCut && !altCutMethod) {
+        pu.validateValue(userDeclareCutOp, 808)
+    } else {
+        if (cu.getValue(userDeclareCutOp) == 808) {
+            //default to Zund if set to MCT Cut
+            cu.changeField(userDeclareCutOp, 968)
         }
-        var altCutMethod = altCutMethodId[cu.getValue(fields.operation111)] ? altCutMethodId[cu.getValue(fields.operation111)] : null;
+    }
 
-        var setZundCost = altCutMethod ? false : true;
+    var setZundCost = altCutMethod ? false : true;  
+    var isZundCut = cu.getSelectedOptionText(userDeclareCutOp).indexOf('Zund') != -1;
 
-        setZundOps(quote, setZundCost, isZundCut);
-        setAltCutMethod(updates, altCutMethod);
+    setZundOps(quote, setZundCost, isZundCut);
+    setAltCutMethod(updates, altCutMethod);
 }
 function setZundOps(quote, setZundCost, isZundCut) {
     var zundLoading = fields.operation53;
@@ -380,61 +394,6 @@ function getMaxZundRank(zundFactors, defaultFactor, printSubFactor, mountSubFact
         }
     }
     return result
-}
-function setZundInCutOp(cutMethod, zundChoice) {
-    //TO BE REWRITTEN WITH NEW OPERATIONS ASKING LINEAR INCH
-    var intCutOp = fields.operation112;
-    var intCutBladeOptions = [
-        455,  // Complex_Blade
-        454  // Simple_Blade
-    ]
-    var intCutRouteOptions = [
-        457,  // Simple_Route
-        456   // Complex_Route
-    ]
-    var intCutSetting = { 
-        454 : 457,
-        455 : 456
-    }
-    //trim and only show option for current zund factor
-    pu.trimOperationItemNames(112, '_');
-    if (zundChoice.rank > 3){
-        pu.hideFieldOptions(intCutRouteOptions);
-    } else {
-        pu.hideFieldOptions(intCutBladeOptions);
-    }
-    if (cu.hasValue(intCutOp) && cutMethod == 'zund') {
-        var intCutItem = cu.getValue(intCutOp);
-        //blade cut
-        if (zundChoice.rank > 3) {
-            if (!(intCutItem in intCutSetting)) {
-                for (var key in intCutSetting) {
-                    if (intCutSetting[key] == intCutItem) {
-                        cu.changeField(intCutOp, key, true);
-                    }
-                }
-            }
-        } 
-        //Route Cut
-        else {
-            if (intCutItem in intCutSetting) {
-                cu.changeField(intCutOp, intCutSetting[intCutItem], true);
-            }
-        }
-    } else {
-        if (cu.hasValue(intCutOp)) {
-            cu.changeField(intCutOp,'',true);
-        }
-    }
-}
-
-function setMCTCutOp(cutMethod) {
-    var mctCutting = fields.operation127;
-    var mctLoading = fields.operation128;
-    var mctUnloading = fields.operation129;
-    if (cutMethod != 'mct') {
-        pu.validateValue(mctCutting,'');
-    }
 }
 function setFabCutOp(cutMethod, product) {
     var fabCutOp = fields.operation116;

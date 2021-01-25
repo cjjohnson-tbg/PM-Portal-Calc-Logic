@@ -84,10 +84,13 @@ var metaFieldsActions = {
             //Remove all meta fields on re-order or duplicating jobs
             var previousPage = document.referrer;
             var previousPageWasCart = previousPage.indexOf('order/cart') != -1;
+            var metaToClear = $('.additionalInformation').children().not('.colorCritical');
+            var metaClearInputs = metaToClear.find('input');
+
             if (previousPageWasCart) {
                 $('.additionalInformation .hardProof input').val('');
             } else {
-                $('.additionalInformation input').val('');
+                metaClearInputs.val('')
             }
         }
         function bindCalcReInit() {

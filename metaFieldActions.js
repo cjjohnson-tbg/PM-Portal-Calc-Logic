@@ -40,7 +40,8 @@ var metaFieldsActions = {
                 ['Match to - Other', 'colorMatch'],
                 ['Evaluation lighting', 'evalLighting'],
                 ['Lighting environment', 'lightEnv'],
-                ['Add to Slug', 'slug']
+                ['Add to Slug', 'slug'],
+                ['FGI Quantity', 'fgiQty']
             ]
             $.each(metaFieldClass , function (i, val) {
                 $('#additionalProductFields .additionalInformation div label:contains("' + val[0] + '")').parent().addClass(val[1]);

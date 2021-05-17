@@ -38,10 +38,12 @@ var metaFieldsActions = {
                 ['Proof Quantity for PM', 'pmProofQty'],
                 ['Color will be used for this art', 'colorArt'],
                 ['Match to - Other', 'colorMatch'],
+                ['Color Note Details', 'colorNotes'],
                 ['Evaluation lighting', 'evalLighting'],
                 ['Lighting environment', 'lightEnv'],
                 ['Add to Slug', 'slug'],
-                ['FGI Quantity', 'fgiQty']
+                ['FGI Quantity', 'fgiQty'],
+                ['Alpha Code', 'alphaCode']
             ]
             $.each(metaFieldClass , function (i, val) {
                 $('#additionalProductFields .additionalInformation div label:contains("' + val[0] + '")').parent().addClass(val[1]);
@@ -296,30 +298,36 @@ var metaFieldsActions = {
         }
         function colorCriticalDevice() {
             //Only show Color Critial field when Color Critical Operations is selected
-            var jobIsColorCritical = false;
-            var colorCritialMeta = $('.colorCritical input');
+            var colorMatch = $('.colorCritical');
+            var colorNotes = $('.colorNotes');
+            
+            var colorWorkComplete = false;
+            var colorMatchJob = false;
+            
             if (cu.isSmallFormat(product)) {
-                if (fields.operation205) {
-                    if (cu.hasValue(fields.operation205)) {
-                        jobIsColorCritical = true;
-                    }
+                if (cu.getValue(fields.operation205) == 1464) {
+                    colorWorkComplete = true;
+                } else if (cu.getValue(fields.operation205) == 1465) {
+                    colorMatchJob = true;
                 }
             } else {  //large format products
-                if (cu.hasValue(fields.operation130)) {
-                    jobIsColorCritical = true;
+                if (cu.getValue(fields.operation130) == 591) {
+                    colorWorkComplete = true;
+                } else if (cu.getValue(fields.operation130) == 592) {
+                    colorMatchJob = true;
                 }
             }
-            if (jobIsColorCritical) {
-                $('.colorCritical').show();
-                $('.colorCritical').css('color', 'red');
-                if (colorCritialMeta.val() == '') {
-                    disableCheckoutReasons.push('You have selected a Color Critical Device.  Please declare a job Number below.');
-                }
-                $('.colorCritical input').blur(function() {
-                    configureEvents.onQuoteUpdated();
-                });
+            if (colorWorkComplete) {
+                var errMessage = ('You have selected a Color Work Complete. Please enter Color Note Details below.');
+                requireMetaField(colorNotes, errMessage);
             } else {
-                $('.colorCritical').hide();
+                colorNotes.hide();
+            }
+            if (colorMatchJob) {
+                var errMessage = ('You have selected a Color Critical Match to Job Number. Please declare a job Number below.');
+                requireMetaField(colorMatch, errMessage);
+            } else {
+                colorMatch.hide();
             }
         }
         function tileSlug() {

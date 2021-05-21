@@ -106,6 +106,7 @@ function functionsRanInFullQuote(updates, validation, product, quote) {
     jobCostSpoilage(quote);
     colorWork();
     bucketPrinting(product);
+    magnetPrintMode();
 }
 
 function functionsRanAfterFullQuote(updates, validation, product, quote) {
@@ -1187,6 +1188,25 @@ function bucketPrinting(product) {
         return true
     }
     
+}
+function magnetPrintMode() {
+    var magPaperTypes = ['51'];
+    var magPrintModeOp = fields.operation187;
+    //Standard Satin
+    var defaultMode = 1259;
+
+    if (magPrintModeOp) {
+        if (cu.isValueInSet(fields.paperType, magPaperTypes)) {
+            cu.showField(magPrintModeOp);
+            if (!cu.hasValue(magPrintModeOp)) {
+                cu.changeField(magPrintModeOp, defaultMode, true);
+            }
+        } else {
+            pu.validateValue(magPrintModeOp, '');
+            cu.hideField(magPrintModeOp);
+        }
+    }
+        
 }
 
 //functions ran after completed full quote

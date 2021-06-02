@@ -750,7 +750,8 @@ function heatBendingRules(updates) {
     var boardTypesThatCanHeatBend = [
         '247',   //Buy-out
         '173',   // Styrene
-        '189',   // Styrene - white
+        '189',   // Styrene - white - 105
+        '337',  //Styrene - white - 126
         '190',   // Styrene - black
         '193',   // Styrene - translucent
         '182',   // PETG

@@ -1087,6 +1087,9 @@ function heatBendingRules(updates) {
         '69',    //PETG .080
         '159',    //PETG .118
         '8',    //Styrene 125"
+        '487',  //Styrene 030
+        '486',  //Styrene 040
+        '562',  //Styrene 060
         '54', //Expanded PVC Foamboard - 6mm - White"
         '116', //Expanded PVC Foamboard - 6mm - Black"
         '129', //Optix Acrylic .220 Clear"
@@ -1124,7 +1127,8 @@ function heatBendingRules(updates) {
         '386',   //EPVC Sintra - White - 1mm
         '211',     //Styrene 040
         '199',   //PETG .040 Non-Glare
-        '113'   //Expanded PVC Foamboard 1 MM - White`
+        '113',   //Expanded PVC Foamboard 1 MM - White`
+        '486'   //Styrene 040
     ]
 
 
